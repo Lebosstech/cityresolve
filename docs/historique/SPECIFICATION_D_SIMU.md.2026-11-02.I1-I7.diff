@@ -1,0 +1,81 @@
+﻿diff --git a/docs/historique/SPECIFICATION_D_SIMU.md.2026-11-02.pre-I1-I7.md b/docs/SPECIFICATION_D_SIMU.md
+index 0d1be2b..406aed1 100644
+--- a/docs/historique/SPECIFICATION_D_SIMU.md.2026-11-02.pre-I1-I7.md
++++ b/docs/SPECIFICATION_D_SIMU.md
+@@ -3,6 +3,7 @@
+ > Statut : proposition technique non approuv├®e, non gel├®e. R├®f├®rences : V1.5
+ > ┬º2.2ÔÇô┬º2.3, V1.3 ┬º2, V1.2 ┬º3. Aucune validation m├®tier. Aucune valeur
+ > ci-dessous n'est une mesure r├®elle.
++> Amendements I4ÔÇôI5 appliqu├®s le 2026-11-02 (pr├®-edit fba375fe1495).
+ 
+ ├ëtiquettes de source : H = hypoth├¿se exp├®rimentale (choix d'exp├®rience,
+ approbation utilisateur) ; N = d├®cision normative (validation m├®tier requise) ;
+@@ -38,29 +39,38 @@ Q discriminant ; calibrage m├®tier restant ouvert (OD-SIMU-03).
+ 
+ ## 5. Disponibilit├®s [N]
+ 
+-├ëquipes 08:00ÔÇô16:00 chaque jour, horizon 14 jours calendaires, arriv├®es des
+-signalements jours 1ÔÇô7 aux heures de service (repris V1.3, conventionnel).
++Heures calendaires : chronologie continue J+heures (J = d├®but du sc├®nario).
++├ëquipes 08:00ÔÇô16:00 chaque jour calendaire, horizon 14 jours calendaires,
++arriv├®es des signalements jours 1ÔÇô7 aux heures de service (repris V1.3,
++conventionnel).
+ 
+ ## 6. ├ëch├®ances [N]
+ 
+-Depuis la premi├¿re arriv├®e du signalement de l'incident (chronologie v├®rit├®) :
+-S1 = 7 j, S2 = 72 h, S3 = 24 h, S4 = 4 h. S5 : pas d'├®ch├®ance, escalade
+-imm├®diate, jamais planifi├® (V1.5).
++Depuis l'apparition r├®elle de l'incident (premier signalement, chronologie
++v├®rit├®, fix├®e ├á l'├®criture et scell├®e) : S1 = 7 j, S2 = 72 h, S3 = 24 h,
++S4 = 4 h, en **heures calendaires** (proposition OD-SIMU-08). S5 : pas
++d'├®ch├®ance, escalade imm├®diate, jamais planifi├® (V1.5). Un incident ├á
++├®ch├®ance hors marge ouvrable est enregistr├® structurellement infaisable
++(┬º7), jamais retir├®.
+ 
+-## 7. Faisabilit├® (6 conditions cumulatives)
++## 7. Faisabilit├® (conditions cumulatives + enregistrement)
+ 
+ Plan faisable ssi chaque intervention planifi├®e respecte : (1) comp├®tence de
+ l'├®quipe ; (2) fen├¬tres de disponibilit├® ; (3) ach├¿vement avant ├®ch├®ance
+ (d├®placements + file inclus) ; (4) co├╗t cumul├® Ôëñ budget ; (5) pas de
+ chevauchement par ├®quipe (t├óche + trajets) ; (6) aucun S5 planifi├®. Violation
+-ÔåÆ Q=0 du plan + comptage d'infaisabilit├® (V1.5 ┬º3).
++ÔåÆ Q=0 du plan + comptage d'infaisabilit├® (V1.5 ┬º3). (7) Enregistrement : tout
++incident oracle-d├®cisionnellement infaisable ab initio est conserv├® dans le
++jeu, scor├® 0 pour tous, compt├® dans le taux d'infaisabilit├® structurelle
++publi├®. Retrait interdit.
+ 
+ ## 8. Terminaison d'une intervention simul├®e (R_i)
+ 
+ R_i = 1 ssi, selon le simulateur fig├® et les attributs cach├®s : ├®quipe
+ comp├®tente, d├®marrage compatible, fin (d├®but + dur├®e vraie) avant ├®ch├®ance,
+ co├╗t imput├®. Sinon 0. Pas de cr├®dit partiel (binaire, V1.1). Les dur├®es et
+-co├╗ts vrais servent ├á noter ; les estimations servent ├á planifier.
++co├╗ts vrais servent ├á noter ; les estimations servent ├á planifier. R_i
++correspond ├á R (r├®sultat simul├®) du formalisme C6 ┬º5.
+ 
+ ## 9. Robustesse +20 % / +50 %
+ 
+@@ -85,3 +95,21 @@ multiplicateurs + vitesse 20 km/h (H). OD-SIMU-03 taux 10/h, 2/km, budget
+ 120 (N). OD-SIMU-04 r├¿gle d'interpr├®tation robustesse (utilisateur).
+ OD-SIMU-05 horizons et horaires ┬º5 (N). OD-SIMU-06 ├®ch├®ances ┬º6 (N).
+ OD-SIMU-07 sch├®ma estimations = tables / v├®rit├® = tables ├ù multiplicateur (H).
++OD-SIMU-08 convention heures calendaires (utilisateur, m├®tier recommand├®).
++
++## 12. Partition des connaissances (I5 : disponible / cach├®e / r├®v├®l├®e)
++
++M├¬mes disponibilit├®s temporelles pour les deux m├®thodes ; toute asym├®trie =
++d├®viation, run invalide (DEV ┬º6).
++
++| Information | Statut | Disponibilit├® |
++|---|---|---|
++| Lots de signalements (contenu ├á l'arriv├®e) | DISPONIBLE | ├á l'heure d'arriv├®e ; futurs cach├®s |
++| Tables de base SIMU (dur├®es, co├╗ts, taux, vitesse) | DISPONIBLE | toujours (d├¿s P0) |
++| Comp├®tences, dispos, d├®p├┤t, budget, graphe | DISPONIBLE | toujours (d├¿s P0) |
++| R├¿gles d'├®ch├®ances | DISPONIBLE | toujours ; horloges sur arriv├®es v├®rit├® |
++| Lots d'injection t1/t2 | DISPONIBLE | ├á t1 puis t2, simultan├® |
++| Mapping groupes vrais, S/E vrais | CACH├ëE | jamais avant notation |
++| Multiplicateurs, dur├®es/co├╗ts vrais, positions exactes | CACH├ëE | jamais avant notation |
++| Verdicts oracle, contenu futur | CACH├ëE | jamais avant notation |
++| V├®rit├® compl├¿te + verdicts + ├®carts est./vrai | R├ëV├ëL├ëE ├Ç NOTATION | post-ex├®cution, scoring/audit seuls |

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Bac à sable DEV</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="banner">BAC À SABLE — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
+<div id="errBox" class="err" hidden></div>
+<div class="layout">
+<nav>
+  <div class="brand">CityResolve <span class="tag sim">DEV</span></div>
+  <button data-view="dashboard" class="active">Tableau de bord</button>
+  <button data-view="reports">Signalements</button>
+  <button data-view="incidents">Incidents regroupés</button>
+  <button data-view="planning">Planification</button>
+  <button data-view="simulation">Simulation et résultats</button>
+  <button data-view="journal">Journal des décisions</button>
+  <button data-view="compare">Comparaison des méthodes</button>
+  <div class="legend">
+    <span class="tag sim">SIMULÉ</span><span class="tag calc">CALCULÉ</span>
+    <span class="tag unk">INCONNU</span><span class="tag prop">PROPOSÉ</span>
+    <span class="tag hum">HUMAIN</span>
+  </div>
+  <div class="meta" id="metaBox"></div>
+</nav>
+<main>
+  <section id="view-dashboard" class="view active">
+    <h1>Tableau de bord</h1>
+    <div id="dashCards" class="cards"></div>
+    <h2>Carte locale fictive (grille 5×5 km)</h2>
+    <svg id="map" viewBox="0 0 500 500" width="100%" height="320"></svg>
+    <h2>Scénario</h2>
+    <div class="row">
+      <select id="scKind"><option value="jouet-1">Jouet fixe nº1</option><option value="jouet-s5">Jouet S5</option><option value="dev">DEV généré</option></select>
+      <input id="scSeed" type="number" value="7" min="1" max="9999" title="graine">
+      <button id="scLoad">Charger</button>
+    </div>
+    <p class="note">Politique active : <span id="polLine"></span></p>
+  </section>
+  <section id="view-reports" class="view">
+    <h1>Signalements <span class="tag sim">SIMULÉ</span></h1>
+    <table id="repTable"><thead><tr><th>ID</th><th>Description</th><th>Catégorie</th><th>Position</th><th>Date (min)</th><th>S/E</th><th>Photo</th></tr></thead><tbody></tbody></table>
+    <h2>Nouveau signalement</h2>
+    <div class="form">
+      <input id="fText" placeholder="description" size="40">
+      <select id="fCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select>
+      <input id="fX" type="number" step="0.1" value="2.5" title="x km"> <input id="fY" type="number" step="0.1" value="2.5" title="y km">
+      <input id="fT" type="number" value="500" title="minutes"> <input id="fPhoto" placeholder="photo (optionnel)">
+      <select id="fSev" title="gravité déclarée"><option value="">gravité inconnue</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="fExp" title="exposition déclarée"><option value="">exposition inconnue</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      <button id="fAdd">Ajouter</button>
+    </div>
+    <p class="note">Les signalements ajoutés à la main sont hors vérité terrain (métriques non applicables).</p>
+  </section>
+  <section id="view-incidents" class="view">
+    <h1>Incidents regroupés <span class="tag calc">CALCULÉ</span></h1>
+    <div class="row">
+      <label>DIST_MAX (m) <input id="pDist" type="number" value="250"></label>
+      <label>DELTA_T (h) <input id="pDt" type="number" value="6"></label>
+      <label>SIM_MIN <input id="pSim" type="number" step="0.05" value="0.75"></label>
+      <label>Méthode <select id="gMethod"><option value="classique">CLASSIQUE</option><option value="meta">META</option></select></label>
+      <button id="gRun">Regrouper</button>
+      <button id="metaVerify">Vérifier Meta</button>
+    </div>
+    <div id="f1Box"></div>
+    <div id="uncertBox"></div>
+    <h2>Extraction structurée Meta</h2>
+    <div class="form">
+      <input id="xReport" placeholder="ID signalement (ex. R1)" size="18">
+      <button id="xRun">Extraire (Meta)</button>
+    </div>
+    <pre id="xOut" class="dump"></pre>
+    <table id="incTable"><thead><tr><th>ID</th><th>Signalements</th><th>S</th><th>E</th><th>Domaine</th><th>Poids</th><th>Échéance</th><th>Confiance</th></tr></thead><tbody></tbody></table>
+  </section>
+  <section id="view-planning" class="view">
+    <h1>Planification des équipes <span class="tag prop">PROPOSÉ</span></h1>
+    <button id="planRun">Proposer un plan (optimiseur exact commun)</button>
+    <div id="planBox"></div>
+    <div class="row"><button id="vYes">Valider (humain)</button><button id="vNo">Rejeter (humain)</button><span id="vState"></span></div>
+  </section>
+  <section id="view-simulation" class="view">
+    <h1>Simulation et résultats <span class="tag sim">SIMULÉ</span></h1>
+    <button id="simRun">Simuler le plan</button>
+    <div id="simBox"></div>
+    <h2>Information nouvelle</h2>
+    <div class="form">
+      <input id="iText" placeholder="description" size="40">
+      <select id="iCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select>
+      <input id="iX" type="number" step="0.1" value="2.5"> <input id="iY" type="number" step="0.1" value="2.5">
+      <input id="iT" type="number" value="1500">
+      <select id="iSev" title="gravité déclarée"><option value="">gravité inconnue</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+      <select id="iExp" title="exposition déclarée"><option value="">exposition inconnue</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
+      <button id="iAdd">Injecter + réévaluer</button>
+      <button id="iTeam">Simuler panne équipe-1</button>
+    </div>
+    <div id="injBox"></div>
+  </section>
+  <section id="view-journal" class="view">
+    <h1>Journal des décisions</h1>
+    <button id="jReload">Actualiser</button>
+    <table id="jTable"><thead><tr><th>#</th><th>Heure</th><th>Événement</th><th>Détails</th></tr></thead><tbody></tbody></table>
+  </section>
+  <section id="view-compare" class="view">
+    <h1>Comparaison des méthodes <span class="tag calc">CALCULÉ</span></h1>
+    <p class="note">Compare jusqu'à 3 jeux de paramètres classiques sur le scénario courant (vérité DEV visible). Le connecteur Meta reste désactivé sans accès vérifié.</p>
+    <button id="cRun">Comparer (défaut / strict / large)</button>
+    <table id="cTable"><thead><tr><th>Config</th><th>Groupes</th><th>F1</th><th>Q planifié</th><th>Q simulé</th><th>Faisable</th></tr></thead><tbody></tbody></table>
+    <h2>CLASSIQUE vs META (DEV uniquement)</h2>
+    <button id="c2Run">Comparer les méthodes</button>
+    <div id="c2Box"></div>
+  </section>
+</main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# CityResolve — .gitignore (aucun secret ne doit être versionné)
+.dart_tool/
+build/
+app/data/*.jsonl
+app/data/state.json*
+app/data/backup-*/
+.env
+*.bak
+node_modules/
+__pycache__/
+.venv/
+.DS_Store/
+Thumbs.db

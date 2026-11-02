@@ -1,0 +1,146 @@
+﻿diff --git a/docs/historique/SPECIFICATION_D_C6.md.2026-11-02.pre-I1-I7.md b/docs/SPECIFICATION_D_C6.md
+index b0e8dd3..e89405f 100644
+--- a/docs/historique/SPECIFICATION_D_C6.md.2026-11-02.pre-I1-I7.md
++++ b/docs/SPECIFICATION_D_C6.md
+@@ -3,7 +3,8 @@
+ > Statut : proposition technique non approuv├®e, non gel├®e. R├®f├®rences : V1.5
+ > ┬º1.6, PROTOCOLE ┬º3.6, ANNEXE V1.1 ┬º3, V1.3 ┬º1. Aucune validation m├®tier.
+ > Aucun essai confirmatoire. La v├®rit├® terrain n'est jamais d├®termin├®e ├á
+-> partir d'une sortie de m├®thode (voir ┬º8).
++> partir d'une sortie de m├®thode (voir ┬º5).
++> Amendements I1ÔÇôI4 appliqu├®s le 2026-11-02 (pr├®-edit 9204507d2ba0).
+ 
+ ## 1. Types d'injection (un seul type par injection, ┬º6)
+ 
+@@ -31,65 +32,84 @@
+ 
+ ## 3. Cas o├╣ le plan doit changer (n├®cessaire, verdict oracle ┬º5)
+ 
+-- N1 : le plan ant├®rieur de la m├®thode devient **infaisable** sous la v├®rit├®
+-  mise ├á jour (d├®lai, budget, comp├®tence, disponibilit├®, graphe).
+-- N2 : le plan oracle-optimal sur la v├®rit├® mise ├á jour gagne **ÔëÑ5 points Q**
+-  par rapport au plan ant├®rieur ├®valu├® sur cette m├¬me v├®rit├®.
+-- N3 : l'injection r├®v├¿le en v├®rit├® un S4/S5 : S5 ÔåÆ **escalade exig├®e** ;
+-  S4 ÔåÆ r├®planification si N1 ou N2 tient, sinon escalade du non-r├®alisable.
++- N1 : le plan ant├®rieur devient **infaisable** selon le mod├¿le d├®cisionnel
++  fig├® (observables + estimations accessibles + optimiseur commun) **ET une
++  modification r├®alisable existe** ÔåÆ r├®vision mat├®rielle exig├®e.
++- N1b : plan ant├®rieur infaisable **sans alternative r├®alisable** ÔåÆ correct =
++  **signalement d'infaisabilit├® motiv├®, sans r├®affectation** (replanifier sans
++  base = FP ; ne rien signaler = FN_report, descriptif).
++- N2 : le plan oracle-d├®cisionnel optimal (informations disponibles, jamais la
++  v├®rit├® cach├®e) gagne **ÔëÑ5 points Q** vs plan ant├®rieur ÔåÆ r├®vision exig├®e.
++- N3 : l'injection r├®v├¿le en v├®rit├® un S4/S5 : S5 ÔåÆ **escalade exig├®e**,
++  scor├®e au ┬º7 et jamais en replanification ; S4 ÔåÆ N1/N1b/N2.
+ 
+ ## 4. Cas o├╣ le plan doit rester inchang├® (non n├®cessaire, verdict oracle ┬º5)
+ 
+ - U1 : injection redondante (doublon, confirmation) : ancien plan faisable
+-  et gain oracle < 5 points.
++  et gain oracle-d├®cisionnel < 5 points.
+ - U2 : reclassification sans effet sur les priorit├®s ni la faisabilit├®.
+ - U3 : signalement d'un incident d├®j├á couvert, sans changement de faisabilit├®.
+ - U4 : changement de ressource avec marge (route non utilis├®e, ├®quipe de
+-  r├®serve) : ancien plan faisable et gain oracle < 5 points.
+-
+-## 5. Oracle ind├®pendant (d├®termination de la bonne d├®cision, sans circularit├®)
+-
+-- L'oracle = **l'optimiseur commun + un adaptateur de v├®rit├®** (code
+-  versionn├®, gel├® avant les cach├®s). Entr├®es : v├®rit├® scell├®e avant/apr├¿s,
+-  plan ant├®rieur logg├® de la m├®thode jug├®e. Sorties : n├®cessaire ? (N1/N2/N3
+-  ou U1ÔÇôU4) + code motif. La **d├®cision de r├®vision test├®e n'entre jamais**
+-  dans le verdict : la n├®cessit├® se juge contre le plan ant├®rieur, pas contre
+-  la r├®ponse. Aucune sortie de CityResolve ni de la baseline ne sert ├á ├®tablir
+-  la v├®rit├® ou la r├¿gle.
+-- Ordre : v├®rit├® et codes oracle scell├®s (hash) avant ex├®cution ; plans
+-  ant├®rieurs journalis├®s immuables ; verdicts calcul├®s apr├¿s, rejouables ├á
+-  l'identique. Le contr├┤leur (C3) atteste l'ant├®riorit├® des scell├®s.
++  r├®serve) : ancien plan faisable et gain oracle-d├®cisionnel < 5 points.
++
++## 5. Oracle ind├®pendant (formalisme V / P* / P╠é / R, sans circularit├®)
++
++- **V** : v├®rit├® terrain ind├®pendante, scell├®e avant ex├®cution.
++- **P*_dec** : plan optimal selon les informations disponibles ├á l'instant
++  (observables + estimations + r├¿gles fig├®es) = seule r├®f├®rence des verdicts.
++- **P*_retro** : optimum ├á connaissance compl├¿te (V) = r├®f├®rence descriptive
++  (regret) uniquement, jamais un verdict.
++- **P╠é_m** : plan propos├® par la m├®thode m avec les informations disponibles.
++- **R** : r├®sultat obtenu dans le simulateur fig├® (SIMU ┬º8).
++- L'oracle = **l'optimiseur commun + un adaptateur** (observables scell├®s,
++  estimations fig├®es). Entr├®es : lots observables, estimations, P╠é ant├®rieur
++  logg├®. **Interdits dans les verdicts** : multiplicateurs, dur├®es et co├╗ts
++  vrais, groupes vrais, contenu des injections futures. Un syst├¿me n'est
++  jamais p├®nalis├® pour une information future inaccessible au moment de
++  d├®cider. La d├®cision de r├®vision test├®e n'entre jamais dans le verdict.
++  Aucune sortie de CityResolve ni de la baseline ne sert ├á ├®tablir V ou la
++  r├¿gle.
++- Ordre : V, lots et codes oracle scell├®s (hash) avant ex├®cution ; P╠é
++  journalis├®s immuables ; verdicts calcul├®s apr├¿s, rejouables ├á l'identique.
++  Le contr├┤leur (C3) atteste l'ant├®riorit├® des scell├®s.
+ 
+ ## 6. R├®visions correctes et injustifi├®es (calcul)
+ 
+ - Changement mat├®riel : s├®lection, affectation ou ordre modifiant les
+   ├®ch├®ances. Cosm├®tique exclu : purs d├®calages horaires < 30 min sans
+   changement d'ordre ni d'affectation (seuil normatif, ├á valider).
+-- Par ├®v├®nement : n├®cessaire ? ├ù r├®vis├® mat├®riellement ? ÔåÆ TP (r├®vis├® si
+-  n├®cessaire), FN (inchang├® si n├®cessaire), FP (r├®vis├® si non n├®cessaire),
+-  TN (inchang├® si non n├®cessaire).
++- Par ├®v├®nement REPLAN (┬º8) : n├®cessaire ? ├ù r├®vis├® mat├®riellement ? ÔåÆ TP
++  (r├®vis├® si n├®cessaire), FN (inchang├® si n├®cessaire), FP (r├®vis├® si non
++  n├®cessaire), TN (inchang├® si non n├®cessaire). N1b : correct = signalement
++  sans r├®affectation (compt├® ├á part, descriptif).
+ - Taux : rappel_n├®cessaire = TP/(TP+FN) ; taux_FP = FP/(FP+TN) ; publi├®s
+-  globaux et par type T1ÔÇôT6. Injections ├á cause unique : les injections
+-  mixtes sont interdites (attribution propre).
++  globaux et par type T1ÔÇôT6, par m├®thode et pool├®s (┬º8). Injections ├á cause
++  unique : les injections mixtes sont interdites (attribution propre).
+ 
+-## 7. Urgences S5 (traitement particulier)
++## 7. Urgences S5 (indicateurs d'escalade exclusifs, jamais de replanification)
+ 
+-- Une injection r├®v├®lant un S5 exige une **escalade imm├®diate**, jamais une
+-  r├®affectation d'├®quipes. R├®affectation suite ├á une injection S5 = FP, sauf
+-  N1/N2 ├®tabli ind├®pendamment (impossible ici, cause unique ┬º6 : donc FP
+-  toujours pour une injection T_S5 pure). Escalade omise = omission de
+-  d├®tection (crit├¿res B si sc├®nario B ; en A : rappel_escalade_S5 descriptif).
+-- Rappel d'escalade S5 sur injections : publi├® s├®par├®ment, jamais fusionn├®
+-  aux crit├¿res B statiques.
++- Une occasion r├®v├®lant un S5 exige une **escalade imm├®diate**, jamais une
++  r├®affectation : toute r├®affectation = FP. Une **escalade correcte n'est
++  jamais une erreur** (ni FP ni FN de replanification). Escalade omise =
++  omission de d├®tection (crit├¿res B si sc├®nario B ; descriptif si A).
++- Rappel_escalade_S5 = occasions escalad├®es / occasions S5, par m├®thode ;
++  publi├® s├®par├®ment, jamais fusionn├® aux crit├¿res B statiques ni aux taux ┬º6.
+ 
+ ## 8. Couverture et ├®quilibre pr├®enregistr├®s
+ 
+-- Ensemble A : **30/30 sc├®narios inject├®s**, 2 injections chacun (1 n├®cessaire
+-  + 1 inutile, ordre tir├® par RNG ├®valuateur, scell├®) = 60 + 60 ├®v├®nements.
++- 30 sc├®narios ├ù 2 occasions (t1, t2) = **60 occasions**. Typ├®es par le plan
++  de couverture scell├® : REPLAN (60ÔêÆK) ou ESCALADE (K = occasions r├®v├®lant
++  un S5, document├® sans quota). REPLAN : n├®cessaires/stables au plus
++  ├®quilibr├®, nombres exacts scell├®s.
++- D├®cisions-m├®thodes **appari├®es et d├®pendantes** : 2 m├®thodes ├ù 60 occasions
++  = 120 d├®cisions, grappes = sc├®narios, occasions s├®quentielles P0ÔåÆP1ÔåÆP2.
++  Taux secondaires ; tout IC par bootstrap de grappes (sc├®nario).
++- Coh├®rence quotas/d├®nominateurs : couverture ÔëÑ6/type T1ÔÇôT6 sur occasions
++  REPLAN ÔåÆ 36 Ôëñ 60ÔêÆK, v├®rifi├® par le contr├┤leur pr├®-ex├®cution ; d├®nominateurs
++  effectifs (replan, escalade) publi├®s depuis le plan scell├®.
++- Hypoth├¿se [H] non obligatoire (OD-C6-06) : cibler ├®ch├®ance > t_inj + 2h
++  pour les n├®cessaires ; ├®carts autoris├®s et enregistr├®s.
+ - Ensemble B : **aucune injection** (objet = d├®tection/escalade statique).
+-- Couverture minimale par type T1ÔÇôT6 : ÔëÑ6 ├®v├®nements chacun (n├®cessaires et
+-  non n├®cessaires confondus pour T1ÔÇôT5 ; T6 selon annotation C7). L'├®valuateur
+-  produit le plan de couverture scell├® avant g├®n├®ration.
+ - Statut des taux (PROPOSITION, ├á valider) : **secondaires, hors conjonction
+   primaire** ÔÇö Q capte d├®j├á les cons├®quences d'une mauvaise r├®vision ; les
+   taux diagnostiquent le comportement. Seuils d'interpr├®tation candidats
+@@ -100,5 +120,5 @@
+ OD-C6-01 instants t1/t2 et 30/30 (utilisateur) ; OD-C6-02 seuil N2 = 5 points
+ (m├®tier) ; OD-C6-03 seuil cosm├®tique 30 min (m├®tier) ; OD-C6-04 statut
+ secondaire des taux + seuils 80/20 (m├®tier) ; OD-C6-05 plan de couverture
+-(├®valuateur, avant g├®n├®ration). Seuil cosm├®tique et N2 repris de V1.3/V1.5,
+-jamais ajust├®s apr├¿s r├®sultats.
++(├®valuateur, avant g├®n├®ration) ; OD-C6-06 marge 2h comme hypoth├¿se (utilisateur).
++Seuils repris de V1.3/V1.5, jamais ajust├®s apr├¿s r├®sultats.

@@ -1,0 +1,7 @@
+name: cityresolve_app
+description: CityResolve — bac à sable de développement (données fictives, protocole NON GELÉ).
+version: 0.1.0
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+# Dépendance unique : mongo_dart (MongoDB local). Le reste n'utilise que le SDK.
+dependencies: {mongo_dart: ^0.10.10}

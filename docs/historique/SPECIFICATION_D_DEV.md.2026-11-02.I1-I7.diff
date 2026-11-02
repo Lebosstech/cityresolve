@@ -1,0 +1,76 @@
+﻿diff --git a/docs/historique/SPECIFICATION_D_DEV.md.2026-11-02.pre-I1-I7.md b/docs/SPECIFICATION_D_DEV.md
+index 04b0c4c..76f11a5 100644
+--- a/docs/historique/SPECIFICATION_D_DEV.md.2026-11-02.pre-I1-I7.md
++++ b/docs/SPECIFICATION_D_DEV.md
+@@ -2,12 +2,16 @@
+ 
+ > Statut : proposition technique non approuv├®e, non gel├®e. R├®f├®rence : V1.5
+ > ┬º1.5, ┬º4. Aucun sc├®nario confirmatoire cach├® cr├®├® ni consult├® ici.
++> Amendement I6 appliqu├® le 2026-11-02 (pr├®-edit a865cb280268) ; I7 au ┬º8.
+ 
+ ## 1. Donn├®es visibles autoris├®es au d├®veloppement (DEV)
+ 
+ - DEV = **12 sc├®narios visibles** (4 par strate : mineurs / mixte / pression),
+   m├¬me format que A (20 signalements, 8 incidents, 2 ├®quipes), auteurs =
+   d├®veloppeurs, stock├®s dans le d├®p├┤t, versionn├®s, v├®rit├® **visible**.
++- La s├®lection sur DEV est **exploratoire** : DEV sert ├á construire et
++  d├®grossir, jamais ├á prouver. A/B servent uniquement ├á l'├®valuation finale
++  pr├®enregistr├®e.
+ - Usages autoris├®s : d├®bogage, s├®lection des 2 baselines, it├®rations Meta,
+   contr├┤le de plausibilit├® de variance (V1.5 ┬º1.9). **Interdit** : toute
+   pr├®sentation d'un score DEV comme preuve de performance ; tout r├®glage
+@@ -19,13 +23,25 @@
+   DELTA_T_MAX {1,6,24} h, SIM_MIN {0,65 ; 0,75 ; 0,85}), s├®lection sur Q
+   simul├® DEV (simulateur fig├®). ├ëgalit├® (╬öQ < 1e-9) : ordre lexicographique
+   croissant (rayon, fen├¬tre, similarit├®) ÔÇö d├®terministe, pr├®enregistr├®.
+-- Baseline F1 (secondaire) : m├¬me grille, m├¬me r├¿gle d'├®galit├®, s├®lection
+-  sur F1 DEV. Les deux codes + param├¿tres + abstentions gel├®s avant cach├®s.
+-- C├┤t├® Meta : journal obligatoire (versions de prompt, nombre d'essais,
+-  scores DEV) ; prompt et version de mod├¿le gel├®s avant cach├®s.
++- Validation crois├®e : **4 plis stratifi├®s** (1 sc├®nario/strate/pli ;
++  entra├«nement 9, validation 3) ; s├®lection sur Q moyen de validation ;
++  ├®cart entra├«nement/validation publi├®. **Limites explicites** : n=12, plis
++  de 3, variance ├®lev├®e du Q de validation, instabilit├® de s├®lection
++  possible ; 4 plis ne prouvent aucune g├®n├®ralisation ÔÇö d'o├╣ le statut
++  exploratoire (┬º1) et l'├®valuation finale sur cach├®s.
++- Baseline F1 (secondaire) : m├¬me grille, m├¬me CV, m├¬me r├¿gle d'├®galit├®,
++  s├®lection sur F1 DEV. Les deux codes + param├¿tres + abstentions gel├®s
++  avant cach├®s.
++- Budget de r├®glage **v├®rifiable** (par m├®thode, journal obligatoire) :
++  essais (IDs des candidats ├®valu├®s sur DEV int├®gral), temps (horloge +
++  machine), donn├®es consult├®es (IDs sc├®narios DEV + usages), param├¿tres
++  gel├®s (valeurs + hash), ressources (versions de mod├¿les, appels, volumes,
++  co├╗ts). Publication c├┤te ├á c├┤te ; disproportion constat├®e soumise ├á
++  l'utilisateur avant le run cach├® (pas de porte automatique, pas
++  d'├®quivalence num├®rique 27=27 : les natures de r├®glage diff├¿rent).
+ - Contr├┤le de variance : ¤â des ╬ö appari├®s calcul├® sur DEV seul, publi├® avant
+   ex├®cution, compar├® ├á la borne de plausibilit├® 10 points (registre ┬º4) ;
+-  descriptif, sans porte de sortie ni re-calibrage.
++  descriptif, sans porte de sortie ni re-calibrage (IC large ├á n=12).
+ 
+ ## 3. Ensembles confirmatoires cach├®s A et B (rappel gel├® par V1.5)
+ 
+@@ -60,12 +76,20 @@
+ 
+ - Lots d'entr├®e bit-├á-bit identiques, m├¬mes estimations accessibles, m├¬mes
+   instants d'injection, m├¬me budget temps, m├¬me format de sortie (V1.5 ┬º2.3).
+-  Check-list de parit├® sign├®e par l'├®valuateur ├á chaque phase ; tout ├®cart =
+-  d├®viation au protocole, run invalide.
++  Partition des connaissances : SIMU ┬º12. Check-list de parit├® sign├®e par
++  l'├®valuateur ├á chaque phase ; tout ├®cart = d├®viation au protocole, run
++  invalide.
+ 
+ ## 7. Points ouverts de cette sp├®cification
+ 
+ OD-DEV-01 : 12 sc├®narios DEV et auteurs d├®veloppeurs (utilisateur).
+ OD-DEV-02 : canevas d'instructions contributeurs + texte final ├®valuateur
+ (utilisateur, puis ex├®cution ├®valuateur). OD-DEV-03 : r├¿gle d'├®galit├®
+-lexicographique (utilisateur).
++lexicographique (utilisateur). OD-DEV-04 : proc├®dure CV + cadre budg├®taire
++(utilisateur).
++
++## 8. Diagnostic divergent regroupement/allocation (I7, descriptif, secondaire)
++
++- Cas ┬½ ╬öF1>0, ╬öQÔëê0 ┬╗ (V1.2 ┬º4) : Spearman des (╬öF1, ╬öQ) par sc├®nario sur A,
++  proportion ╬öF1ÔëÑ+0,05 avec ╬öQ<+2, nuage publi├®. Aucune condition de succ├¿s :
++  pur diagnostic anti-masquage (le primaire reste la conjonction F1 ET Q).
