@@ -1,0 +1,646 @@
+{
+  "source": "Dart visible uniquement : scenarios.dart + test_exploratoire.dart (E1/E2)",
+  "note": "Aucune donnée inventée. E1 truth_groups = null car la partition n est pas spécifiée dans le code.",
+  "scenarios": [
+    {
+      "id": "jouet-1",
+      "label": "Jouet fixe nº1 (6 sign., 3 inc.)",
+      "seed": null,
+      "reports": [
+        {
+          "id": "R1",
+          "text": "nid de poule rue des lilas chaussee abimee",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "R2",
+          "text": "nid de poule rue des lilas chaussee trou",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 530,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "R3",
+          "text": "fuite eau importante avenue centrale trottoir inonde",
+          "category": "fuite-eau",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 560,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "R4",
+          "text": "fuite eau importante avenue centrale trottoir deborde",
+          "category": "fuite-eau",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 600,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "R5",
+          "text": "branche arbre tombee parc vert chemin bloque",
+          "category": "arbre",
+          "x": 4.0,
+          "y": 1.0,
+          "t": 640,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "R6",
+          "text": "branche arbre tombee parc vert chemin coupe",
+          "category": "arbre",
+          "x": 4.0,
+          "y": 1.0,
+          "t": 680,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        }
+      ],
+      "truth": [
+        {
+          "id": "T-A",
+          "reportIds": [
+            "R1",
+            "R2"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "voirie",
+          "x": 1.0,
+          "y": 1.0,
+          "firstArrival": 500,
+          "durationMult": 1.0
+        },
+        {
+          "id": "T-B",
+          "reportIds": [
+            "R3",
+            "R4"
+          ],
+          "severity": 3,
+          "exposure": 2,
+          "domain": "reseaux",
+          "x": 3.0,
+          "y": 3.0,
+          "firstArrival": 560,
+          "durationMult": 1.0
+        },
+        {
+          "id": "T-C",
+          "reportIds": [
+            "R5",
+            "R6"
+          ],
+          "severity": 1,
+          "exposure": 0,
+          "domain": "espaces-verts",
+          "x": 4.0,
+          "y": 1.0,
+          "firstArrival": 640,
+          "durationMult": 1.0
+        }
+      ],
+      "truth_groups": [
+        [
+          "R1",
+          "R2"
+        ],
+        [
+          "R3",
+          "R4"
+        ],
+        [
+          "R5",
+          "R6"
+        ]
+      ]
+    },
+    {
+      "id": "dev-7",
+      "label": "DEV visible graine 7 (20 sign., 8 inc.)",
+      "seed": 7,
+      "reports": [
+        {
+          "id": "D1",
+          "text": "nid poule rue basse chaussee trou grand",
+          "category": "nid-de-poule",
+          "x": 0.5651812903440858,
+          "y": 0.6455177734525426,
+          "t": 649,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D2",
+          "text": "nid poule rue basse chaussee trou abimee",
+          "category": "nid-de-poule",
+          "x": 0.5958600325987262,
+          "y": 0.6253762737104137,
+          "t": 714,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D3",
+          "text": "nid poule rue basse chaussee trou abimee",
+          "category": "nid-de-poule",
+          "x": 0.5604760631235849,
+          "y": 0.6561026812039219,
+          "t": 727,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D4",
+          "text": "nid poule rue basse chaussee trou dangereux",
+          "category": "nid-de-poule",
+          "x": 0.5552820939210528,
+          "y": 0.6384923510650772,
+          "t": 761,
+          "severityHint": 1,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D5",
+          "text": "fuite eau rue haute trottoir inonde importante",
+          "category": "fuite-eau",
+          "x": 2.492500233017069,
+          "y": 0.6796228500258666,
+          "t": 2139,
+          "severityHint": 3,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D6",
+          "text": "fuite eau rue haute trottoir inonde cassee",
+          "category": "fuite-eau",
+          "x": 2.541342653926179,
+          "y": 0.6824083513365604,
+          "t": 2157,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D7",
+          "text": "fuite eau rue haute trottoir inonde passants",
+          "category": "fuite-eau",
+          "x": 2.4826918039107815,
+          "y": 0.7082385253897807,
+          "t": 2116,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D8",
+          "text": "reverberes eteints avenue nord nuit eclairage reparations",
+          "category": "eclairage",
+          "x": 4.270214343492085,
+          "y": 0.7935700741643688,
+          "t": 3523,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D9",
+          "text": "reverberes eteints avenue nord nuit eclairage reparations",
+          "category": "eclairage",
+          "x": 4.248713781550569,
+          "y": 0.7923471314220886,
+          "t": 3577,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D10",
+          "text": "reverberes eteints avenue nord nuit eclairage panne",
+          "category": "eclairage",
+          "x": 4.246950408168957,
+          "y": 0.7432905964656348,
+          "t": 3653,
+          "severityHint": 2,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D11",
+          "text": "branche arbre tombee square est chemin violent",
+          "category": "arbre",
+          "x": 0.6956116453784208,
+          "y": 2.4515048716188903,
+          "t": 542,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D12",
+          "text": "branche arbre tombee square est chemin violent",
+          "category": "arbre",
+          "x": 0.7140456456074494,
+          "y": 2.5001338989447084,
+          "t": 725,
+          "severityHint": 2,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D13",
+          "text": "branche arbre tombee square est chemin promeneurs",
+          "category": "arbre",
+          "x": 0.7429920154859035,
+          "y": 2.51808892493104,
+          "t": 634,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D14",
+          "text": "coupure electrique quartier ouest courant immeubles ascenseurs",
+          "category": "coupure-electrique",
+          "x": 2.513675032451254,
+          "y": 2.5076642345763656,
+          "t": 4990,
+          "severityHint": 4,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D15",
+          "text": "coupure electrique quartier ouest courant immeubles generale",
+          "category": "coupure-electrique",
+          "x": 2.49847779432876,
+          "y": 2.5357732333335297,
+          "t": 5036,
+          "severityHint": 4,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D16",
+          "text": "travaux chaussee boulevard sud deviation circulation difficile",
+          "category": "chaussée",
+          "x": 4.334414903051334,
+          "y": 2.6440127956095774,
+          "t": 2062,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D17",
+          "text": "travaux chaussee boulevard sud deviation circulation dangereuse",
+          "category": "chaussée",
+          "x": 4.266932331992237,
+          "y": 2.562570520587793,
+          "t": 2191,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D18",
+          "text": "fontaine coule place centre eau flaque grandit",
+          "category": "fuite-eau",
+          "x": 1.5539467725108111,
+          "y": 4.328846443587764,
+          "t": 6355,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D19",
+          "text": "fontaine coule place centre eau flaque robinet",
+          "category": "fuite-eau",
+          "x": 1.5438329495668586,
+          "y": 4.3468575495283615,
+          "t": 6388,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "D20",
+          "text": "trottoir degrade impasse moulins dalles soulevees pieton",
+          "category": "nid-de-poule",
+          "x": 3.6088565731558133,
+          "y": 4.182071184063423,
+          "t": 3561,
+          "severityHint": 1,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario"
+        }
+      ],
+      "truth": [
+        {
+          "id": "V1",
+          "reportIds": [
+            "D1",
+            "D2",
+            "D3",
+            "D4"
+          ],
+          "severity": 1,
+          "exposure": 0,
+          "domain": "voirie",
+          "x": 0.6,
+          "y": 0.6,
+          "firstArrival": 649,
+          "durationMult": 1.0
+        },
+        {
+          "id": "V2",
+          "reportIds": [
+            "D5",
+            "D6",
+            "D7"
+          ],
+          "severity": 3,
+          "exposure": 2,
+          "domain": "reseaux",
+          "x": 2.5,
+          "y": 0.7,
+          "firstArrival": 2116,
+          "durationMult": 0.8
+        },
+        {
+          "id": "V3",
+          "reportIds": [
+            "D8",
+            "D9",
+            "D10"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "voirie",
+          "x": 4.3,
+          "y": 0.8,
+          "firstArrival": 3523,
+          "durationMult": 1.25
+        },
+        {
+          "id": "V4",
+          "reportIds": [
+            "D11",
+            "D12",
+            "D13"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "espaces-verts",
+          "x": 0.7,
+          "y": 2.5,
+          "firstArrival": 542,
+          "durationMult": 1.0
+        },
+        {
+          "id": "V5",
+          "reportIds": [
+            "D14",
+            "D15"
+          ],
+          "severity": 4,
+          "exposure": 2,
+          "domain": "reseaux",
+          "x": 2.5,
+          "y": 2.5,
+          "firstArrival": 4990,
+          "durationMult": 0.8
+        },
+        {
+          "id": "V6",
+          "reportIds": [
+            "D16",
+            "D17"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "voirie",
+          "x": 4.3,
+          "y": 2.6,
+          "firstArrival": 2062,
+          "durationMult": 1.25
+        },
+        {
+          "id": "V7",
+          "reportIds": [
+            "D18",
+            "D19"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "reseaux",
+          "x": 1.5,
+          "y": 4.3,
+          "firstArrival": 6355,
+          "durationMult": 1.0
+        },
+        {
+          "id": "V8",
+          "reportIds": [
+            "D20"
+          ],
+          "severity": 1,
+          "exposure": 0,
+          "domain": "voirie",
+          "x": 3.6,
+          "y": 4.2,
+          "firstArrival": 3561,
+          "durationMult": 0.8
+        }
+      ],
+      "truth_groups": [
+        [
+          "D1",
+          "D2",
+          "D3",
+          "D4"
+        ],
+        [
+          "D5",
+          "D6",
+          "D7"
+        ],
+        [
+          "D8",
+          "D9",
+          "D10"
+        ],
+        [
+          "D11",
+          "D12",
+          "D13"
+        ],
+        [
+          "D14",
+          "D15"
+        ],
+        [
+          "D16",
+          "D17"
+        ],
+        [
+          "D18",
+          "D19"
+        ],
+        [
+          "D20"
+        ]
+      ]
+    },
+    {
+      "id": "e1-diagnostic",
+      "label": "E1 exploratoire (3 sign., fusion limite)",
+      "seed": null,
+      "reports": [
+        {
+          "id": "A1",
+          "text": "fuite eau rue basse trottoir inonde canalisation",
+          "category": "fuite-eau",
+          "x": 2.0,
+          "y": 2.0,
+          "t": 500,
+          "severityHint": 3,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "A2",
+          "text": "fuite eau rue basse trottoir inonde cassee",
+          "category": "fuite-eau",
+          "x": 2.05,
+          "y": 2.0,
+          "t": 520,
+          "severityHint": 3,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "B1",
+          "text": "fuite eau rue basse trottoir inonde importante",
+          "category": "fuite-eau",
+          "x": 2.1,
+          "y": 2.0,
+          "t": 510,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        }
+      ],
+      "truth": null,
+      "truth_groups": null,
+      "truth_note": "2 incidents vrais mentionnés, partition non spécifiée dans le code : pas de F1 pour E1."
+    },
+    {
+      "id": "e2-synonymes",
+      "label": "E2 exploratoire (2 sign., même incident, vocabulaire disjoint)",
+      "seed": null,
+      "reports": [
+        {
+          "id": "A1",
+          "text": "trou chaussee dangereux voitures",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        },
+        {
+          "id": "A2",
+          "text": "excavation bitume perilleuse automobiles",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 510,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario"
+        }
+      ],
+      "truth": [
+        {
+          "id": "T-E2",
+          "reportIds": [
+            "A1",
+            "A2"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "domain": "voirie",
+          "x": 1.0,
+          "y": 1.0,
+          "firstArrival": 500,
+          "durationMult": 1.0
+        }
+      ],
+      "truth_groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "truth_note": "Un seul incident vrai, d après le commentaire du code exploratoire (même incident, mots différents)."
+    }
+  ]
+}

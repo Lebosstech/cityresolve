@@ -1,0 +1,347 @@
+{
+  "jouet-1": {
+    "R1": {
+      "probleme": "nid de poule",
+      "description": "nid de poule rue des lilas chaussee abimee",
+      "localisationMentionnee": "rue des lilas",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Aucune gravite exprimee sur echelle 1 a 5 ; le terme 'abimee' est une appreciation qualitative vague ne permettant pas d'attribuer un niveau chiffre sans approximation",
+        "Localisation limitee a 'rue des lilas' sans numero, intersection, troncon, sens, repere ni commune ; position exacte indeterminable",
+        "Aucune distance, mesure, dimension, profondeur, nombre ou etendue precisee",
+        "Aucun delai, date, heure, anciennete ou evolution temporelle mentionne",
+        "Aucune exposition mentionnee : usagers concernes, frequentation, proximite d'equipement ou danger specifique absents du texte",
+        "Portee exacte de 'chaussee abimee' incertaine : lien avec un nid-de-poule unique ou multiple non precise"
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle du nid de poule signale",
+        "Correspondance effective de 'rue des lilas' avec une voie reelle et localisation du desordre sur cette voie",
+        "Realite et nature de la degradation decrite comme 'chaussee abimee'"
+      ]
+    },
+    "R3": {
+      "probleme": "fuite-eau",
+      "description": "fuite eau importante avenue centrale trottoir inonde",
+      "localisationMentionnee": "avenue centrale, trottoir",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Le qualificatif 'importante' est subjectif, sans mesure de debit, volume ou critere, et sans grille de correspondance verifiable avec l'echelle 1..5 ; aucune valeur numerique ne peut etre attribuee sans invention.",
+        "'avenue centrale' est imprecise : ville, numero, troncon, cote, point de repere et geolocalisation absents ; risque d'homonymes non resolvable.",
+        "Le lien entre 'trottoir' et 'avenue centrale' n'est pas explicite : il n'est pas verifiable s'il s'agit du trottoir de cette avenue, ni de quel cote ou segment.",
+        "Le terme 'inonde' est non quantifie : etendue, profondeur, surface et verification visuelle absentes.",
+        "La nature de l'eau (potable, usee, pluviale) et l'origine de la fuite ne sont pas precisees.",
+        "Aucune distance chiffree n'est mentionnee.",
+        "Aucun delai, date, heure, duree ou evolution temporelle n'est mentionne.",
+        "Aucune exposition de personnes, biens ou environnement n'est explicitement mentionnee ; le seul mot 'trottoir' ne permet pas d'inferer une exposition sans invention.",
+        "La correspondance entre la categorie declaree 'fuite-eau' et la realite du terrain n'est pas verifiee."
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle d'une fuite d'eau",
+        "Caractere 'importante' de la fuite",
+        "Inondation effective du trottoir",
+        "Localisation exacte sur l'avenue centrale",
+        "Origine, cause et responsabilite de la fuite",
+        "Presence, exposition ou impact sur des usagers, biens ou environnement"
+      ]
+    },
+    "R5": {
+      "probleme": "branche d'arbre tombée et chemin bloqué",
+      "description": "branche arbre tombee parc vert chemin bloque",
+      "localisationMentionnee": "parc vert",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Mot 'branche' : singulier apparent mais nombre, dimensions, poids, position exacte au sol, état fragmenté ou entier non précisés",
+        "Paire 'branche - arbre' : incertitude si branche totalement détachée, partiellement attachée, au sol ou suspendue ; essence, taille et état de l'arbre non précisés",
+        "Mot 'tombee' sans accent : forme et temps incertains ('tombée' / 'tombé') ; date, heure, ancienneté de la chute et cause non précisées ; mode de constat non décrit",
+        "Paire 'parc - vert' : incertitude lexicale majeure entre nom propre 'Parc Vert' et description générique 'parc vert' ; aucun toponyme officiel, adresse, commune, coordonnée, entrée ou repère vérifiable mentionné",
+        "Mot 'chemin' : type, nom, largeur, revêtement non précisés ; incertitude s'il s'agit d'un chemin interne au parc ou d'un chemin distinct ; distance entre la branche, l'arbre, le parc et le chemin absente",
+        "Paire 'chemin - bloque' sans accent : degré d'obstruction inconnu (total / partiel), longueur obstruée, praticabilité restante pour piétons, vélos ou véhicules non précisées",
+        "Relation spatiale 'parc vert - chemin' : incertitude si le blocage se situe à l'intérieur du parc, à l'entrée ou à proximité ; aucune distance chiffrée mentionnée",
+        "Aucun délai mentionné : délai depuis la chute, urgence demandée, moment du constat absents",
+        "Aucune gravité exprimée sur échelle 1..5 : le mot 'bloque' ne constitue pas une cotation et n'exprime pas explicitement un danger pour les personnes",
+        "Aucune exposition mentionnée : orientation, ombre / soleil, météo, éclairage absents",
+        "Segmentation du texte sans ponctuation ni majuscule : découpage entre faits incertain, lien causal exact entre 'branche arbre tombee' et 'chemin bloque' suggéré mais non formulé explicitement",
+        "Signalement de source fictive R5 de catégorie déclarée 'arbre' : aucune vérification de terrain possible, orthographe et exhaustivité incertaines"
+      ],
+      "elementsNonVerifies": [
+        "Affirmation non vérifiée de la chute effective d'une branche",
+        "Affirmation non vérifiée de l'appartenance de la branche à un arbre",
+        "Affirmation non vérifiée de l'existence et de l'identité du lieu 'parc vert'",
+        "Affirmation non vérifiée de l'existence et de l'identité du 'chemin' concerné",
+        "Affirmation non vérifiée du blocage effectif du chemin",
+        "Lien causal non vérifié entre la branche tombée et le blocage du chemin",
+        "Conformité non vérifiée de la catégorie déclarée 'arbre' avec la réalité du terrain",
+        "Absence ou présence non vérifiée de danger pour les personnes, animaux ou biens",
+        "Position, dimensions et praticabilité non vérifiées sur place"
+      ]
+    }
+  },
+  "e1-diagnostic": {
+    "A1": {
+      "probleme": "fuite eau",
+      "description": "fuite eau rue basse trottoir inonde canalisation",
+      "localisationMentionnee": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Suite de mots sans ponctuation ni verbe conjugué : relations syntaxiques entre les mots indéterminables",
+        "\"rue basse\" : impossible de déterminer s'il s'agit d'un toponyme \"Rue Basse\" ou d'une description générique (partie basse d'une rue)",
+        "\"trottoir inonde\" : portée incertaine, accord grammatical incertain (\"inonde\" vs \"inondé\"), lien causal avec \"fuite eau\" non explicité",
+        "\"canalisation\" : rôle indéterminé, cause présumée, élément affecté ou simple mot-clé, non précisé",
+        "Absence de localisation précise et vérifiable : pas de numéro, ville, repère ou coordonnées",
+        "Absence de gravité exprimée sur une échelle 1 à 5",
+        "Absence d'exposition mentionnée : aucune personne, population ou bien désigné comme exposé",
+        "Absence de temporalité : pas de date, heure, durée ou évolution"
+      ],
+      "elementsNonVerifies": [
+        "Existence réelle d'une fuite d'eau",
+        "Inondation effective d'un trottoir",
+        "Existence et identification d'une rue ou d'un lieu-dit correspondant à \"rue basse\"",
+        "Implication d'une canalisation dans les faits évoqués",
+        "Adéquation de la catégorie déclarée \"fuite-eau\" avec une situation réelle"
+      ]
+    }
+  },
+  "e2-synonymes": {
+    "A1": {
+      "probleme": "trou chaussee [catégorie déclarée: nid-de-poule]",
+      "description": "trou chaussee dangereux voitures",
+      "localisationMentionnee": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": "voitures",
+      "incertitudes": [
+        "Mot 'trou' : nombre, dimensions, profondeur, forme non precises.",
+        "Mot 'chaussee' sans accent dans le texte : type de voie, identifiant, materiau, gestionnaire non precises.",
+        "Mot 'dangereux' : qualificatif subjectif sans critere explicite ; aucune regle de conversion vers echelle 1..5 fournie donc quantification impossible sans invention.",
+        "Mot 'voitures' : fonction syntaxique indeterminee faute de verbe ou preposition ; statut d'entite exposee seulement suppose.",
+        "Paire 'trou - chaussee' : juxtaposition sans preposition ; lien de localisation suppose mais non formule explicitement.",
+        "Paire 'chaussee - dangereux' : portee de l'adjectif incertaine, trou dangereux ou chaussee dangereuse.",
+        "Paire 'dangereux - voitures' : relation danger-cible supposee mais sans verbe ; caractere avere, potentiel, observe ou craint indetermine.",
+        "Paire 'trou - voitures' et 'trou - dangereux - voitures' : aucune relation causale ou d'impact formulee explicitement.",
+        "Aucune localisation mentionnee : rue, adresse, repere, commune, coordonnees absents.",
+        "Aucune distance mentionnee.",
+        "Aucun delai, date ou heure mentionnes.",
+        "Categorie declaree 'nid-de-poule' : information de metadonnee externe au texte entre guillemets, non verifiable par le seul texte."
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle et caracteristiques physiques du trou.",
+        "Position reelle sur une chaussee.",
+        "Caractere dangereux reel.",
+        "Exposition, risque ou dommage reel pour des voitures.",
+        "Qualification technique en nid-de-poule.",
+        "Toute localisation precise.",
+        "Toute gravite chiffree sur echelle 1..5.",
+        "Toute distance, tout delai, toute date."
+      ]
+    }
+  },
+  "dev-7": {
+    "D1": {
+      "probleme": "nid-de-poule",
+      "description": "nid poule rue basse chaussee trou grand",
+      "localisationMentionnee": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Suite de 7 tokens sans ponctuation ni verbe : decoupage syntaxique et relations entre mots incertains.",
+        "Forme 'nid poule' : orthographe approximative sans 'de' ni traits d'union ; assimilation certaine au 'nid-de-poule' declare impossible sans verification.",
+        "Sequence 'rue basse chaussee' : absence de nom propre, numero, repere, commune ; ambiguite entre nom de rue incomplet, description generique et qualificatif 'basse' ; lieu precis non identifiable.",
+        "'trou grand' : qualificatif 'grand' subjectif sans mesure de diametre, profondeur ni photo ; taille reelle indeterminable.",
+        "'grand' n'est pas une gravite exprimee sur echelle 1..5 ; toute conversion chiffree serait inventee.",
+        "Aucune distance chiffree mentionnee.",
+        "Aucun delai, date ou heure mentionnes.",
+        "Aucune exposition de personne, vehicule ou usage mentionnee ; relations de paires adjacentes non probantes."
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle du trou / nid-de-poule non verifiee.",
+        "Localisation exacte non verifiee et non verifiable en l'etat.",
+        "Dimensions, profondeur et dangerosite reelles non verifiees.",
+        "Date d'apparition et persistance actuelle non verifiees.",
+        "Absence d'exposition verifiable."
+      ]
+    },
+    "D5": {
+      "probleme": "fuite eau",
+      "description": "fuite eau rue haute trottoir inonde importante",
+      "localisationMentionnee": "rue haute",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Mention 'rue haute' ambiguë : possible nom propre versus description générique, sans numéro, commune, repère ou coordonnées complémentaires",
+        "Correspondance entre qualificatif 'importante' et échelle 1..5 non définie dans le texte, aucune valeur chiffrée fournie",
+        "Nature, origine, débit et étendue exacte de la fuite et de 'trottoir inonde' non précisés ni quantifiés",
+        "Absence de distance, délai, paire ou exposition explicitement mentionnés dans le texte"
+      ],
+      "elementsNonVerifies": [
+        "Existence réelle d'une fuite d'eau",
+        "Inondation effective d'un trottoir",
+        "Caractère 'importante' de la fuite ou de l'inondation",
+        "Existence et identification exacte du lieu mentionné comme 'rue haute'"
+      ]
+    },
+    "D8": {
+      "probleme": "reverberes eteints",
+      "description": "reverberes eteints avenue nord nuit eclairage reparations",
+      "localisationMentionnee": "avenue nord",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Localisation 'avenue nord' imprecise et incomplete : absence de numero, ville, repere, troncon ou point precis.",
+        "Ambiguite du mot 'nord' : partie possible du toponyme 'avenue nord' ou indication directionnelle, non tranchable sans ponctuation ni contexte.",
+        "Nombre exact de reverberes concernes inconnu : forme plurielle sans quantification.",
+        "Temporalite 'nuit' imprecise : aucune date, heure, duree, frequence ou recurrence indiquee.",
+        "Cause, origine ou nature de l'extinction non precisee.",
+        "Aucune gravite exprimee dans le texte : aucun terme quantifie ou qualificatif de severite.",
+        "Aucune exposition de personne, population ou duree d'exposition explicitement mentionnee ; le terme 'nuit' n'est pas retenu comme exposition pour eviter toute interpretation.",
+        "Sens et portee de 'reparations' incertains : constat, demande ou attente, sans detail ni perimetre defini.",
+        "Articulation exacte entre 'eclairage', 'reverberes eteints' et 'reparations' non explicitee au-dela de la juxtaposition de mots."
+      ],
+      "elementsNonVerifies": [
+        "Extinction effective des reverberes.",
+        "Existence, denomination exacte et position reelle de 'avenue nord'.",
+        "Survenue effective pendant la nuit.",
+        "Necessite, demande ou realisation effective de reparations liees a l'eclairage.",
+        "Adequation de la categorie declaree 'eclairage' avec les faits reels."
+      ]
+    },
+    "D11": {
+      "probleme": "mention non vérifiée d'une « branche arbre tombee » interprétable comme branche d'arbre tombée",
+      "description": "texte littéral : « branche arbre tombee square est chemin violent » ; mention d'une branche d'arbre tombée avec suite indéterminée « square est chemin violent », sans phrase construite ni détail vérifiable dans le seul texte",
+      "localisationMentionnee": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "texte sans ponctuation ni accents : « tombee » pour « tombée », segmentation et syntaxe absentes, aucune certitude sans invention",
+        "mot 1 « branche » : sans déterminant, sans taille, sans état, sans position au sol ou suspendue",
+        "mot 2 « arbre » : juxtaposé à « branche » sans préposition, lien branche-d'arbre supposé mais non explicite",
+        "mot 3 « tombee » : forme à accord féminin singulier suggérant accord avec « branche » à distance de 1 mot intercalé « arbre », mais sans auxiliaire, sans temps, sans lieu de chute",
+        "mot 4 « square » : nom commun sans nom propre, sans déterminant, impossible d'identifier un square précis",
+        "mot 5 « est » : ambiguïté irréductible entre verbe « est » et direction « est », sans contexte discriminant",
+        "mot 6 « chemin » : nom commun indéterminé, relation avec « square » inconnue à distance de 1 mot « est »",
+        "mot 7 « violent » : adjectif masculin singulier, accord possible avec « chemin » à distance 0, sens atypique pour un chemin ; cible réelle inconnue à distance de 4 mots de « branche »",
+        "paires adjacentes : « branche arbre », « arbre tombee », « tombee square », « square est », « est chemin », « chemin violent » toutes juxtaposées sans préposition ni verbe clair, aucune relation syntaxique vérifiable",
+        "distances : relation « branche »-« tombee » avec 1 mot d'écart, relation « square »-« chemin » avec 1 mot d'écart « est », relation « branche »-« violent » avec 4 mots d'écart, aucune portée déterminable sans invention",
+        "délais et temporalité : aucun marqueur de date, heure, ancienneté, durée ou évolution mentionné",
+        "gravité : aucun score exprimé, le seul terme intensif « violent » ne qualifie pas explicitement un danger et ne permet aucun mapping 1..5 sans invention",
+        "exposition : aucune personne, usage, fréquentation ou vulnérabilité mentionnée",
+        "catégorie déclarée « arbre » fournie en métadonnée, non vérifiable par le seul texte"
+      ],
+      "elementsNonVerifies": [
+        "chute effective d'une branche",
+        "existence, essence, état et localisation précise d'un arbre",
+        "localisation précise : quel square, quel chemin, position de la branche",
+        "sens de « est » et de « violent », événement violent éventuel non décrit",
+        "obstruction, danger, dommages ou gêne réelle",
+        "moment, cause et ancienneté de la chute",
+        "présence ou exposition de personnes, biens ou circulation"
+      ]
+    },
+    "D14": {
+      "probleme": "coupure-electrique",
+      "description": "coupure electrique quartier ouest courant immeubles ascenseurs",
+      "localisationMentionnee": "quartier ouest",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Phrase fragmentaire sans verbe ni ponctuation : relation exacte entre 'coupure electrique', 'courant', 'immeubles', 'ascenseurs' incertaine",
+        "Mot 'courant' ambigu : désigne possiblement l'électricité concernée par la coupure sans qu'on puisse trancher s'il indique une absence ou une présence partielle de courant",
+        "Extension spatiale de 'quartier ouest' non précisée : périmètre, rues, adresses et nombre d'immeubles concernés absents",
+        "Temporalité absente : date, heure de début, durée, caractère en cours ou terminé non indiqués",
+        "Impact précis sur 'immeubles' et 'ascenseurs' indéterminé : simple arrêt, panne généralisée ou personnes bloquées non spécifié",
+        "Aucune gravité exprimée explicitement dans le texte",
+        "Aucune exposition particulière de personnes mentionnée explicitement dans le texte"
+      ],
+      "elementsNonVerifies": [
+        "Réalité effective de la coupure électrique alléguée",
+        "Localisation réelle au 'quartier ouest'",
+        "Atteinte réelle des immeubles et des ascenseurs",
+        "Présence éventuelle de personnes affectées ou bloquées dans les ascenseurs",
+        "Cause, durée et étendue réelle de l'événement"
+      ]
+    },
+    "D16": {
+      "probleme": "travaux sur chaussee avec deviation et circulation difficile",
+      "description": "travaux chaussee boulevard sud deviation circulation difficile",
+      "localisationMentionnee": "boulevard sud",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Mot 'travaux' : nature, ampleur et avancement non precises",
+        "Mot 'chaussee' : portion concernee et etat non precises",
+        "Expression 'boulevard sud' : troncon, numero, repere, commune, distance et coordonnees non precises",
+        "Mot 'deviation' : itineraire, sens, signalisation et modalites non precises",
+        "Expression 'circulation difficile' : formulation qualitative sans echelle 1..5 exprimee, intensite non quantifiable sans invention",
+        "Aucune distance mentionnee",
+        "Aucun delai, date, heure ou duree mentionne",
+        "Aucune exposition de personne ou groupe mentionnee explicitement",
+        "Categorie declaree 'chaussee' : correspondance avec le contenu non etablie"
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle des travaux",
+        "Localisation reelle 'boulevard sud'",
+        "Existence reelle, trace et effectivite de la deviation",
+        "Realite et mesure de la difficulte de circulation",
+        "Nature exacte des travaux",
+        "Duree et periode des travaux et de la gene"
+      ]
+    },
+    "D18": {
+      "probleme": "écoulement d'eau signalé au niveau d'une fontaine (catégorie déclarée : fuite-eau)",
+      "description": "Selon le signalement : une fontaine coule, mention de 'place centre', avec présence d'eau / flaque qui grandit",
+      "localisationMentionnee": "place centre",
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Mot 'fontaine' : type, identité, état et caractère normal ou anormal du fonctionnement non précisés",
+        "Mot 'coule' : débit, continuité, origine et caractère anormal non précisés, sans mesure",
+        "Groupe 'place centre' : toponyme incomplet et ambigu, distinction incertaine entre nom de lieu et indication générique 'place' + 'centre', ville/commune absente",
+        "Mot 'eau' : origine, nature et quantité non précisées",
+        "Groupe 'eau flaque' : relation exacte entre l'eau évoquée et la flaque non explicitée",
+        "Groupe 'flaque grandit' : taille initiale et actuelle, profondeur, vitesse d'extension, moment du constat et durée d'évolution non précisés, appréciation subjective sans mesure",
+        "Paire 'fontaine' - 'flaque' : lien causal seulement implicite par juxtaposition des mots, non affirmé explicitement",
+        "Aucune distance chiffrée ni repère spatial précis mentionné",
+        "Aucun délai, date, heure ou durée explicite mentionné",
+        "Aucune gravité exprimée sur une échelle de 1 à 5, le mot 'grandit' n'est pas une notation de gravité",
+        "Aucune exposition mentionnée",
+        "Qualification en 'fuite-eau' relevant uniquement de la catégorie déclarée, non démontrée par le seul texte"
+      ],
+      "elementsNonVerifies": [
+        "Existence réelle de la fontaine et de son écoulement",
+        "Existence et localisation réelle de la 'place centre' évoquée",
+        "Provenance effective de l'eau / de la flaque depuis la fontaine",
+        "Réalité objective de l'agrandissement de la flaque",
+        "Caractère anormal / de fuite de l'écoulement : un fonctionnement normal n'est pas exclu par le seul mot 'coule'",
+        "Toute mesure d'étendue, de débit, de durée, de danger ou d'impact"
+      ]
+    },
+    "D20": {
+      "probleme": "trottoir degrade, dalles soulevees",
+      "description": "trottoir degrade impasse moulins dalles soulevees pieton",
+      "localisationMentionnee": "impasse moulins",
+      "graviteExprimee": null,
+      "expositionMentionnee": "pieton",
+      "incertitudes": [
+        "Chaque mot examine isolement (trottoir, degrade, impasse, moulins, dalles, soulevees, pieton) : sens litteral seul retenu, sans inference au-dela du terme, orthographe sans accents signalant une incertitude de lecture.",
+        "Chaque paire adjacente examinee (trottoir-degrade, degrade-impasse, impasse-moulins, moulins-dalles, dalles-soulevees, soulevees-pieton) : en l'absence de ponctuation et de syntaxe, la relation grammaticale et logique exacte reste incertaine.",
+        "Discordance possible entre categorie declaree nid-de-poule et description trottoir degrade / dalles soulevees : il est incertain s'il s'agit d'un nid-de-poule.",
+        "Localisation impasse moulins : libelle incomplet, sans numero, commune, repere ni orthographe officielle verifiable, perimetre incertain.",
+        "Mot isole pieton : fonction incertaine, usager expose suppose mais non explicite, aucun lien causal enonce.",
+        "Aucune gravite exprimee explicitement par qualificatif gradue, donc aucune valeur 1..5 attribuable.",
+        "Aucune distance, dimension, mesure, nombre de dalles ou hauteur de soulevement mentionnee.",
+        "Aucun delai, date, heure, duree ou anciennete mentionne.",
+        "Cause du degrade et du soulevement non mentionnee."
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle de la degradation du trottoir non verifiee.",
+        "Existence reelle des dalles soulevees, leur nombre et leur etat non verifies.",
+        "Existence reelle et orthographe officielle de impasse moulins non verifiees.",
+        "Exposition reelle d'un pieton et danger reel non verifies.",
+        "Gravite reelle non verifiee.",
+        "Qualification en nid-de-poule non verifiee au regard de la description."
+      ]
+    }
+  }
+}

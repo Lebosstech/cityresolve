@@ -1,0 +1,1389 @@
+{
+  "jouet-1": {
+    "classique": {
+      "groups": [
+        [
+          "R1",
+          "R2"
+        ],
+        [
+          "R3",
+          "R4"
+        ],
+        [
+          "R5",
+          "R6"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I2",
+          "reportIds": [
+            "R3",
+            "R4"
+          ],
+          "severity": 3,
+          "severityStatus": "declaree",
+          "severityValues": [
+            3,
+            3
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 3,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 3.0,
+          "y": 3.0,
+          "firstSeen": 560,
+          "deadline": 2000,
+          "confidence": 0.75,
+          "weight": 0.6625000000000001
+        },
+        {
+          "id": "I1",
+          "reportIds": [
+            "R1",
+            "R2"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 1.0,
+          "y": 1.0,
+          "firstSeen": 500,
+          "deadline": 4820,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I3",
+          "reportIds": [
+            "R5",
+            "R6"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1,
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": 0,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            0,
+            0
+          ],
+          "exposureUnknown": false,
+          "domain": "espaces-verts",
+          "domainConflict": false,
+          "x": 4.0,
+          "y": 1.0,
+          "firstSeen": 640,
+          "deadline": 10720,
+          "confidence": 0.75,
+          "weight": 0.1625
+        }
+      ],
+      "plan_q": 100.0,
+      "plan_cost": 92.0,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-1",
+          "order": 1,
+          "startMin": 500,
+          "endMin": 620,
+          "travelKm": 2.0,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I2",
+          "teamId": "equipe-2",
+          "order": 1,
+          "startMin": 560,
+          "endMin": 800,
+          "travelKm": 6.0,
+          "cost": 52.0
+        },
+        {
+          "incidentId": "I3",
+          "teamId": "equipe-1",
+          "order": 2,
+          "startMin": 640,
+          "endMin": 700,
+          "travelKm": 3.0,
+          "cost": 16.0
+        }
+      ],
+      "plan_unassigned": {},
+      "plan_escalations": [],
+      "sim_q": 100.0,
+      "sim_cost": 92.0,
+      "sim_feasible": true,
+      "sim_violations": [],
+      "sim_missed_truth": [],
+      "sim_outcomes": [
+        {
+          "incidentId": "I1",
+          "truthId": "T-A",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 500,
+          "endMin": 620,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I3",
+          "truthId": "T-C",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 640,
+          "endMin": 700,
+          "cost": 16.0
+        },
+        {
+          "incidentId": "I2",
+          "truthId": "T-B",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 560,
+          "endMin": 800,
+          "cost": 52.0
+        }
+      ]
+    },
+    "meta": {
+      "groups": [
+        [
+          "R1",
+          "R2"
+        ],
+        [
+          "R3",
+          "R4"
+        ],
+        [
+          "R5",
+          "R6"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I2",
+          "reportIds": [
+            "R3",
+            "R4"
+          ],
+          "severity": 3,
+          "severityStatus": "declaree",
+          "severityValues": [
+            3,
+            3
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 3,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 3.0,
+          "y": 3.0,
+          "firstSeen": 560,
+          "deadline": 2000,
+          "confidence": 1.0,
+          "weight": 0.6625000000000001
+        },
+        {
+          "id": "I1",
+          "reportIds": [
+            "R1",
+            "R2"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 1.0,
+          "y": 1.0,
+          "firstSeen": 500,
+          "deadline": 4820,
+          "confidence": 1.0,
+          "weight": 0.4125
+        },
+        {
+          "id": "I3",
+          "reportIds": [
+            "R5",
+            "R6"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1,
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": 0,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            0,
+            0
+          ],
+          "exposureUnknown": false,
+          "domain": "espaces-verts",
+          "domainConflict": false,
+          "x": 4.0,
+          "y": 1.0,
+          "firstSeen": 640,
+          "deadline": 10720,
+          "confidence": 1.0,
+          "weight": 0.1625
+        }
+      ],
+      "plan_q": 100.0,
+      "plan_cost": 92.0,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-1",
+          "order": 1,
+          "startMin": 500,
+          "endMin": 620,
+          "travelKm": 2.0,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I2",
+          "teamId": "equipe-2",
+          "order": 1,
+          "startMin": 560,
+          "endMin": 800,
+          "travelKm": 6.0,
+          "cost": 52.0
+        },
+        {
+          "incidentId": "I3",
+          "teamId": "equipe-1",
+          "order": 2,
+          "startMin": 640,
+          "endMin": 700,
+          "travelKm": 3.0,
+          "cost": 16.0
+        }
+      ],
+      "plan_unassigned": {},
+      "plan_escalations": [],
+      "sim_q": 100.0,
+      "sim_cost": 92.0,
+      "sim_feasible": true,
+      "sim_violations": [],
+      "sim_missed_truth": [],
+      "sim_outcomes": [
+        {
+          "incidentId": "I1",
+          "truthId": "T-A",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 500,
+          "endMin": 620,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I3",
+          "truthId": "T-C",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 640,
+          "endMin": 700,
+          "cost": 16.0
+        },
+        {
+          "incidentId": "I2",
+          "truthId": "T-B",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 560,
+          "endMin": 800,
+          "cost": 52.0
+        }
+      ]
+    }
+  },
+  "dev-7": {
+    "classique": {
+      "groups": [
+        [
+          "D1",
+          "D2",
+          "D3",
+          "D4"
+        ],
+        [
+          "D11",
+          "D12",
+          "D13"
+        ],
+        [
+          "D14",
+          "D15"
+        ],
+        [
+          "D16",
+          "D17"
+        ],
+        [
+          "D18",
+          "D19"
+        ],
+        [
+          "D20"
+        ],
+        [
+          "D5",
+          "D6",
+          "D7"
+        ],
+        [
+          "D10",
+          "D8",
+          "D9"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I3",
+          "reportIds": [
+            "D14",
+            "D15"
+          ],
+          "severity": 4,
+          "severityStatus": "declaree",
+          "severityValues": [
+            4,
+            4
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 4,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 2.506076413390007,
+          "y": 2.5217187339549474,
+          "firstSeen": 4990,
+          "deadline": 5230,
+          "confidence": 0.75,
+          "weight": 0.825
+        },
+        {
+          "id": "I7",
+          "reportIds": [
+            "D5",
+            "D6",
+            "D7"
+          ],
+          "severity": 3,
+          "severityStatus": "declaree",
+          "severityValues": [
+            3,
+            3,
+            3
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 3,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 2.50551156361801,
+          "y": 0.6900899089174026,
+          "firstSeen": 2116,
+          "deadline": 3556,
+          "confidence": 0.75,
+          "weight": 0.6625000000000001
+        },
+        {
+          "id": "I6",
+          "reportIds": [
+            "D20"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": null,
+          "exposureStatus": "inconnue",
+          "exposureValues": [],
+          "exposureUnknown": true,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 3.6088565731558133,
+          "y": 4.182071184063423,
+          "firstSeen": 3561,
+          "deadline": 13641,
+          "confidence": 0.0,
+          "weight": 0.5125
+        },
+        {
+          "id": "I2",
+          "reportIds": [
+            "D11",
+            "D12",
+            "D13"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "espaces-verts",
+          "domainConflict": false,
+          "x": 0.7175497688239245,
+          "y": 2.4899092318315463,
+          "firstSeen": 542,
+          "deadline": 4862,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I4",
+          "reportIds": [
+            "D16",
+            "D17"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 4.3006736175217855,
+          "y": 2.6032916580986853,
+          "firstSeen": 2062,
+          "deadline": 6382,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I8",
+          "reportIds": [
+            "D10",
+            "D8",
+            "D9"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 4.25529284440387,
+          "y": 0.7764026006840307,
+          "firstSeen": 3523,
+          "deadline": 7843,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I5",
+          "reportIds": [
+            "D18",
+            "D19"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 1.5488898610388349,
+          "y": 4.337851996558063,
+          "firstSeen": 6355,
+          "deadline": 10675,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I1",
+          "reportIds": [
+            "D1",
+            "D2",
+            "D3",
+            "D4"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": 0,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 0.5691998699968625,
+          "y": 0.6413722698579889,
+          "firstSeen": 649,
+          "deadline": 10729,
+          "confidence": 0.75,
+          "weight": 0.1625
+        }
+      ],
+      "plan_q": 60.983606557377044,
+      "plan_cost": 118.40471398659227,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-2",
+          "order": 4,
+          "startMin": 4804,
+          "endMin": 4864,
+          "travelKm": 1.2105721398548512,
+          "cost": 12.421144279709702
+        },
+        {
+          "incidentId": "I3",
+          "teamId": "equipe-2",
+          "order": 5,
+          "startMin": 4990,
+          "endMin": 5170,
+          "travelKm": 3.817223007490103,
+          "cost": 37.634446014980206
+        },
+        {
+          "incidentId": "I4",
+          "teamId": "equipe-2",
+          "order": 2,
+          "startMin": 3649,
+          "endMin": 3769,
+          "travelKm": 1.87226983053257,
+          "cost": 23.74453966106514
+        },
+        {
+          "incidentId": "I6",
+          "teamId": "equipe-2",
+          "order": 3,
+          "startMin": 3776,
+          "endMin": 3836,
+          "travelKm": 2.2705965703307096,
+          "cost": 14.54119314066142
+        },
+        {
+          "incidentId": "I8",
+          "teamId": "equipe-2",
+          "order": 1,
+          "startMin": 3523,
+          "endMin": 3643,
+          "travelKm": 5.031695445087901,
+          "cost": 30.063390890175803
+        }
+      ],
+      "plan_unassigned": {
+        "I2": "non retenu par l’optimiseur (Q maximal sans lui)",
+        "I5": "non retenu par l’optimiseur (Q maximal sans lui)",
+        "I7": "non retenu par l’optimiseur (Q maximal sans lui)"
+      },
+      "plan_escalations": [],
+      "sim_q": 0.0,
+      "sim_cost": 142.20000000000002,
+      "sim_feasible": false,
+      "sim_violations": [
+        "budget dépassé : 142.2 > 120.0"
+      ],
+      "sim_missed_truth": [
+        "V2",
+        "V4",
+        "V7"
+      ],
+      "sim_outcomes": [
+        {
+          "incidentId": "I8",
+          "truthId": "V3",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 3523,
+          "endMin": 3673,
+          "cost": 35.2
+        },
+        {
+          "incidentId": "I4",
+          "truthId": "V6",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 3679,
+          "endMin": 3829,
+          "cost": 28.6
+        },
+        {
+          "incidentId": "I6",
+          "truthId": "V8",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4824,
+          "endMin": 4872,
+          "cost": 23.6
+        },
+        {
+          "incidentId": "I1",
+          "truthId": "V1",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4892,
+          "endMin": 4952,
+          "cost": 23.2
+        },
+        {
+          "incidentId": "I3",
+          "truthId": "V5",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4990,
+          "endMin": 5134,
+          "cost": 31.6
+        }
+      ]
+    },
+    "meta": {
+      "groups": [
+        [
+          "D1",
+          "D2",
+          "D3",
+          "D4"
+        ],
+        [
+          "D10",
+          "D8",
+          "D9"
+        ],
+        [
+          "D11",
+          "D12",
+          "D13"
+        ],
+        [
+          "D14",
+          "D15"
+        ],
+        [
+          "D16",
+          "D17"
+        ],
+        [
+          "D18",
+          "D19"
+        ],
+        [
+          "D20"
+        ],
+        [
+          "D5",
+          "D6",
+          "D7"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I4",
+          "reportIds": [
+            "D14",
+            "D15"
+          ],
+          "severity": 4,
+          "severityStatus": "declaree",
+          "severityValues": [
+            4,
+            4
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 4,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 2.506076413390007,
+          "y": 2.5217187339549474,
+          "firstSeen": 4990,
+          "deadline": 5230,
+          "confidence": 0.95,
+          "weight": 0.825
+        },
+        {
+          "id": "I8",
+          "reportIds": [
+            "D5",
+            "D6",
+            "D7"
+          ],
+          "severity": 3,
+          "severityStatus": "declaree",
+          "severityValues": [
+            3,
+            3,
+            3
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 3,
+          "exposure": 2,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            2,
+            2
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 2.50551156361801,
+          "y": 0.6900899089174026,
+          "firstSeen": 2116,
+          "deadline": 3556,
+          "confidence": 0.9,
+          "weight": 0.6625000000000001
+        },
+        {
+          "id": "I7",
+          "reportIds": [
+            "D20"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": null,
+          "exposureStatus": "inconnue",
+          "exposureValues": [],
+          "exposureUnknown": true,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 3.6088565731558133,
+          "y": 4.182071184063423,
+          "firstSeen": 3561,
+          "deadline": 13641,
+          "confidence": 0.0,
+          "weight": 0.5125
+        },
+        {
+          "id": "I3",
+          "reportIds": [
+            "D11",
+            "D12",
+            "D13"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "espaces-verts",
+          "domainConflict": false,
+          "x": 0.7175497688239245,
+          "y": 2.4899092318315463,
+          "firstSeen": 542,
+          "deadline": 4862,
+          "confidence": 0.75,
+          "weight": 0.4125
+        },
+        {
+          "id": "I5",
+          "reportIds": [
+            "D16",
+            "D17"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 4.3006736175217855,
+          "y": 2.6032916580986853,
+          "firstSeen": 2062,
+          "deadline": 6382,
+          "confidence": 0.55,
+          "weight": 0.4125
+        },
+        {
+          "id": "I2",
+          "reportIds": [
+            "D10",
+            "D8",
+            "D9"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 4.25529284440387,
+          "y": 0.7764026006840307,
+          "firstSeen": 3523,
+          "deadline": 7843,
+          "confidence": 0.8,
+          "weight": 0.4125
+        },
+        {
+          "id": "I6",
+          "reportIds": [
+            "D18",
+            "D19"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "reseaux",
+          "domainConflict": false,
+          "x": 1.5488898610388349,
+          "y": 4.337851996558063,
+          "firstSeen": 6355,
+          "deadline": 10675,
+          "confidence": 0.95,
+          "weight": 0.4125
+        },
+        {
+          "id": "I1",
+          "reportIds": [
+            "D1",
+            "D2",
+            "D3",
+            "D4"
+          ],
+          "severity": 1,
+          "severityStatus": "declaree",
+          "severityValues": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 1,
+          "exposure": 0,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 0.5691998699968625,
+          "y": 0.6413722698579889,
+          "firstSeen": 649,
+          "deadline": 10729,
+          "confidence": 1.0,
+          "weight": 0.1625
+        }
+      ],
+      "plan_q": 60.98360655737705,
+      "plan_cost": 118.40471398659227,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-2",
+          "order": 4,
+          "startMin": 4804,
+          "endMin": 4864,
+          "travelKm": 1.2105721398548512,
+          "cost": 12.421144279709702
+        },
+        {
+          "incidentId": "I2",
+          "teamId": "equipe-2",
+          "order": 1,
+          "startMin": 3523,
+          "endMin": 3643,
+          "travelKm": 5.031695445087901,
+          "cost": 30.063390890175803
+        },
+        {
+          "incidentId": "I4",
+          "teamId": "equipe-2",
+          "order": 5,
+          "startMin": 4990,
+          "endMin": 5170,
+          "travelKm": 3.817223007490103,
+          "cost": 37.634446014980206
+        },
+        {
+          "incidentId": "I5",
+          "teamId": "equipe-2",
+          "order": 2,
+          "startMin": 3649,
+          "endMin": 3769,
+          "travelKm": 1.87226983053257,
+          "cost": 23.74453966106514
+        },
+        {
+          "incidentId": "I7",
+          "teamId": "equipe-2",
+          "order": 3,
+          "startMin": 3776,
+          "endMin": 3836,
+          "travelKm": 2.2705965703307096,
+          "cost": 14.54119314066142
+        }
+      ],
+      "plan_unassigned": {
+        "I3": "non retenu par l’optimiseur (Q maximal sans lui)",
+        "I6": "non retenu par l’optimiseur (Q maximal sans lui)",
+        "I8": "non retenu par l’optimiseur (Q maximal sans lui)"
+      },
+      "plan_escalations": [],
+      "sim_q": 0.0,
+      "sim_cost": 142.20000000000002,
+      "sim_feasible": false,
+      "sim_violations": [
+        "budget dépassé : 142.2 > 120.0"
+      ],
+      "sim_missed_truth": [
+        "V2",
+        "V4",
+        "V7"
+      ],
+      "sim_outcomes": [
+        {
+          "incidentId": "I2",
+          "truthId": "V3",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 3523,
+          "endMin": 3673,
+          "cost": 35.2
+        },
+        {
+          "incidentId": "I5",
+          "truthId": "V6",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 3679,
+          "endMin": 3829,
+          "cost": 28.6
+        },
+        {
+          "incidentId": "I7",
+          "truthId": "V8",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4824,
+          "endMin": 4872,
+          "cost": 23.6
+        },
+        {
+          "incidentId": "I1",
+          "truthId": "V1",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4892,
+          "endMin": 4952,
+          "cost": 23.2
+        },
+        {
+          "incidentId": "I4",
+          "truthId": "V5",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 4990,
+          "endMin": 5134,
+          "cost": 31.6
+        }
+      ]
+    }
+  },
+  "e1-diagnostic": {
+    "classique": {
+      "error": "verite non specifiee pour ce scenario : Q non calculable",
+      "groups": [
+        [
+          "A1",
+          "A2",
+          "B1"
+        ]
+      ]
+    },
+    "meta": {
+      "error": "verite non specifiee pour ce scenario : Q non calculable",
+      "groups": [
+        [
+          "A1",
+          "A2",
+          "B1"
+        ]
+      ]
+    }
+  },
+  "e2-synonymes": {
+    "classique": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I1",
+          "reportIds": [
+            "A1"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 1.0,
+          "y": 1.0,
+          "firstSeen": 500,
+          "deadline": 4820,
+          "confidence": 0.0,
+          "weight": 0.4125
+        },
+        {
+          "id": "I2",
+          "reportIds": [
+            "A2"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 1.0,
+          "y": 1.0,
+          "firstSeen": 510,
+          "deadline": 4830,
+          "confidence": 0.0,
+          "weight": 0.4125
+        }
+      ],
+      "plan_q": 100.0,
+      "plan_cost": 44.0,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-1",
+          "order": 1,
+          "startMin": 500,
+          "endMin": 620,
+          "travelKm": 2.0,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I2",
+          "teamId": "equipe-1",
+          "order": 2,
+          "startMin": 620,
+          "endMin": 740,
+          "travelKm": 0.0,
+          "cost": 20.0
+        }
+      ],
+      "plan_unassigned": {},
+      "plan_escalations": [],
+      "sim_q": 100.0,
+      "sim_cost": 44.0,
+      "sim_feasible": true,
+      "sim_violations": [],
+      "sim_missed_truth": [],
+      "sim_outcomes": [
+        {
+          "incidentId": "I1",
+          "truthId": "T-E2",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 500,
+          "endMin": 620,
+          "cost": 24.0
+        },
+        {
+          "incidentId": "I2",
+          "truthId": "T-E2",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 620,
+          "endMin": 740,
+          "cost": 20.0
+        }
+      ]
+    },
+    "meta": {
+      "groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "incidents": [
+        {
+          "id": "I1",
+          "reportIds": [
+            "A1",
+            "A2"
+          ],
+          "severity": 2,
+          "severityStatus": "declaree",
+          "severityValues": [
+            2,
+            2
+          ],
+          "severityUnknown": false,
+          "severityForDecision": 2,
+          "exposure": 1,
+          "exposureStatus": "declaree",
+          "exposureValues": [
+            1,
+            1
+          ],
+          "exposureUnknown": false,
+          "domain": "voirie",
+          "domainConflict": false,
+          "x": 1.0,
+          "y": 1.0,
+          "firstSeen": 500,
+          "deadline": 4820,
+          "confidence": 0.85,
+          "weight": 0.4125
+        }
+      ],
+      "plan_q": 100.0,
+      "plan_cost": 24.0,
+      "plan_tasks": [
+        {
+          "incidentId": "I1",
+          "teamId": "equipe-1",
+          "order": 1,
+          "startMin": 500,
+          "endMin": 620,
+          "travelKm": 2.0,
+          "cost": 24.0
+        }
+      ],
+      "plan_unassigned": {},
+      "plan_escalations": [],
+      "sim_q": 100.0,
+      "sim_cost": 24.0,
+      "sim_feasible": true,
+      "sim_violations": [],
+      "sim_missed_truth": [],
+      "sim_outcomes": [
+        {
+          "incidentId": "I1",
+          "truthId": "T-E2",
+          "pure": true,
+          "result": 1,
+          "reason": "achevée dans les contraintes",
+          "startMin": 500,
+          "endMin": 620,
+          "cost": 24.0
+        }
+      ]
+    }
+  }
+}

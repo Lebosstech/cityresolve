@@ -1,0 +1,78 @@
+[
+  {
+    "scenario": "jouet-1",
+    "classique_f1": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "meta_f1": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "desaccords": []
+  },
+  {
+    "scenario": "dev-7",
+    "classique_f1": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "meta_f1": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "desaccords": []
+  },
+  {
+    "scenario": "e1-diagnostic",
+    "classique_f1": null,
+    "meta_f1": null,
+    "desaccords": []
+  },
+  {
+    "scenario": "e2-synonymes",
+    "classique_f1": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "meta_f1": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "A1",
+          "A2"
+        ],
+        "classique_fusionne": false,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,217 @@
+{
+  "jouet-1": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "R1",
+        "R2"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "R3",
+        "R4"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G3",
+      "reportIds": [
+        "R5",
+        "R6"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    }
+  ],
+  "dev-7": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "D11",
+        "D12",
+        "D13"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G3",
+      "reportIds": [
+        "D14",
+        "D15"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G4",
+      "reportIds": [
+        "D16",
+        "D17"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G5",
+      "reportIds": [
+        "D18",
+        "D19"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G6",
+      "reportIds": [
+        "D20"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "classique",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G7",
+      "reportIds": [
+        "D5",
+        "D6",
+        "D7"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    },
+    {
+      "id": "G8",
+      "reportIds": [
+        "D10",
+        "D8",
+        "D9"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    }
+  ],
+  "e1-diagnostic": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1",
+        "A2",
+        "B1"
+      ],
+      "confidence": 0.75,
+      "singleton": false,
+      "method": "classique",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "similarité minimale 0.75 proche du seuil 0.75"
+      ],
+      "justification": null
+    }
+  ],
+  "e2-synonymes": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "classique",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "A2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "classique",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ]
+}

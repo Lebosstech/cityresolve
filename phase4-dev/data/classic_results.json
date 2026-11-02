@@ -1,0 +1,338 @@
+[
+  {
+    "scenario": "jouet-1",
+    "method": "classique",
+    "groups": [
+      [
+        "R1",
+        "R2"
+      ],
+      [
+        "R3",
+        "R4"
+      ],
+      [
+        "R5",
+        "R6"
+      ]
+    ],
+    "groups_detail": [
+      {
+        "id": "G1",
+        "reportIds": [
+          "R1",
+          "R2"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G2",
+        "reportIds": [
+          "R3",
+          "R4"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G3",
+        "reportIds": [
+          "R5",
+          "R6"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      }
+    ],
+    "ambiguous": [],
+    "f1": {
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  {
+    "scenario": "dev-7",
+    "method": "classique",
+    "groups": [
+      [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      [
+        "D11",
+        "D12",
+        "D13"
+      ],
+      [
+        "D14",
+        "D15"
+      ],
+      [
+        "D16",
+        "D17"
+      ],
+      [
+        "D18",
+        "D19"
+      ],
+      [
+        "D20"
+      ],
+      [
+        "D5",
+        "D6",
+        "D7"
+      ],
+      [
+        "D10",
+        "D8",
+        "D9"
+      ]
+    ],
+    "groups_detail": [
+      {
+        "id": "G1",
+        "reportIds": [
+          "D1",
+          "D2",
+          "D3",
+          "D4"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G2",
+        "reportIds": [
+          "D11",
+          "D12",
+          "D13"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G3",
+        "reportIds": [
+          "D14",
+          "D15"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G4",
+        "reportIds": [
+          "D16",
+          "D17"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G5",
+        "reportIds": [
+          "D18",
+          "D19"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G6",
+        "reportIds": [
+          "D20"
+        ],
+        "confidence": 0.0,
+        "singleton": true,
+        "method": "classique",
+        "uncertain": false,
+        "uncertaintyReasons": [],
+        "justification": null
+      },
+      {
+        "id": "G7",
+        "reportIds": [
+          "D5",
+          "D6",
+          "D7"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      },
+      {
+        "id": "G8",
+        "reportIds": [
+          "D10",
+          "D8",
+          "D9"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      }
+    ],
+    "ambiguous": [],
+    "f1": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  {
+    "scenario": "e1-diagnostic",
+    "method": "classique",
+    "groups": [
+      [
+        "A1",
+        "A2",
+        "B1"
+      ]
+    ],
+    "groups_detail": [
+      {
+        "id": "G1",
+        "reportIds": [
+          "A1",
+          "A2",
+          "B1"
+        ],
+        "confidence": 0.75,
+        "singleton": false,
+        "method": "classique",
+        "uncertain": true,
+        "uncertaintyReasons": [
+          "similarité minimale 0.75 proche du seuil 0.75"
+        ],
+        "justification": null
+      }
+    ],
+    "ambiguous": [],
+    "f1": null
+  },
+  {
+    "scenario": "e2-synonymes",
+    "method": "classique",
+    "groups": [
+      [
+        "A1"
+      ],
+      [
+        "A2"
+      ]
+    ],
+    "groups_detail": [
+      {
+        "id": "G1",
+        "reportIds": [
+          "A1"
+        ],
+        "confidence": 0.0,
+        "singleton": true,
+        "method": "classique",
+        "uncertain": false,
+        "uncertaintyReasons": [],
+        "justification": null
+      },
+      {
+        "id": "G2",
+        "reportIds": [
+          "A2"
+        ],
+        "confidence": 0.0,
+        "singleton": true,
+        "method": "classique",
+        "uncertain": false,
+        "uncertaintyReasons": [],
+        "justification": null
+      }
+    ],
+    "ambiguous": [
+      {
+        "a": "A1",
+        "b": "A2",
+        "sim": 0.0,
+        "distM": 0,
+        "dtMin": 10,
+        "reason": "proximité spatio-temporelle mais vocabulaire insuffisant (Jaccard 0.00 < 0.75) : séparation incertaine"
+      }
+    ],
+    "f1": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "precision": 1.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  }
+]
