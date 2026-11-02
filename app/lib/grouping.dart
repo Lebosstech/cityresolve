@@ -14,6 +14,86 @@ Set<String> tokens(String text) => text
     .where((w) => w.length > 2)
     .toSet();
 
+/// Garde-fou contenu insuffisant (poussé sur main).
+///
+/// Un texte est insuffisant si, après passage en minuscules, il contient
+/// moins de 2 caractères alphanumériques (lettres accentuées comprises).
+/// Donc : texte vide, ponctuation/espaces seuls, ou un seul caractère.
+/// Un texte de 2 caractères ou plus PASSE le garde-fou (limite assumée :
+/// il peut rester vide de sens, ex. "ab") — le garde-fou ne vise que
+/// l'absence de contenu, pas la qualité du contenu. Il ne résout ni le
+/// lieu inconnu, ni le temps inconnu, ni les contradictions (voir
+/// PATCH_GUARDRAIL_NOTES.md).
+final RegExp _alphanum = RegExp(r'[a-zàâäéèêëîïôöùûüç0-9]');
+
+bool hasInsufficientContent(String text) {
+  var count = 0;
+  for (final _ in _alphanum.allMatches(text.toLowerCase())) {
+    count++;
+    if (count >= 2) return false;
+  }
+  return true;
+}
+
+const String guardrailReason =
+    'garde-fou-contenu-insuffisant : signalement non fusionnable, contenu insuffisant, à vérifier';
+
+/// Filtre déterministe post-modèle (ou post-classique) : découpe tout
+/// groupe contenant un signalement à contenu insuffisant en singletons,
+/// chacun marqué incertain avec la raison garde-fou explicite. Les groupes
+/// sans contenu insuffisant sont retournés inchangés. Le comptage
+/// `cancelledMerges` = nombre de groupes multi-signalements découpés :
+/// c'est la trace journalisable de l'annulation, même si le modèle avait
+/// proposé la fusion avec une incertitude faible.
+({List<Group> groups, int cancelledMerges}) applyContentGuardrail(
+    List<Report> reports, List<Group> groups) {
+  final byId = {for (final r in reports) r.id: r};
+  final out = <Group>[];
+  var cancelled = 0;
+  for (final g in groups) {
+    final bad = g.reportIds.where(
+        (id) => byId[id] != null && hasInsufficientContent(byId[id]!.text));
+    if (bad.isEmpty) {
+      out.add(g);
+      continue;
+    }
+    if (g.reportIds.length > 1) cancelled++;
+    for (final id in g.reportIds) {
+      final isBad = bad.contains(id);
+      out.add(Group(
+        id: '',
+        reportIds: [id],
+        confidence: 0.0,
+        singleton: true,
+        method: g.method,
+        uncertain: isBad ? true : g.uncertain,
+        uncertaintyReasons: isBad
+            ? [guardrailReason]
+            : g.uncertaintyReasons,
+        justification: isBad
+            ? 'Garde-fou : fusion proposée annulée (contenu insuffisant)'
+                '${g.justification == null ? '' : ' ; proposition d’origine : ${g.justification}'}'
+            : g.justification,
+      ));
+    }
+  }
+  out.sort((a, b) => a.reportIds.first.compareTo(b.reportIds.first));
+  for (var i = 0; i < out.length; i++) {
+    final g = out[i];
+    out[i] = Group(
+      id: 'G${i + 1}',
+      reportIds: g.reportIds,
+      confidence: g.confidence,
+      singleton: g.singleton,
+      method: g.method,
+      uncertain: g.uncertain,
+      uncertaintyReasons: g.uncertaintyReasons,
+      justification: g.justification,
+    );
+  }
+  return (groups: out, cancelledMerges: cancelled);
+}
+
 double jaccard(String a, String b) {
   final ta = tokens(a);
   final tb = tokens(b);
@@ -81,6 +161,13 @@ List<Group> groupReports(
     for (var j = i + 1; j < n; j++) {
       final a = reports[i];
       final b = reports[j];
+      // Garde-fou : un contenu insuffisant ne fusionne JAMAIS, quelle que
+      // soit la distance, le temps ou la similarité (deux textes vides
+      // ont un Jaccard de 0,0, mais la règle est explicite et ne dépend
+      // d'aucun seuil).
+      if (hasInsufficientContent(a.text) || hasInsufficientContent(b.text)) {
+        continue;
+      }
       if (distKm(a, b) <= distMaxKm && dtMin(a, b) <= deltaTMaxMin) {
         final s = jaccard(a.text, b.text);
         if (s >= simMin) {
@@ -116,6 +203,10 @@ List<Group> groupReports(
     }
     // Incertitude du regroupement : signalée, jamais masquée.
     final reasons = <String>[];
+    if (comp.length == 1 &&
+        hasInsufficientContent(reports[comp.first].text)) {
+      reasons.add(guardrailReason);
+    }
     if (comp.length > 1) {
       if (conf <= simMin + 0.10) {
         reasons.add(
@@ -190,7 +281,7 @@ List<Map<String, dynamic>> ambiguousPairs(
         reason =
             'texte similaire mais distance ${(dKm * 1000).round()} m au-delà du seuil ${distMaxM.round()} m : séparation incertaine';
       } else if (s >= simMin && dt <= deltaTMaxMin && dKm > distMaxKm * 2) {
-        // E4 (patch local, non poussé) : même texte, très loin. Ne pas
+        // E4 (poussé sur main) : même texte, très loin. Ne pas
         // fusionner de force (deux incidents réels peuvent partager un
         // texte), mais ne pas séparer en silence : signaler le doublon
         // distant à vérifier par un humain.

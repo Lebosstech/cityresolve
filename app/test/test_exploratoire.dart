@@ -141,6 +141,26 @@ void main() {
         'oracle=${nec.code} (${nec.detail})');
   }
 
+  // E9. Garde-fou contenu insuffisant (poussé sur main) : deux
+  // textes vides au même lieu et au même temps ne fusionnent pas, et le
+  // singleton vide est marqué à vérifier au lieu d'être imposé en silence.
+  {
+    final reps = [
+      Report(id: 'V1', text: '', category: 'autre', x: 1.0, y: 1.0, t: 500),
+      Report(id: 'V2', text: '', category: 'autre', x: 1.0, y: 1.0, t: 510),
+      Report(id: 'N1', text: 'nid poule rue lilas chaussee degradee', category: 'nid-de-poule', x: 1.0, y: 1.0, t: 505),
+    ];
+    final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    final vides = g.where((gr) => gr.reportIds.any((id) => id.startsWith('V')));
+    observe('E9 deux textes vides non fusionnés et marqués garde-fou',
+        g.length == 3 &&
+            vides.length == 2 &&
+            vides.every((gr) =>
+                gr.singleton &&
+                gr.uncertaintyReasons.contains(guardrailReason)),
+        '${g.length} groupe(s), raisons vides=${vides.map((gr) => gr.uncertaintyReasons).toList()}');
+  }
+
   print('== EXPLORATOIRE : $_ok OK, $_limite LIMITE(S) CONFIRMEE(S) ==');
   print('Les LIMITE sont des comportements mesurés et publiés, pas des échecs masqués.');
 }

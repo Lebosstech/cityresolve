@@ -14,6 +14,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'grouping.dart';
 import 'types.dart';
 
 enum MetaState { unconfigured, verified, accessError }
@@ -494,7 +495,20 @@ Future<List<Group>> proposeMatchingWithMeta(
         uncertaintyReasons: g.uncertaintyReasons,
         justification: g.justification);
   }
-  return groups;
+  // Garde-fou déterministe post-modèle (poussé sur main) : même
+  // si le modèle propose une fusion impliquant un contenu insuffisant —
+  // c'est exactement l'échec inc-vide de phase4-hard, où le modèle avait
+  // fusionné deux textes vides avec incertitude 1,0 — la fusion est
+  // annulée et chaque signalement concerné redevient un singleton marqué
+  // 'garde-fou-contenu-insuffisant'. L'annulation est journalisée dans
+  // les groupes retournés eux-mêmes (raison + justification), qui sont
+  // persistés par le serveur dans metaGroups ; le nombre de fusions
+  // annulées est donc vérifiable groupe par groupe, sans dépendre de
+  // l'incertitude du modèle. Un pré-filtre (ne pas envoyer ces textes au
+  // modèle) n'a pas été choisi : il masquerait la proposition du modèle
+  // au lieu de la corriger visiblement.
+  final filtered = applyContentGuardrail(reports, groups);
+  return filtered.groups;
 }
 
 /// Regroupement IA synchrone conservé pour compatibilité : toujours refusé

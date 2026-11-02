@@ -724,6 +724,95 @@ Future<void> main() async {
     }
   }
 
+  // 24. Garde-fou contenu insuffisant (poussé sur main).
+  {
+    Report rep(String id, String text) => Report(
+        id: id, text: text, category: 'autre', x: 1.0, y: 1.0, t: 500);
+    // T24a : deux textes vides ne fusionnent pas.
+    final gVide = groupReports([rep('V1', ''), rep('V2', '')],
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gVide.length == 2 && gVide.every((g) => g.singleton),
+        'T24a deux textes vides ne fusionnent pas', gVide.toString());
+    check(gVide.every((g) =>
+        g.uncertain && g.uncertaintyReasons.contains(guardrailReason)),
+        'T24a-bis singletons vides marqués garde-fou',
+        gVide.map((g) => g.uncertaintyReasons).toString());
+    // T24b : texte vide contre texte non vide ne fusionne pas.
+    final gMix = groupReports(
+        [rep('V1', ''), rep('N1', 'nid poule rue lilas chaussee degradee')],
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gMix.length == 2 && gMix.every((g) => g.singleton),
+        'T24b vide contre non vide ne fusionne pas', gMix.toString());
+    // T24c : un seul caractère ne fusionne pas (même identique des deux côtés).
+    final gChar = groupReports([rep('C1', 'a'), rep('C2', 'a')],
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gChar.length == 2 && gChar.every((g) => g.singleton),
+        'T24c un seul caractère ne fusionne pas', gChar.toString());
+    // T24d : ponctuation/espaces seuls ne fusionnent pas.
+    final gPonct = groupReports([rep('P1', '!!!'), rep('P2', '   ')],
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gPonct.length == 2 && gPonct.every((g) => g.singleton),
+        'T24d ponctuation seule ne fusionne pas', gPonct.toString());
+    // T24e : texte normal non affecté (deux textes normaux identiques fusionnent).
+    final gNorm = groupReports(
+        [
+          rep('N1', 'nid poule rue lilas chaussee degradee'),
+          rep('N2', 'nid poule rue lilas chaussee degradee')
+        ],
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gNorm.length == 1 && !gNorm.single.singleton,
+        'T24e texte normal non affecté', gNorm.toString());
+    // T24f : le filtre post-modèle annule une fusion proposée par un
+    // modèle (cas inc-vide de phase4-hard : deux vides fusionnés).
+    final fakeMeta = [
+      Group(
+          id: 'G1',
+          reportIds: ['V1', 'V2'],
+          confidence: 0.0,
+          singleton: false,
+          method: 'meta',
+          uncertain: true,
+          uncertaintyReasons: ['incertitude modèle 1.00'],
+          justification: 'aucune preuve positive'),
+      Group(
+          id: 'G2',
+          reportIds: ['N1'],
+          confidence: 0.0,
+          singleton: true,
+          method: 'meta'),
+    ];
+    final filtered = applyContentGuardrail(
+        [rep('V1', ''), rep('V2', ''), rep('N1', 'nid poule rue lilas')],
+        fakeMeta);
+    check(filtered.cancelledMerges == 1,
+        'T24f une fusion annulée comptée', '${filtered.cancelledMerges}');
+    check(filtered.groups.length == 3 &&
+        filtered.groups.every((g) => g.singleton),
+        'T24f fusion annulée -> 3 singletons', filtered.groups.toString());
+    check(filtered.groups
+            .where((g) => g.reportIds.first.startsWith('V'))
+            .every((g) => g.uncertaintyReasons.contains(guardrailReason)),
+        'T24f singletons annulés marqués garde-fou',
+        filtered.groups.map((g) => g.uncertaintyReasons).toString());
+    // T24g : le filtre ne touche pas un groupe normal.
+    final kept = applyContentGuardrail(
+        [
+          rep('N1', 'nid poule rue lilas chaussee degradee'),
+          rep('N2', 'nid poule rue lilas chaussee degradee')
+        ],
+        [
+          Group(
+              id: 'G1',
+              reportIds: ['N1', 'N2'],
+              confidence: 0.9,
+              singleton: false,
+              method: 'meta',
+              justification: 'même nid-de-poule')
+        ]);
+    check(kept.cancelledMerges == 0 && kept.groups.length == 1,
+        'T24g groupe normal conservé', kept.groups.toString());
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }
