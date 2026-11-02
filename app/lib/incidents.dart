@@ -111,6 +111,62 @@ List<Incident> aggregateSplitGroups(
   return out;
 }
 
+/// --- Branchement serveur du découpage multi-problème ---
+///
+/// Le serveur ne doit JAMAIS appeler `aggregate()` sur un groupe dont
+/// un identifiant contient `:` (sous-signalement `ORIGINE:FAMILLE`) :
+/// `aggregate()` chercherait `E1:eclairage` dans la table des
+/// signalements et échouerait (accès `byId[id]!` sur une clé absente).
+/// `aggregateMixedGroups()` route chaque groupe vers la bonne
+/// agrégation : groupes découpés -> `aggregateSplitGroups()`, groupes
+/// pleins -> `aggregate()`, puis renumérote les incidents I1.. dans
+/// l'ordre final (poids décroissant, échéance, identifiant provisoire),
+/// car les deux agrégations numéroteraient sinon chacune depuis I1
+/// et les tâches de plan (référencées par identifiant d'incident)
+/// deviendraient ambiguës. Sur des groupes sans `:` le résultat est
+/// identique à `aggregate()` (prouvé par le test T27d).
+bool groupUsesSplitIds(Group g) =>
+    g.reportIds.any((id) => id.contains(':'));
+
+bool groupsUseSplitIds(List<Group> groups) =>
+    groups.any(groupUsesSplitIds);
+
+List<Incident> aggregateMixedGroups(
+    List<Group> groups, Map<String, Report> byId) {
+  final split = groups.where(groupUsesSplitIds).toList();
+  final plain = groups.where((g) => !groupUsesSplitIds(g)).toList();
+  final merged = <Incident>[
+    ...aggregateSplitGroups(split, byId),
+    ...aggregate(plain, byId),
+  ];
+  merged.sort((a, b) {
+    final dw = b.weight.compareTo(a.weight);
+    if (dw != 0) return dw;
+    final dd = a.deadline.compareTo(b.deadline);
+    if (dd != 0) return dd;
+    return a.id.compareTo(b.id);
+  });
+  return [
+    for (var i = 0; i < merged.length; i++)
+      Incident(
+        id: 'I${i + 1}',
+        reportIds: merged[i].reportIds,
+        severity: merged[i].severity,
+        exposure: merged[i].exposure,
+        domain: merged[i].domain,
+        x: merged[i].x,
+        y: merged[i].y,
+        firstSeen: merged[i].firstSeen,
+        confidence: merged[i].confidence,
+        severityStatus: merged[i].severityStatus,
+        severityValues: merged[i].severityValues,
+        exposureStatus: merged[i].exposureStatus,
+        exposureValues: merged[i].exposureValues,
+        domainConflict: merged[i].domainConflict,
+      ),
+  ];
+}
+
 List<Incident> aggregate(
     List<Group> groups, Map<String, Report> byId) {
   final out = <Incident>[];

@@ -185,13 +185,20 @@ Map<String, dynamic> metricsFor(AppState s) {
     }
   }
   // Hors vérité (ex. manuels) : exclus du scoring, ni FP ni FN.
-  final pred = s.groups
+  // Groupes découpés : scorés sur leurs origines (E1:eclairage -> E1).
+  // Limite assumée : une origine présente dans deux groupes découpés ne
+  // compte que pour le dernier dans predOf ; le F1 d'un état découpé est
+  // donc une approximation au niveau origine, pas une preuve au niveau
+  // sous-signalement. La preuve première du découpage reste le nombre
+  // d'incidents produits (2, pas 1), pas ce F1.
+  final scored = originMappedGroups(s.groups);
+  final pred = scored
       .map((g) => g.reportIds.where(trueOf.containsKey).toList())
       .toList();
   final prf = pairwiseF1(truthGroups, pred);
   final predOf = <String, int>{};
-  for (var i = 0; i < s.groups.length; i++) {
-    for (final id in s.groups[i].reportIds) {
+  for (var i = 0; i < scored.length; i++) {
+    for (final id in scored[i].reportIds) {
       if (trueOf.containsKey(id)) predOf[id] = i;
     }
   }
@@ -199,6 +206,7 @@ Map<String, dynamic> metricsFor(AppState s) {
     'available': true,
     'pairwise': prf.toJson(),
     'bCubedF1': bCubedF1(trueOf, predOf),
+    'splitMapped': groupsUseSplitIds(s.groups),
     'note': metricNote(),
   };
 }
@@ -253,6 +261,92 @@ AppState _initState(String base, {bool restore = true}) {
   return s;
 }
 
+/// --- Branchement serveur du découpage multi-problème ---
+///
+/// Règle d'or : un groupe dont un identifiant contient `:` (sous-signalement
+/// `ORIGINE:FAMILLE`) n'est JAMAIS agrégé par `aggregate()` classique, qui
+/// échouerait en cherchant `E1:eclairage` dans la table des signalements.
+/// `aggregateForGroups()` route vers `aggregateMixedGroups()` dès qu'un
+/// groupe découpé est présent, sinon vers `aggregate()` (chemin inchangé).
+/// Le découpage est EXPLICITE, jamais silencieux : le serveur ne découpe
+/// que sur demande (`method: 'split'` ou `split: true` sur classique/meta),
+/// le chemin classique par défaut est strictement conservé.
+bool groupsUseSplitIds(List<Group> groups) =>
+    groups.any((g) => g.reportIds.any((id) => id.contains(':')));
+
+List<Incident> aggregateForGroups(
+        List<Group> groups, Map<String, Report> byId) =>
+    groupsUseSplitIds(groups)
+        ? aggregateMixedGroups(groups, byId)
+        : aggregate(groups, byId);
+
+/// Origines d'une liste d'identifiants (pleins ou découpés), sans doublon,
+/// ordre préservé. `originIdOfSubunit` laisse un identifiant plein inchangé,
+/// donc cette fonction est l'identité sur des groupes non découpés.
+List<String> originIdsOfRefs(List<String> ids) {
+  final out = <String>[];
+  for (final id in ids) {
+    final o = originIdOfSubunit(id);
+    if (!out.contains(o)) out.add(o);
+  }
+  return out;
+}
+
+List<Group> originMappedGroups(List<Group> groups) => [
+      for (final g in groups)
+        Group(
+          id: g.id,
+          reportIds: originIdsOfRefs(g.reportIds),
+          confidence: g.confidence,
+          singleton: originIdsOfRefs(g.reportIds).length == 1,
+          abstained: g.abstained,
+          method: g.method,
+          uncertain: g.uncertain,
+          uncertaintyReasons: g.uncertaintyReasons,
+          justification: g.justification,
+        ),
+    ];
+
+/// Copie d'un incident dont les identifiants découpés sont ramenés à leurs
+/// origines, pour l'appariement à la vérité terrain lors d'une simulation.
+/// Les champs de planification (identifiant, domaine, position, gravité,
+/// échéance via firstSeen/severity) sont conservés : seules les références
+/// de signalements changent, donc un incident plein est inchangé.
+Incident originMappedIncident(Incident i) => Incident(
+      id: i.id,
+      reportIds: originIdsOfRefs(i.reportIds),
+      severity: i.severity,
+      exposure: i.exposure,
+      domain: i.domain,
+      x: i.x,
+      y: i.y,
+      firstSeen: i.firstSeen,
+      confidence: i.confidence,
+      severityStatus: i.severityStatus,
+      severityValues: i.severityValues,
+      exposureStatus: i.exposureStatus,
+      exposureValues: i.exposureValues,
+      domainConflict: i.domainConflict,
+    );
+
+/// Regroupement par découpage global (groupSplitReports) : chaque
+/// signalement est expansé en sous-signalements par famille DEV, groupés
+/// par famille, puis agrégés par aggregateMixedGroups. L'origine reste
+/// récupérable depuis chaque incident découpé (partie avant `:`).
+void regroupSplit(AppState s, {bool keepPlan = false}) {
+  final byId = {for (final r in s.reports) r.id: r};
+  s.groups = groupSplitReports(s.reports,
+      distMaxM: (s.groupParams['distMaxM'] as num).toDouble(),
+      deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble());
+  s.incidents = aggregateForGroups(s.groups, byId);
+  s.groupMethod = 'split';
+  if (!keepPlan) {
+    s.plan = null;
+    s.planValidation = null;
+    s.sim = null;
+  }
+}
+
 void _restore(AppState s, Map<String, dynamic> doc) {
   final kind = (doc['scenarioKind'] ?? 'jouet-1') as String;
   final seed = (doc['scenarioSeed'] ?? 7) as int;
@@ -284,10 +378,27 @@ void _restore(AppState s, Map<String, dynamic> doc) {
       .toList();
   s.extractions =
       ((doc['extractions'] as Map?) ?? {}).cast<String, dynamic>();
+  // Groupes persistés capturés AVANT regroup() : regroup() écrase s.groups
+  // par le classique, et un état découpé (méthode 'split', identifiants
+  // ORIGINE:FAMILLE) serait sinon perdu au redémarrage. Le format 1 ne
+  // change pas : les identifiants découpés survivent déjà dans
+  // Group.toJson/fromJson, et groupMethod='split' est persisté dans
+  // stateDoc. Un ancien état sans `:` restaure exactement l'ancien chemin.
+  final persistedGroups = ((doc['groups'] as List?) ?? [])
+      .map((e) => Group.fromJson(e as Map<String, dynamic>))
+      .toList();
+  final persistedMethod = (doc['groupMethod'] ?? 'classique') as String;
   regroup(s, keepPlan: true);
-  if (s.groupMethod == 'meta' && s.metaGroups.isNotEmpty) {
+  if (persistedMethod == 'split' &&
+      persistedGroups.any((g) => g.reportIds.any((id) => id.contains(':')))) {
+    s.groups = persistedGroups;
+    s.groupMethod = 'split';
+    s.incidents =
+        aggregateForGroups(s.groups, {for (final r in s.reports) r.id: r});
+  } else if (s.groupMethod == 'meta' && s.metaGroups.isNotEmpty) {
     s.groups = s.metaGroups;
-    s.incidents = aggregate(s.groups, {for (final r in s.reports) r.id: r});
+    s.incidents =
+        aggregateForGroups(s.groups, {for (final r in s.reports) r.id: r});
   }
   if (doc['plan'] != null) {
     s.plan = Plan.fromJson(doc['plan'] as Map<String, dynamic>);
@@ -645,6 +756,29 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (b[k] != null) s.groupParams[k] = (b[k] as num).toDouble();
     }
     final method = (b['method'] ?? 'classique') as String;
+    final split = b['split'] == true;
+    if (method == 'split') {
+      // Regroupement découpé global, explicite : jamais de aggregate()
+      // classique sur des identifiants ORIGINE:FAMILLE.
+      regroupSplit(s);
+      await auditPersist(s, 'group.done', {
+        'method': 'split',
+        'groups': s.groups.length,
+        'incidents': s.incidents.length
+      });
+      return _json(req, {
+        'method': 'split',
+        'groups': s.groups.map((g) => g.toJson()).toList(),
+        'incidents': s.incidents.map((i) => i.toJson()).toList(),
+        'params': s.groupParams,
+        'metrics': metricsFor(s),
+        'ambiguousPairs': ambiguousPairs(s.reports,
+            originMappedGroups(s.groups),
+            distMaxM: (s.groupParams['distMaxM'] as num).toDouble(),
+            deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble(),
+            simMin: (s.groupParams['simMin'] as num).toDouble()),
+      });
+    }
     if (method == 'meta') {
       if (s.meta.state != MetaState.verified) {
         return _json(req, {
@@ -654,17 +788,34 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         }, 400);
       }
       try {
-        final groups = await proposeMatchingWithMeta(s.meta, s.reports,
+        var groups = await proposeMatchingWithMeta(s.meta, s.reports,
             onRecord: (r) => s.metaCalls.add(r));
+        var splitGroups = 0;
+        if (split) {
+          // Post-filtre découpage sur le regroupement Meta : un groupe
+          // contenant un signalement multi-problème est découpé par
+          // famille, puis agrégé par aggregateMixedGroups, jamais par
+          // aggregate() classique. Le nombre de groupes découpés est
+          // journalisé, et les groupes découpés restent dans metaGroups
+          // (persistés tels quels, identifiants ORIGINE:FAMILLE inclus).
+          final sp = splitGroupsByFamily(s.reports, groups);
+          groups = sp.groups;
+          splitGroups = sp.splitGroups;
+        }
         s.metaGroups = groups;
         s.groups = groups;
         s.groupMethod = 'meta';
         s.incidents =
-            aggregate(groups, {for (final r in s.reports) r.id: r});
+            aggregateForGroups(groups, {for (final r in s.reports) r.id: r});
         s.plan = null;
         s.planValidation = null;
         s.sim = null;
-        await auditPersist(s, 'group.done', {'method': 'meta', 'model': s.meta.model});
+        await auditPersist(s, 'group.done', {
+          'method': 'meta',
+          'model': s.meta.model,
+          'split': split,
+          'splitGroups': splitGroups
+        });
         return _json(req, {
           'method': 'meta',
           'model': s.meta.model,
@@ -681,17 +832,37 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       }
     }
     if (method != 'classique') {
-      return _json(req, {'error': 'method = classique|meta'}, 400);
+      return _json(req, {'error': 'method = classique|meta|split'}, 400);
     }
     regroup(s);
-    await auditPersist(s, 'group.done', {'params': s.groupParams, 'method': 'classique'});
+    var splitGroups = 0;
+    if (split) {
+      // Post-filtre découpage sur le regroupement classique : même règle
+      // que pour Meta, agrégation mixte, jamais aggregate() classique
+      // sur des identifiants découpés.
+      final sp = splitGroupsByFamily(s.reports, s.groups);
+      s.groups = sp.groups;
+      splitGroups = sp.splitGroups;
+      s.incidents =
+          aggregateForGroups(s.groups, {for (final r in s.reports) r.id: r});
+    }
+    await auditPersist(s, 'group.done', {
+      'params': s.groupParams,
+      'method': 'classique',
+      'split': split,
+      'splitGroups': splitGroups
+    });
     return _json(req, {
       'method': 'classique',
+      'split': split,
+      'splitGroups': splitGroups,
       'groups': s.groups.map((g) => g.toJson()).toList(),
       'incidents': s.incidents.map((i) => i.toJson()).toList(),
       'params': s.groupParams,
       'metrics': metricsFor(s),
-      'ambiguousPairs': ambiguousPairs(s.reports, s.groups,
+      'ambiguousPairs': ambiguousPairs(
+          s.reports,
+          split ? originMappedGroups(s.groups) : s.groups,
           distMaxM: (s.groupParams['distMaxM'] as num).toDouble(),
           deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble(),
           simMin: (s.groupParams['simMin'] as num).toDouble()),
@@ -762,14 +933,22 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (s.truth.isEmpty) {
       return _json(req, {'error': 'vérité terrain indisponible'}, 400);
     }
+    // Appariement vérité sur les origines : sans cette projection, un
+    // incident découpé [E1:eclairage] n'intersecterait jamais la vérité
+    // [E1] et serait compté 'hors vérité', avec la vérité manquée, alors
+    // même que le découpage a produit la bonne tâche. Les champs de
+    // planification sont conservés (voir originMappedIncident) ; un
+    // incident plein est inchangé par la projection.
+    final simProposed =
+        s.incidents.map(originMappedIncident).toList();
     s.sim = simulate(
         plan: s.plan!,
-        proposed: s.incidents,
+        proposed: simProposed,
         truth: s.truth,
         teams: defaultTeams());
     s.robust = robustness(
         plan: s.plan!,
-        proposed: s.incidents,
+        proposed: simProposed,
         truth: s.truth,
         teams: defaultTeams());
     await auditPersist(s, 'simulate.done', {
@@ -781,6 +960,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {
       'result': s.sim!.toJson(),
       'robustness': s.robust.map((r) => r.toJson()).toList(),
+      'splitOriginMapped': groupsUseSplitIds(s.groups),
       'note': 'Interventions SIMULÉES, pas des interventions urbaines réelles.',
     });
   }
@@ -883,7 +1063,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
           distMaxM: (c['distMaxM'] as num).toDouble(),
           deltaTMaxH: (c['deltaTMaxH'] as num).toDouble(),
           simMin: (c['simMin'] as num).toDouble());
-      final incs = aggregate(g, byId);
+      final incs = aggregateForGroups(g, byId);
       final knownIds = {for (final t in s.truth) ...t.reportIds};
       final prf = pairwiseF1(
           s.truth.map((t) => t.reportIds).toList(),
@@ -918,13 +1098,21 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble(),
         simMin: (s.groupParams['simMin'] as num).toDouble());
     Map<String, dynamic> side(List<Group> gs, String method) {
-      final incs = aggregate(gs, byId);
+      // Agrégation mixte : si metaGroups a été découpé (split: true),
+      // aggregate() classique échouerait sur les identifiants découpés.
+      // F1 scoré sur les origines, avec la même limite documentée que
+      // metricsFor (une origine dans deux groupes découpés ne compte que
+      // pour le dernier) ; la preuve du découpage reste le nombre
+      // d'incidents, pas ce F1.
+      final incs = aggregateForGroups(gs, byId);
       Map<String, dynamic>? metrics;
       if (s.truth.isNotEmpty) {
         final known = {for (final t in s.truth) ...t.reportIds};
         final prf = pairwiseF1(
             s.truth.map((t) => t.reportIds).toList(),
-            gs.map((g) => g.reportIds.where(known.contains).toList()).toList());
+            originMappedGroups(gs)
+                .map((g) => g.reportIds.where(known.contains).toList())
+                .toList());
         metrics = prf.toJson();
       }
       double? planQ, simQ;
@@ -955,14 +1143,19 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final disagreements = <Map<String, dynamic>>[];
     if (s.metaGroups.isNotEmpty) {
       mSide = side(s.metaGroups, 'meta');
+      // Désaccords au niveau origine : un groupe découpé [E1:eclairage]
+      // et un groupe plein [E1] désignent le même signalement E1. Sans
+      // cette projection, chaque paire découpée serait comptée comme
+      // désaccord artificiel. Limite : une origine dans deux groupes
+      // découpés ne garde que le dernier dans ces cartes.
       final cg = <String, String>{};
-      for (final g in classicGroups) {
+      for (final g in originMappedGroups(classicGroups)) {
         for (final id in g.reportIds) {
           cg[id] = g.id;
         }
       }
       final mg = <String, String>{};
-      for (final g in s.metaGroups) {
+      for (final g in originMappedGroups(s.metaGroups)) {
         for (final id in g.reportIds) {
           mg[id] = g.id;
         }

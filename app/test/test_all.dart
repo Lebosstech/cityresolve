@@ -1045,6 +1045,111 @@ Future<void> main() async {
         'T26h inconnus jamais fusionnés', gInc.toString());
   }
 
+  // 27. Branchement serveur du découpage (lib) : agrégation mixte.
+  // Le routage serveur lui-même (bin/server.dart) n'est pas importable
+  // par ce harnais de tests lib : il est vérifié sur serveur réel via
+  // le runbook (méthode 'split', split:true). Ici, on prouve le contrat
+  // sur lequel le serveur s'appuie : aggregateMixedGroups, la
+  // détection des identifiants découpés, et la persistance aller-retour.
+  {
+    Report repS(String id, String text) => Report(
+        id: id,
+        text: text,
+        category: 'nid-de-poule',
+        x: 1.0,
+        y: 1.0,
+        t: 500,
+        severityHint: 2,
+        exposureHint: 1);
+    final origine = [
+      repS('E1', 'nid poule rue lilas chaussee degradee reverbere eteint'),
+      Report(
+          id: 'E2',
+          text: 'nid poule rue lilas chaussee degradee',
+          category: 'nid-de-poule',
+          x: 1.0,
+          y: 1.0,
+          t: 510,
+          severityHint: 2,
+          exposureHint: 1),
+      repS('P1', 'fuite eau rue basse trottoir inonde'),
+    ];
+    final byId = {for (final r in origine) r.id: r};
+    final gSplit = groupSplitReports(origine.sublist(0, 2),
+        distMaxM: dDist, deltaTMaxH: dDt);
+    // T27a : un groupe découpé agrégé en mixte donne 2 incidents
+    // (voirie + éclairage), pas 1, et le plein reste un incident propre.
+    final plain = [
+      Group(
+          id: 'G9',
+          reportIds: ['P1'],
+          confidence: 0.0,
+          singleton: true,
+          method: 'classique')
+    ];
+    final mixed = aggregateMixedGroups([...gSplit, ...plain], byId);
+    check(mixed.length == 3,
+        'T27a mixte découpé donne 3 incidents', mixed.toString());
+    check(mixed.map((i) => i.id).toSet().length == 3,
+        'T27a-bis identifiants incidents uniques', mixed.toString());
+    check(mixed.any((i) => i.reportIds.single == 'E1:eclairage'),
+        'T27a-ter éclairage survit en incident propre', mixed.toString());
+    // T27b : l'origine est récupérable depuis chaque incident découpé.
+    check(mixed
+            .where((i) => i.reportIds.any((id) => id.contains(':')))
+            .every((i) => i.reportIds
+                .every((id) => byId.containsKey(originIdOfSubunit(id)))),
+        'T27b origines récupérables depuis incidents découpés',
+        mixed.toString());
+    // T27c : chemin non découpé strictement identique à l'ancien.
+    final gPlain = groupReports(origine,
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    final incClassic = aggregate(gPlain, byId);
+    final incMixedPlain = aggregateMixedGroups(gPlain, byId);
+    check(
+        incClassic.length == incMixedPlain.length &&
+            incClassic
+                .map((i) => '${i.id}:${i.reportIds.join(',')}:${i.domain}')
+                .join('|') ==
+                incMixedPlain
+                    .map((i) => '${i.id}:${i.reportIds.join(',')}:${i.domain}')
+                    .join('|'),
+        'T27c non découpé identique à aggregate()',
+        '${incClassic.length} vs ${incMixedPlain.length}');
+    // T27d : ancien état sans sous-signalements reste lisible, et un
+    // état découpé survit à un aller-retour JSON (format 1, inchangé).
+    final restoredPlain = gPlain
+        .map((g) => Group.fromJson(g.toJson()))
+        .toList();
+    final restoredSplit = gSplit
+        .map((g) => Group.fromJson(g.toJson()))
+        .toList();
+    check(restoredPlain.every((g) => !groupUsesSplitIds(g)) &&
+        restoredSplit.any(groupUsesSplitIds),
+        'T27d aller-retour JSON conserve les identifiants découpés',
+        restoredSplit.toString());
+    check(aggregateMixedGroups(restoredSplit, byId).length == 2,
+        'T27d-bis état découpé restauré donne toujours 2 incidents',
+        restoredSplit.toString());
+    // T27e : détection des identifiants découpés (prédicat du serveur).
+    check(groupUsesSplitIds(gSplit.first) &&
+        !groupUsesSplitIds(plain.first) &&
+        groupsUseSplitIds([...gSplit, ...plain]) &&
+        !groupsUseSplitIds(plain),
+        'T27e détection split/plain correcte', '');
+    // T27f : l'appariement vérité d'un incident découpé exige la
+    // projection vers l'origine : brut, l'intersection est vide.
+    final splitInc = mixed.firstWhere(
+        (i) => i.reportIds.single == 'E1:eclairage');
+    check(splitInc.reportIds.toSet().intersection({'E1'}).isEmpty &&
+        splitInc.reportIds
+                .map(originIdOfSubunit)
+                .toSet()
+                .intersection({'E1'})
+                .isNotEmpty,
+        'T27f vérité liée via origine, pas via identifiant brut', '');
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }
