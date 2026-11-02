@@ -1,0 +1,43 @@
+{
+  "method": "classique",
+  "created_utc": "2026-11-02T20:30:00Z",
+  "source_note": "Groupes DEV publiés dans phase4-multi-split/data/classic_groups.json, recopies sans modification des groupes.",
+  "scenarios": {
+    "split-origine": {
+      "groups": [
+        [
+          "E1",
+          "E2"
+        ]
+      ]
+    },
+    "split-seul": {
+      "groups": [
+        [
+          "M1"
+        ]
+      ]
+    },
+    "split-faux": {
+      "groups": [
+        [
+          "N1"
+        ]
+      ]
+    },
+    "split-vague": {
+      "groups": [
+        [
+          "V1"
+        ]
+      ]
+    },
+    "split-trois": {
+      "groups": [
+        [
+          "T1"
+        ]
+      ]
+    }
+  }
+}

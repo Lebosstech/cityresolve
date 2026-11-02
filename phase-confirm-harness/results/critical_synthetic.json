@@ -1,0 +1,132 @@
+{
+  "harness_version": "0.1.0-dev-harness-only",
+  "evaluation_kind": "DEV-HARNESS-TEST-NOT-CONFIRMATORY",
+  "truth": {
+    "path": "test_dev/critical_synthetic/truth.json",
+    "sha256": "7672d4401dd42ddb11e1bbf911ae4da3b10c5e63d183abd179ee9c3966c48cea",
+    "set_id": "critical-synthetic-dev",
+    "is_held_out": false,
+    "truth_created_utc": "2026-11-02T00:00:00Z"
+  },
+  "predictions": [
+    {
+      "path": "test_dev/critical_synthetic/predictions_good.json",
+      "sha256": "4f673a9acffa8d3d5e328f20ec950eaee3e9a712abbdc6a8d8e17c78476c6d18",
+      "method": "good",
+      "created_utc": "2026-11-02T20:30:00Z"
+    },
+    {
+      "path": "test_dev/critical_synthetic/predictions_bad.json",
+      "sha256": "c7345d8a67de78970efec76dcfe839a4332e1c3a2374727ed0851f18d6bda602",
+      "method": "bad",
+      "created_utc": "2026-11-02T20:30:00Z"
+    }
+  ],
+  "per_scenario": {
+    "c1": {
+      "good": {
+        "scenario_id": "c1",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": 100.0,
+        "q_planned_reason": null,
+        "q_simulated": 100.0,
+        "q_simulated_reason": null
+      },
+      "bad": {
+        "scenario_id": "c1",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [
+          "c-S5"
+        ],
+        "violations": [
+          "S5 dispatched via teams: c-S5"
+        ],
+        "n_violations": 1,
+        "q_planned": 100.0,
+        "q_planned_reason": null,
+        "q_simulated": 100.0,
+        "q_simulated_reason": null
+      }
+    }
+  },
+  "aggregates": {
+    "good": {
+      "n_scenarios": 1,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 1.0,
+      "total_produced_incidents": 2,
+      "total_truth_incidents": 2,
+      "secondary_survival_rate": null,
+      "secondary_scenarios": 0,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 0,
+      "total_violations": 0,
+      "mean_q_simulated": 100.0,
+      "mean_q_planned": 100.0,
+      "q_scenarios": 1
+    },
+    "bad": {
+      "n_scenarios": 1,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 1.0,
+      "total_produced_incidents": 2,
+      "total_truth_incidents": 2,
+      "secondary_survival_rate": null,
+      "secondary_scenarios": 0,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 1,
+      "total_violations": 1,
+      "mean_q_simulated": 100.0,
+      "mean_q_planned": 100.0,
+      "q_scenarios": 1
+    }
+  },
+  "paired_gain_vs_reference": null,
+  "sensitivity_weights": null,
+  "cost_stress": null,
+  "meta_interface": {
+    "note": "Meta predictions, when supplied later, must carry a meta_calls log in the same format as phase4 logs (one JSON line per call, with model, scenario and usage). This run made no Meta call and read no Meta log.",
+    "meta_calls_log_checked": false
+  },
+  "warnings": [
+    "F1 adapte seul est trompeur. Lire avec survie, nombre d'incidents et couverture exacte.",
+    "Un resultat DEV n'est jamais un resultat confirmatoire et n'est jamais une preuve de Niveau 3."
+  ]
+}

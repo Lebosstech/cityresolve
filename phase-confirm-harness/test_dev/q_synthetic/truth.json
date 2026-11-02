@@ -1,0 +1,79 @@
+{
+  "set_id": "q-synthetic-dev",
+  "label": "DEV synthétique Q uniquement, JAMAIS jeu tenu à l'écart",
+  "is_held_out": false,
+  "truth_created_utc": "2026-11-02T00:00:00Z",
+  "counting_rule": "Même règle que multi-split : unité = sous-signalement ORIGINE:FAMILLE, survie secondaire, F1 adapté paires même famille uniquement, couverture exacte. Q selon annexe V1.1 inchangée : w = 0.65*(S/4)+0.35*(E/4), Q = 100*sum(w*resolu)/sum(w), S5 exclu (aucun S5 ici).",
+  "scenarios": [
+    {
+      "id": "q1",
+      "truth_incidents": [
+        [
+          "A1:voirie-nid"
+        ],
+        [
+          "A2:eclairage"
+        ]
+      ],
+      "secondary_subunit": null,
+      "incidents": [
+        {
+          "id": "q1-A",
+          "subunits": [
+            "A1:voirie-nid"
+          ],
+          "severity": 3,
+          "exposure": 2,
+          "deadline_hours": 24,
+          "critical": false
+        },
+        {
+          "id": "q1-B",
+          "subunits": [
+            "A2:eclairage"
+          ],
+          "severity": 2,
+          "exposure": 1,
+          "deadline_hours": 72,
+          "critical": false
+        }
+      ],
+      "note": "Vérification manuelle attendue : wA=0.6625, wB=0.4125, somme 1.075. Référence résout A seul => Q=61.63. Méthode résout A et B => Q=100. Gain absolu 38.37."
+    },
+    {
+      "id": "q2",
+      "truth_incidents": [
+        [
+          "B1:electricite"
+        ],
+        [
+          "B2:voirie-nid"
+        ]
+      ],
+      "secondary_subunit": null,
+      "incidents": [
+        {
+          "id": "q2-C",
+          "subunits": [
+            "B1:electricite"
+          ],
+          "severity": 4,
+          "exposure": 4,
+          "deadline_hours": 4,
+          "critical": true
+        },
+        {
+          "id": "q2-D",
+          "subunits": [
+            "B2:voirie-nid"
+          ],
+          "severity": 1,
+          "exposure": 0,
+          "deadline_hours": 168,
+          "critical": false
+        }
+      ],
+      "note": "Vérification manuelle attendue : wC=1.0, wD=0.1625, somme 1.1625. Référence résout D seul => Q=13.98. Méthode résout C seul => Q=86.02. Gain absolu 72.04."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "method": "method",
+  "created_utc": "2026-11-02T20:30:00Z",
+  "source_note": "Plan DEV synthétique, écrit pour tester le calcul Q du harnais.",
+  "scenarios": {
+    "q1": {
+      "groups": [
+        [
+          "A1:voirie-nid"
+        ],
+        [
+          "A2:eclairage"
+        ]
+      ],
+      "plan": {
+        "planned_resolved": [
+          "q1-A",
+          "q1-B"
+        ],
+        "simulated_resolved": [
+          "q1-A",
+          "q1-B"
+        ],
+        "escalated": [],
+        "violations": [],
+        "cost": 80,
+        "budget": 120
+      }
+    },
+    "q2": {
+      "groups": [
+        [
+          "B1:electricite"
+        ],
+        [
+          "B2:voirie-nid"
+        ]
+      ],
+      "plan": {
+        "planned_resolved": [
+          "q2-C"
+        ],
+        "simulated_resolved": [
+          "q2-C"
+        ],
+        "escalated": [],
+        "violations": [],
+        "cost": 80,
+        "budget": 120
+      }
+    }
+  }
+}

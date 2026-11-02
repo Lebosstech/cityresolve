@@ -1,0 +1,55 @@
+{
+  "method": "classique-split",
+  "created_utc": "2026-11-02T20:30:00Z",
+  "source_note": "Groupes DEV publiés dans phase4-multi-split/data/classic_split_groups.json, recopies sans modification des groupes.",
+  "scenarios": {
+    "split-origine": {
+      "groups": [
+        [
+          "E1:voirie-nid",
+          "E2:voirie-nid"
+        ],
+        [
+          "E1:eclairage"
+        ]
+      ]
+    },
+    "split-seul": {
+      "groups": [
+        [
+          "M1:eclairage"
+        ],
+        [
+          "M1:eau"
+        ]
+      ]
+    },
+    "split-faux": {
+      "groups": [
+        [
+          "N1:voirie-nid"
+        ]
+      ]
+    },
+    "split-vague": {
+      "groups": [
+        [
+          "V1:voirie-nid"
+        ]
+      ]
+    },
+    "split-trois": {
+      "groups": [
+        [
+          "T1:voirie-nid"
+        ],
+        [
+          "T1:eclairage"
+        ],
+        [
+          "T1:eau"
+        ]
+      ]
+    }
+  }
+}

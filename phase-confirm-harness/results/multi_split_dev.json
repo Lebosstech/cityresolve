@@ -1,0 +1,360 @@
+{
+  "harness_version": "0.1.0-dev-harness-only",
+  "evaluation_kind": "DEV-HARNESS-TEST-NOT-CONFIRMATORY",
+  "truth": {
+    "path": "test_dev/multi_split_dev/truth.json",
+    "sha256": "84e22ec3219abb6d2d7b90c15d34e6fd198c08c7473c89223a9b953d3c9c1409",
+    "set_id": "multi-split-dev",
+    "is_held_out": false,
+    "truth_created_utc": "2026-11-02T00:00:00Z"
+  },
+  "predictions": [
+    {
+      "path": "test_dev/multi_split_dev/predictions_classique.json",
+      "sha256": "1403230ab5085c168f44c22814fbee5f93915cb9025d6c117d0448b36dc11e15",
+      "method": "classique",
+      "created_utc": "2026-11-02T20:30:00Z"
+    },
+    {
+      "path": "test_dev/multi_split_dev/predictions_classique-split.json",
+      "sha256": "a70e132bdb2b84075056afaf882c8cfed17d8742ff8202946c98675aa5089721",
+      "method": "classique-split",
+      "created_utc": "2026-11-02T20:30:00Z"
+    }
+  ],
+  "per_scenario": {
+    "split-origine": {
+      "classique": {
+        "scenario_id": "split-origine",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 1,
+        "secondary_survives": false,
+        "coverage_exact": 0,
+        "coverage_fraction": 0.0,
+        "f1_adapte": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": false
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      },
+      "classique-split": {
+        "scenario_id": "split-origine",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": true,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": false
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      }
+    },
+    "split-seul": {
+      "classique": {
+        "scenario_id": "split-seul",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 1,
+        "secondary_survives": false,
+        "coverage_exact": 0,
+        "coverage_fraction": 0.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      },
+      "classique-split": {
+        "scenario_id": "split-seul",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": true,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      }
+    },
+    "split-faux": {
+      "classique": {
+        "scenario_id": "split-faux",
+        "n_truth_incidents": 1,
+        "n_produced_incidents": 1,
+        "secondary_survives": null,
+        "coverage_exact": 1,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      },
+      "classique-split": {
+        "scenario_id": "split-faux",
+        "n_truth_incidents": 1,
+        "n_produced_incidents": 1,
+        "secondary_survives": null,
+        "coverage_exact": 1,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      }
+    },
+    "split-vague": {
+      "classique": {
+        "scenario_id": "split-vague",
+        "n_truth_incidents": 1,
+        "n_produced_incidents": 1,
+        "secondary_survives": null,
+        "coverage_exact": 1,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      },
+      "classique-split": {
+        "scenario_id": "split-vague",
+        "n_truth_incidents": 1,
+        "n_produced_incidents": 1,
+        "secondary_survives": null,
+        "coverage_exact": 1,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      }
+    },
+    "split-trois": {
+      "classique": {
+        "scenario_id": "split-trois",
+        "n_truth_incidents": 3,
+        "n_produced_incidents": 1,
+        "secondary_survives": false,
+        "coverage_exact": 0,
+        "coverage_fraction": 0.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      },
+      "classique-split": {
+        "scenario_id": "split-trois",
+        "n_truth_incidents": 3,
+        "n_produced_incidents": 3,
+        "secondary_survives": true,
+        "coverage_exact": 3,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": null,
+        "q_planned_reason": "no plan supplied",
+        "q_simulated": null,
+        "q_simulated_reason": "no plan supplied"
+      }
+    }
+  },
+  "aggregates": {
+    "classique": {
+      "n_scenarios": 5,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 0.4,
+      "total_produced_incidents": 5,
+      "total_truth_incidents": 9,
+      "secondary_survival_rate": 0.0,
+      "secondary_scenarios": 3,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 0,
+      "total_violations": 0,
+      "mean_q_simulated": null,
+      "mean_q_planned": null,
+      "q_scenarios": 0
+    },
+    "classique-split": {
+      "n_scenarios": 5,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 1.0,
+      "total_produced_incidents": 9,
+      "total_truth_incidents": 9,
+      "secondary_survival_rate": 1.0,
+      "secondary_scenarios": 3,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 0,
+      "total_violations": 0,
+      "mean_q_simulated": null,
+      "mean_q_planned": null,
+      "q_scenarios": 0
+    }
+  },
+  "paired_gain_vs_reference": null,
+  "sensitivity_weights": null,
+  "cost_stress": null,
+  "meta_interface": {
+    "note": "Meta predictions, when supplied later, must carry a meta_calls log in the same format as phase4 logs (one JSON line per call, with model, scenario and usage). This run made no Meta call and read no Meta log.",
+    "meta_calls_log_checked": false
+  },
+  "warnings": [
+    "F1 adapte seul est trompeur. Lire avec survie, nombre d'incidents et couverture exacte.",
+    "Un resultat DEV n'est jamais un resultat confirmatoire et n'est jamais une preuve de Niveau 3."
+  ]
+}

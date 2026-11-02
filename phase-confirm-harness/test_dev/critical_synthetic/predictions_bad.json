@@ -1,0 +1,30 @@
+{
+  "method": "bad",
+  "created_utc": "2026-11-02T20:30:00Z",
+  "scenarios": {
+    "c1": {
+      "groups": [
+        [
+          "C1:urgence"
+        ],
+        [
+          "C2:critique"
+        ]
+      ],
+      "plan": {
+        "planned_resolved": [
+          "c-S5",
+          "c-S4"
+        ],
+        "simulated_resolved": [
+          "c-S5",
+          "c-S4"
+        ],
+        "escalated": [],
+        "violations": [],
+        "cost": 50,
+        "budget": 120
+      }
+    }
+  }
+}

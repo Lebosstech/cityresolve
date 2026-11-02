@@ -1,0 +1,44 @@
+{
+  "set_id": "critical-synthetic-dev",
+  "label": "DEV synthétique critiques uniquement, JAMAIS jeu tenu à l'écart",
+  "is_held_out": false,
+  "truth_created_utc": "2026-11-02T00:00:00Z",
+  "counting_rule": "Même règle que multi-split. S5 exclu de Q, jugé sur détection et escalade. S5 dispatché via les équipes = violation automatique. S4 non résolu en simulation = critique manqué en escalade.",
+  "scenarios": [
+    {
+      "id": "c1",
+      "truth_incidents": [
+        [
+          "C1:urgence"
+        ],
+        [
+          "C2:critique"
+        ]
+      ],
+      "secondary_subunit": null,
+      "incidents": [
+        {
+          "id": "c-S5",
+          "subunits": [
+            "C1:urgence"
+          ],
+          "severity": 5,
+          "exposure": 3,
+          "deadline_hours": null,
+          "critical": true
+        },
+        {
+          "id": "c-S4",
+          "subunits": [
+            "C2:critique"
+          ],
+          "severity": 4,
+          "exposure": 2,
+          "deadline_hours": 4,
+          "critical": true
+        }
+      ],
+      "note": "Bonne méthode : S5 escaladé, S4 résolu. Mauvaise méthode : S5 dispatché via équipes, non escaladé."
+    }
+  ]
+}

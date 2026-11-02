@@ -1,0 +1,232 @@
+{
+  "harness_version": "0.1.0-dev-harness-only",
+  "evaluation_kind": "DEV-HARNESS-TEST-NOT-CONFIRMATORY",
+  "truth": {
+    "path": "test_dev/q_synthetic/truth.json",
+    "sha256": "4c40036620247ebabc3d0983af695a360b8250053d86cabdd389cb5c5270d477",
+    "set_id": "q-synthetic-dev",
+    "is_held_out": false,
+    "truth_created_utc": "2026-11-02T00:00:00Z"
+  },
+  "predictions": [
+    {
+      "path": "test_dev/q_synthetic/predictions_reference.json",
+      "sha256": "b744ecf4a396611d88eb4143c05387c780fbce009b8a8a47fdfff5f55c7df894",
+      "method": "reference",
+      "created_utc": "2026-11-02T20:30:00Z"
+    },
+    {
+      "path": "test_dev/q_synthetic/predictions_method.json",
+      "sha256": "ab4d7f16acdc84599f9c2925c30de147dd7f0cfbae05512a6fd38b2f4cd7e46a",
+      "method": "method",
+      "created_utc": "2026-11-02T20:30:00Z"
+    }
+  ],
+  "per_scenario": {
+    "q1": {
+      "reference": {
+        "scenario_id": "q1",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": 61.62790697674419,
+        "q_planned_reason": null,
+        "q_simulated": 61.62790697674419,
+        "q_simulated_reason": null
+      },
+      "method": {
+        "scenario_id": "q1",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": 100.0,
+        "q_planned_reason": null,
+        "q_simulated": 100.0,
+        "q_simulated_reason": null
+      }
+    },
+    "q2": {
+      "reference": {
+        "scenario_id": "q2",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [
+          "q2-C"
+        ],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": 13.978494623655912,
+        "q_planned_reason": null,
+        "q_simulated": 13.978494623655912,
+        "q_simulated_reason": null
+      },
+      "method": {
+        "scenario_id": "q2",
+        "n_truth_incidents": 2,
+        "n_produced_incidents": 2,
+        "secondary_survives": null,
+        "coverage_exact": 2,
+        "coverage_fraction": 1.0,
+        "f1_adapte": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "degenerate_no_pairs": true
+        },
+        "f1_limite": "F1 adapte seul est trompeur: il ne penalise pas la perte d'un secondaire non decoupe. Lire avec survie, nombre d'incidents et couverture exacte.",
+        "unmatched_subunits_or_ids": [],
+        "over_split": false,
+        "critical_grouping_missed": [],
+        "critical_escalation_missed": [],
+        "violations": [],
+        "n_violations": 0,
+        "q_planned": 86.02150537634408,
+        "q_planned_reason": null,
+        "q_simulated": 86.02150537634408,
+        "q_simulated_reason": null
+      }
+    }
+  },
+  "aggregates": {
+    "reference": {
+      "n_scenarios": 2,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 1.0,
+      "total_produced_incidents": 4,
+      "total_truth_incidents": 4,
+      "secondary_survival_rate": null,
+      "secondary_scenarios": 0,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 1,
+      "total_violations": 0,
+      "mean_q_simulated": 37.80320080020005,
+      "mean_q_planned": 37.80320080020005,
+      "q_scenarios": 2
+    },
+    "method": {
+      "n_scenarios": 2,
+      "mean_f1_adapte": 1.0,
+      "mean_coverage_fraction": 1.0,
+      "total_produced_incidents": 4,
+      "total_truth_incidents": 4,
+      "secondary_survival_rate": null,
+      "secondary_scenarios": 0,
+      "total_critical_grouping_missed": 0,
+      "total_critical_escalation_missed": 0,
+      "total_violations": 0,
+      "mean_q_simulated": 93.01075268817203,
+      "mean_q_planned": 93.01075268817203,
+      "q_scenarios": 2
+    }
+  },
+  "paired_gain_vs_reference": {
+    "method": "method",
+    "reference": "reference",
+    "absolute_gain": {
+      "n": 2,
+      "mean": 55.20755188797199,
+      "sd": 23.808934255255966,
+      "se": 16.835458864716177,
+      "ci95_low": 22.210052513128282,
+      "ci95_high": 88.20505126281569,
+      "note": "normal approximation, indicative only for small n"
+    },
+    "relative_gain_percent": 146.03935835951708,
+    "note": "relative gain undefined when reference mean is zero; absolute gain counts"
+  },
+  "sensitivity_weights": {
+    "1.00/0.00": {
+      "reference": 40.0,
+      "method": 90.0
+    },
+    "0.80/0.20": {
+      "reference": 38.768115942028984,
+      "method": 91.66666666666667
+    },
+    "0.65/0.35": {
+      "reference": 37.80320080020005,
+      "method": 93.01075268817203
+    },
+    "0.50/0.50": {
+      "reference": 36.80555555555556,
+      "method": 94.44444444444444
+    },
+    "0.00/1.00": {
+      "reference": 33.333333333333336,
+      "method": 100.0
+    }
+  },
+  "cost_stress": {
+    "reference": {
+      "factor": 1.5,
+      "scenarios_over_budget_under_stress": []
+    },
+    "method": {
+      "factor": 1.5,
+      "scenarios_over_budget_under_stress": []
+    }
+  },
+  "meta_interface": {
+    "note": "Meta predictions, when supplied later, must carry a meta_calls log in the same format as phase4 logs (one JSON line per call, with model, scenario and usage). This run made no Meta call and read no Meta log.",
+    "meta_calls_log_checked": false
+  },
+  "warnings": [
+    "F1 adapte seul est trompeur. Lire avec survie, nombre d'incidents et couverture exacte.",
+    "Un resultat DEV n'est jamais un resultat confirmatoire et n'est jamais une preuve de Niveau 3."
+  ]
+}
