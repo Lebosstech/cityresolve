@@ -1,4 +1,4 @@
-# Patch local E4 + verrou serveur — NON POUSSÉ sur GitHub
+# Patch local E4 + verrou serveur — Poussé sur main le 2026-11-02, commit 269911986d565b06c0d03e910b1f89e725151fc7
 
 Base : dépôt Lebosstech/cityresolve, commit e478f66 (0.2.1), miroir local.
 Dossier : ~/workspace/cityresolve/patch-e4-lock-app (copie, dépôt d'origine intact dans repo-mirror).

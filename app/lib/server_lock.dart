@@ -1,4 +1,4 @@
-// Verrou mono-instance DEV (patch local, non poussé) : un seul serveur
+// Verrou mono-instance DEV (patch poussé sur main, voir commit patch E4 + verrou) : un seul serveur
 // par répertoire data/. Création exclusive du fichier server.lock.
 // Si le fichier existe déjà, le second serveur doit refuser, avec le
 // PID et la date du premier, au lieu d'écrire dans le même état.
