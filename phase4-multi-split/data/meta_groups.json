@@ -1,0 +1,58 @@
+{
+ "split-origine": {
+  "groups": [
+   {
+    "ids": [
+     "E1",
+     "E2"
+    ],
+    "justification": "E1: x=1,0 km, y=1,0 km, t=500 min, categorie=nid-de-poule, texte 8 mots [nid poule rue lilas chaussee degradee reverbere eteint]. E2: x=1,0 km, y=1,0 km, t=510 min, categorie=nid-de-poule, texte 6 mots [nid poule rue lilas chaussee degradee]. Paire unique E1-E2: distance euclidienne sqrt((1,0-1,0)^2+(1,0-1,0)^2)=0,0 km. Delai abs(510-500)=10 min soit 10/60 heure, meme jour car 500 et 510 <1440 min. Categories identiques nid-de-poule. Analyse mot-a-mot: 6 mots communs dans meme ordre nid, poule, rue, lilas, chaussee, degradee presents dans E1 et E2; integralite de E2 incluse dans debut de E1; 2 mots supplementaires uniquement dans E1: reverbere, eteint. Conclusion: meme incident reel nid-de-poule / chaussee degradee rue lilas. Signalement explicite de double probleme: E1 decrit deux problemes distincts (a) nid-de-poule et (b) reverbere eteint d'eclairage public; E2 ne corrobore que (a); categorie nid-de-poule ne couvre pas (b); regle chaque signalement dans au plus un groupe impose maintien de E1 dans groupe (a), (b) reste non corrobore sans groupe separe faute d'autre signalement. Absent, douteux, non verifiable signale explicitement: gravite, taille, profondeur, numero de rue, position intra-chaussee, quel reverbere non renseignes; precision d'affichage 0,1 km donc micro-distance intra-maille non verifiable; lien d'observation temporelle de (b) vs (a) non documente; possibilite theorique non verifiable de deux trous adjacents decrits de facon generique identique. Aucune gravite, lieu, temps, fait, certitude ou signalement inventes. Incertitude 0,05 quasi-certain pour (a), residu du aux limites ci-dessus.",
+    "incertitude": 0.05
+   }
+  ]
+ },
+ "split-seul": {
+  "groups": [
+   {
+    "ids": [
+     "M1"
+    ],
+    "justification": "Groupe singleton par défaut: seul signalement disponible M1 (x=1,0 km, y=1,0 km, t=500 min, categorie=fuite-eau, texte mot à mot: fuite / eau / rue / basse / trottoir / inonde / reverbere / eteint). Aucune paire inter-signalement donc aucune distance en km ni aucun délai en min calculable. Analyse: fuite+eau+trottoir inonde correspond à categorie fuite-eau; reverbere eteint correspond potentiellement à un problème d'éclairage distinct. M1 décrit donc deux problèmes distincts possibles au même lieu-temps déclaré. Absence d'autre signalement, de gravité, de cause et de preuve de lien causal: impossible de vérifier s'il s'agit d'un seul incident réel ou de deux incidents co-localisés, lien non inféré. Contrainte un signalement dans au plus un groupe empêche de scinder M1; groupe rattaché à l'incident principal fuite-eau avec signalement explicite de l'hétérogénéité. Incertitude 0.5 reflète ce doute interne d'unité, pas une fusion.",
+    "incertitude": 0.5
+   }
+  ]
+ },
+ "split-faux": {
+  "groups": [
+   {
+    "ids": [
+     "N1"
+    ],
+    "justification": "Singleton N1 : unique signalement fourni dans les données, donc aucune paire à évaluer, aucune distance en km et aucun délai en min à calculer. N1 : x=1,0 km, y=1,0 km, t=500 min, categorie=nid-de-poule. Analyse mot à mot du texte : nid + poule = objet nid-de-poule cohérent avec categorie ; rue + lilas = odonyme fictif non vérifiable ; chaussee + degradee = état de chaussée ; trou + grand = description dimensionnelle issue du texte sans gravité supplémentaire inférée. Un seul problème distinct détecté, pas de double problème à scinder. Aucun autre signalement à comparer ; caractère réel et localisation terrain non vérifiables au-delà de la grille fictive fournie.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-vague": {
+  "groups": [
+   {
+    "ids": [
+     "V1"
+    ],
+    "justification": "Groupe singleton V1 isole : corpus fourni = 1 seul signalement, donc 0 paire a comparer, aucune distance en km ni aucun delai en min calculable. Elements V1 : x=1,0 km, y=1,0 km, t=500 min soit 8h20 depuis debut scenario (500=8x60+20), categorie=nid-de-poule. Analyse mot-a-mot du texte 'nid poule rue lilas chaussee degradee quelque chose aussi la nuit' : 'nid poule' coherent avec categorie nid-de-poule ; 'rue lilas' lieu declare non verifiable sans referentiel fourni, non interpretable comme localisation verifiee ; 'chaussee degradee' description generique sans gravite quantifiable fournie, gravite non inventee ; 'quelque chose aussi' formulation vague et douteuse pouvant suggerer un second probleme distinct mais information absente/douteuse/non verifiable, insuffisante pour scinder en deux incidents sans inventer un fait, signalee explicitement ici ; 'nuit' mention temporelle non verifiable car heure de debut du scenario absente, heure reelle et delai jour/nuit non determinables. Aucun autre signalement a rapprocher, donc isolement certain dans le strict perimetre des donnees fournies, sans invention de lieu, temps, gravite, fait ou signalement.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-trois": {
+  "groups": [
+   {
+    "ids": [
+     "T1"
+    ],
+    "justification": "Groupe singleton par défaut : un seul signalement fourni T1, donc 0 paire à analyser, aucune distance inter-signalements en km et aucun délai inter-signalements en min calculable. T1 : x=1,0 km, y=1,0 km, t=500 min soit 8h20 depuis début (500/60, avec 60 min=1 heure donné), categorie=nid-de-poule, texte = nid poule rue lilas chaussee degradee reverbere eteint fuite eau trottoir inonde. Analyse mot à mot : nid + poule + chaussee + degradee = champ voirie cohérent avec categorie ; rue + lilas = toponyme dont portée exacte et application à chaque fait non vérifiable, non inventée ; reverbere + eteint = champ éclairage public a priori distinct ; fuite + eau + trottoir + inonde = champ eau/inondation a priori distinct. Absence d'information vérifiable sur gravité, cause, lien causal, séparateurs, chronologie interne, lieu précis au-delà du libellé. Non vérifiable si 1 ou 2 ou 3 incidents réels. Signalement multi-problèmes explicite : maintenu en un seul groupe uniquement car un signalement dans au plus un groupe et faute d'autre signalement, sans prétendre silencieusement à un incident unique avéré. Aucune gravité, lieu, temps, fait, certitude ou signalement inventé.",
+    "incertitude": 0.8
+   }
+  ]
+ }
+}

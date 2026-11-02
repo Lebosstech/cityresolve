@@ -1,0 +1,27 @@
+{
+  "source": "Scenarios DEV fictifs ecrits pour phase4-multi-split, verite dans data/truth.json ecrite avant tout appel Meta.",
+  "note": "Coordonnees en km (grille fictive), t en minutes. Aucune equipe, budget ou echeance d'allocation n'est defini : le Q n'est donc pas calcule (voir rapport).",
+  "scenarios": [
+    {"id": "split-origine", "label": "Cas d'origine : E1 deux problemes + E2 nid-de-poule seul",
+     "reports": [
+       {"id": "E1", "text": "nid poule rue lilas chaussee degradee reverbere eteint", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+       {"id": "E2", "text": "nid poule rue lilas chaussee degradee", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 510, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+     ]},
+    {"id": "split-seul", "label": "Un seul signalement a deux problemes, sans doublon",
+     "reports": [
+       {"id": "M1", "text": "fuite eau rue basse trottoir inonde reverbere eteint", "category": "fuite-eau", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+     ]},
+    {"id": "split-faux", "label": "Meme probleme mentionne deux fois, pas de decoupage",
+     "reports": [
+       {"id": "N1", "text": "nid poule rue lilas chaussee degradee trou grand", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+     ]},
+    {"id": "split-vague", "label": "Probleme clair + mention vague, pas de decoupage automatique",
+     "reports": [
+       {"id": "V1", "text": "nid poule rue lilas chaussee degradee quelque chose aussi la nuit", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+     ]},
+    {"id": "split-trois", "label": "Un seul signalement a trois problemes distincts",
+     "reports": [
+       {"id": "T1", "text": "nid poule rue lilas chaussee degradee reverbere eteint fuite eau trottoir inonde", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+     ]}
+  ]
+}

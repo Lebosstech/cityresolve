@@ -1,0 +1,40 @@
+{
+ "split-origine": [
+  [
+   "E1:voirie-nid",
+   "E2:voirie-nid"
+  ],
+  [
+   "E1:eclairage"
+  ]
+ ],
+ "split-seul": [
+  [
+   "M1:eclairage"
+  ],
+  [
+   "M1:eau"
+  ]
+ ],
+ "split-faux": [
+  [
+   "N1:voirie-nid"
+  ]
+ ],
+ "split-vague": [
+  [
+   "V1:voirie-nid"
+  ]
+ ],
+ "split-trois": [
+  [
+   "T1:voirie-nid"
+  ],
+  [
+   "T1:eclairage"
+  ],
+  [
+   "T1:eau"
+  ]
+ ]
+}

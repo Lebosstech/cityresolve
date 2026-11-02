@@ -1,0 +1,86 @@
+{
+ "split-origine": {
+  "groups": [
+   {
+    "ids": [
+     "E1:eclairage"
+    ],
+    "justification": "Decoupage: E1 x=1,0 km y=1,0 km t=500 min mots explicites 'reverbere' 'eteint' distincts de 'nid' 'poule' 'chaussee' 'degradee' 'rue' 'lilas' -> E1:eclairage famille eclairage. Regroupement singleton: aucun autre sous-signalement eclairage, E2 x=1,0 km y=1,0 km t=510 min texte 'nid poule rue lilas chaussee degradee' ne contient ni 'reverbere' ni 'eteint', donc pas de paire eclairage a distance/delai, isolement certain. Gravite, lieu precis supplementaire, voirie-nid hors E1, eau, electricite absents non inventes.",
+    "incertitude": 0
+   },
+   {
+    "ids": [
+     "E1:voirie-nid",
+     "E2:voirie-nid"
+    ],
+    "justification": "Decoupage: E1 x=1,0 km y=1,0 km t=500 min categorie=nid-de-poule texte 'nid poule rue lilas chaussee degradee reverbere eteint' -> E1:voirie-nid pour mots explicites 'nid' 'poule', mots 'chaussee' 'degradee' non decoupes car reformulation du meme probleme voirie, mots 'rue' 'lilas' localisation, mots 'reverbere' 'eteint' exclus vers autre famille. E2 x=1,0 km y=1,0 km t=510 min categorie=nid-de-poule texte 'nid poule rue lilas chaussee degradee' -> seul E2:voirie-nid pour 'nid' 'poule', 'chaussee' 'degradee' non deoupe reformulation, 'rue' 'lilas' localisation. Regroupement paire unique (E1:voirie-nid, E2:voirie-nid): distance 0,0 km car memes x y, delai 10 min (510-500) soit 0,166 heure, meme rue 'lilas', memes mots 'nid' 'poule' 'rue' 'lilas' 'chaussee' 'degradee', meme categorie, meme incident reel. Gravite absente, numero de rue / point precis / eau / electricite / eclairage pour ce groupe absents non inventes.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-seul": {
+  "groups": [
+   {
+    "ids": [
+     "M1:eau"
+    ],
+    "justification": "Sous-signalement M1:eau issu de 'fuite eau' explicite, categorie=fuite-eau en appui. 'trottoir inonde' = consequence/reformulation du meme probleme eau, non decoupée en second sous-signalement; 'rue basse' = lieu uniquement. Pas de nid-de-poule explicite donc pas de famille voirie-nid creee, mention vague non utilisee. Donnees presentes et utilisees : x=1,0 km, y=1,0 km, t=500 min. Aucune paire inter-signalements a analyser (signalement unique M1), donc distances en km et delais en min inter-incidents non applicables, non inventes. Gravite, cause, lien causal absents/non verifiables, non inventes. Groupe incident eau isole, sans fusion avec M1:eclairage car familles/reseaux distincts sans preuve explicite de cause commune.",
+    "incertitude": 0
+   },
+   {
+    "ids": [
+     "M1:eclairage"
+    ],
+    "justification": "Sous-signalement M1:eclairage issu de 'reverbere eteint' explicite, distinct de 'fuite eau', donc decoupage en deux sous-signalements certains. Meme x=1,0 km, y=1,0 km, t=500 min car meme signalement d'origine M1, mais incident reel technique distinct (eau vs eclairage), aucun lien causal explicite dans le texte, lien non invente. Aucune autre paire distance/delai a comparer (signalement unique). Gravite et cause absentes/non verifiables, non inventees.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-faux": {
+  "groups": [
+   {
+    "ids": [
+     "N1:voirie-nid"
+    ],
+    "justification": "N1 unique : x=1,0 km, y=1,0 km, t=500 min fournis, unites presentes, aucune paire ni distance ni delai a calculer. Categorie nid-de-poule coherente avec texte nid poule rue lilas chaussee degradee trou grand. Analyse mot a mot : nid poule = probleme explicite voirie-nid ; chaussee degradee trou grand = reformulation du meme trou unique rue lilas, pas deuxieme probleme distinct explicite de type eclairage, eau ou electricite. Donc pas de decoupage, un seul sous-signalement N1:voirie-nid isole en un groupe.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-vague": {
+  "groups": [
+   {
+    "ids": [
+     "V1:voirie-nid"
+    ],
+    "justification": "Unite unique V1 : x=1,0 km, y=1,0 km, t=500 min soit 8h20, categorie=nid-de-poule. Aucune autre unite donc aucune paire, aucune distance et aucun delai inter-signalement calculable : information absente. Analyse mot a mot du texte : nid poule = probleme explicite famille voirie-nid ; rue lilas = lieu fictif sans probleme ; chaussee degradee = meme famille voirie-nid, meme probleme decrit deux fois avec deux formulations donc pas de decoupage selon regle ; quelque chose aussi la nuit = mention vague sans probleme explicite, aucun terme explicite d'eclairage, eau, electricite donc aucun second sous-signalement cree selon regle anti-vague. Absence explicite de descripteurs eclairage, eau, electricite. Donc un seul sous-signalement V1:voirie-nid, seul dans son groupe.",
+    "incertitude": 0
+   }
+  ]
+ },
+ "split-trois": {
+  "groups": [
+   {
+    "ids": [
+     "T1:eau"
+    ],
+    "justification": "Decoupage T1 x=1,0 km y=1,0 km t=500 min: 'fuite eau' = probleme eau explicite; 'trottoir inonde' = meme famille eau meme lieu meme temps, traite comme consequence/formulation du meme incident eau et fusionne en un seul T1:eau pour eviter doublon d'identifiant. Regroupement singleton: aucun autre eau a comparer. Separation d'avec T1:voirie-nid et T1:eclairage malgre distance 0 km et delai 0 min car familles differentes sans lien causal explicite dans le texte, donc incidents distincts.",
+    "incertitude": 0
+   },
+   {
+    "ids": [
+     "T1:eclairage"
+    ],
+    "justification": "Decoupage T1 x=1,0 km y=1,0 km t=500 min: 'reverbere eteint' = probleme eclairage explicite distinct, cree T1:eclairage. Regroupement singleton: aucun autre eclairage a comparer. Separation d'avec T1:voirie-nid et T1:eau malgre distance 0 km et delai 0 min car texte decrit explicitement deux problemes distincts type nid-de-poule ET reverbere eteint, familles differentes sans lien causal explicite, donc incidents distincts.",
+    "incertitude": 0
+   },
+   {
+    "ids": [
+     "T1:voirie-nid"
+    ],
+    "justification": "Decoupage T1 x=1,0 km y=1,0 km t=500 min: 'nid poule' = probleme voirie-nid explicite; 'chaussee degradee' = meme famille meme lieu meme temps, traite comme reformulation du meme probleme et fusionne en un seul T1:voirie-nid selon regle anti-double-comptage; 'rue lilas' = lieu non probleme. Regroupement singleton: aucun autre voirie-nid a comparer. Separation d'avec T1:eclairage et T1:eau malgre distance 0 km et delai 0 min car familles differentes sans lien causal explicite, donc incidents distincts.",
+    "incertitude": 0
+   }
+  ]
+ }
+}

@@ -1,0 +1,99 @@
+{
+ "note": "VERITE TERRAIN PREDEFINIE, ecrite AVANT tout appel Meta. Donnees DEV fictives uniquement. Ne jamais modifier apres avoir vu une sortie Meta. L'unite de verite est le SOUS-SIGNALEMENT (un signalement decoupe par famille de probleme), pas le signalement brut.",
+ "counting_rule": "REGLE DE COMPTAGE PREDEFINIE, definition de survie resserree AVANT tout appel Meta (correction apres un premier calcul deterministe qui revelait une faille : un faisceau meme-signalement [E1:eclairage, E1:voirie] comptait a tort comme survie). (1) Chaque signalement est expanse en sous-signalements, un par famille DEV detectee par lexique explicite. (2) Les incidents vrais sont des ensembles de sous-signalements de MEME famille. (3) Survie du probleme secondaire : vrai si et seulement si la methode produit un incident contenant le sous-signalement secondaire ET aucun sous-signalement d'une autre famille, quel que soit le signalement d'origine ; un singleton secondaire compte comme survie, car l'optimiseur peut alors le planifier separement. (4) F1 adapte : paires de sous-signalements de MEME famille uniquement ; un groupe non decoupe [E1,E2] compte comme UN incident contenant tous les sous-signalements de E1 et E2, donc la paire voirie (E1:voirie,E2:voirie) est un vrai positif meme quand la survie est fausse. CAVEAT : ce F1 ne penalise PAS a lui seul la perte d'un secondaire ; survie et nombre d'incidents sont principaux. (5) Pour (d) vague : aucune famille explicite secondaire, verite = 1 incident ; un decoupage automatique y serait une faute, resultat attendu = 1 incident + revue humaine (note de scenario).",
+ "families_lexicon": {
+  "voirie-nid": [
+   "nid",
+   "poule",
+   "ndp",
+   "trou",
+   "chaussee",
+   "chaus",
+   "degradee",
+   "degrade",
+   "abimee",
+   "abim"
+  ],
+  "eclairage": [
+   "reverbere",
+   "lampadaire",
+   "eclairage",
+   "eteint",
+   "defaillant"
+  ],
+  "eau": [
+   "fuite",
+   "eau",
+   "inonde",
+   "canalisation",
+   "ecoulement"
+  ],
+  "electricite": [
+   "coupure",
+   "courant",
+   "electrique",
+   "electricite",
+   "panne"
+  ]
+ },
+ "scenarios": {
+  "split-origine": {
+   "truth_incidents": [
+    [
+     "E1:voirie-nid",
+     "E2:voirie-nid"
+    ],
+    [
+     "E1:eclairage"
+    ]
+   ],
+   "secondary_subunit": "E1:eclairage",
+   "note": "Cas d'origine phase4-misleading, textes repris verbatim : E1 nid-de-poule + reverbere eteint, E2 nid-de-poule seul. Verite = 2 incidents : voirie (E1-volet voirie + E2) et eclairage (E1-volet eclairage seul). Sans decoupage, un seul groupe masque l'eclairage."
+  },
+  "split-seul": {
+   "truth_incidents": [
+    [
+     "M1:eau"
+    ],
+    [
+     "M1:eclairage"
+    ]
+   ],
+   "secondary_subunit": "M1:eclairage",
+   "note": "Un seul signalement a deux problemes, sans doublon : fuite d'eau + reverbere eteint. Verite = 2 incidents distincts, aucun regroupement force."
+  },
+  "split-faux": {
+   "truth_incidents": [
+    [
+     "N1:voirie-nid"
+    ]
+   ],
+   "secondary_subunit": null,
+   "note": "Un signalement mentionnant deux fois le meme probleme (nid-de-poule, trou) avec deux formulations. Verite = 1 incident, pas de decoupage a l'aveugle. Toutes les mentions appartiennent a la meme famille voirie-nid."
+  },
+  "split-vague": {
+   "truth_incidents": [
+    [
+     "V1:voirie-nid"
+    ]
+   ],
+   "secondary_subunit": null,
+   "note": "Probleme clair (nid-de-poule) + mention vague sans famille explicite ('quelque chose aussi la nuit'). Verite = 1 incident, PAS de decoupage automatique. Resultat attendu : 1 incident + revue humaine (note de scenario ; la detection automatique ne peut pas distinguer vague d'absent, donc ne pas splitter est le comportement sur, pas un echec de detection)."
+  },
+  "split-trois": {
+   "truth_incidents": [
+    [
+     "T1:voirie-nid"
+    ],
+    [
+     "T1:eclairage"
+    ],
+    [
+     "T1:eau"
+    ]
+   ],
+   "secondary_subunit": "T1:eclairage",
+   "note": "Un seul signalement a trois problemes distincts : nid-de-poule, reverbere eteint, fuite d'eau avec trottoir inonde. Verite = 3 incidents si le decoupage le permet, sinon limite a declarer explicitement."
+  }
+ }
+}

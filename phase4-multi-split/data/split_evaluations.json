@@ -1,0 +1,374 @@
+{
+ "split-origine": {
+  "classique": {
+   "n_incidents": 1,
+   "n_truth_incidents": 2,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes": {
+   "n_incidents": 2,
+   "n_truth_incidents": 2,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1,
+    "precision": 1.0,
+    "recall": 0.0,
+    "f1": 0.0
+   }
+  },
+  "classique_split": {
+   "n_incidents": 2,
+   "n_truth_incidents": 2,
+   "secondary_survives": true,
+   "coverage_exact": 2,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes_split": {
+   "n_incidents": 2,
+   "n_truth_incidents": 2,
+   "secondary_survives": true,
+   "coverage_exact": 2,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_incidents_subunits": [
+   [
+    "E1:eclairage",
+    "E1:voirie-nid",
+    "E2:voirie-nid"
+   ]
+  ],
+  "synonymes_incidents_subunits": [
+   [
+    "E1:eclairage",
+    "E1:voirie-nid"
+   ],
+   [
+    "E2:voirie-nid"
+   ]
+  ]
+ },
+ "split-seul": {
+  "classique": {
+   "n_incidents": 1,
+   "n_truth_incidents": 2,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes": {
+   "n_incidents": 1,
+   "n_truth_incidents": 2,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_split": {
+   "n_incidents": 2,
+   "n_truth_incidents": 2,
+   "secondary_survives": true,
+   "coverage_exact": 2,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes_split": {
+   "n_incidents": 2,
+   "n_truth_incidents": 2,
+   "secondary_survives": true,
+   "coverage_exact": 2,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_incidents_subunits": [
+   [
+    "M1:eau",
+    "M1:eclairage"
+   ]
+  ],
+  "synonymes_incidents_subunits": [
+   [
+    "M1:eau",
+    "M1:eclairage"
+   ]
+  ]
+ },
+ "split-faux": {
+  "classique": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_split": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes_split": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_incidents_subunits": [
+   [
+    "N1:voirie-nid"
+   ]
+  ],
+  "synonymes_incidents_subunits": [
+   [
+    "N1:voirie-nid"
+   ]
+  ]
+ },
+ "split-vague": {
+  "classique": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_split": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes_split": {
+   "n_incidents": 1,
+   "n_truth_incidents": 1,
+   "secondary_survives": null,
+   "coverage_exact": 1,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_incidents_subunits": [
+   [
+    "V1:voirie-nid"
+   ]
+  ],
+  "synonymes_incidents_subunits": [
+   [
+    "V1:voirie-nid"
+   ]
+  ]
+ },
+ "split-trois": {
+  "classique": {
+   "n_incidents": 1,
+   "n_truth_incidents": 3,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes": {
+   "n_incidents": 1,
+   "n_truth_incidents": 3,
+   "secondary_survives": false,
+   "coverage_exact": 0,
+   "coverage_fraction": 0.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_split": {
+   "n_incidents": 3,
+   "n_truth_incidents": 3,
+   "secondary_survives": true,
+   "coverage_exact": 3,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "synonymes_split": {
+   "n_incidents": 3,
+   "n_truth_incidents": 3,
+   "secondary_survives": true,
+   "coverage_exact": 3,
+   "coverage_fraction": 1.0,
+   "f1_adapte": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   }
+  },
+  "classique_incidents_subunits": [
+   [
+    "T1:eau",
+    "T1:eclairage",
+    "T1:voirie-nid"
+   ]
+  ],
+  "synonymes_incidents_subunits": [
+   [
+    "T1:eau",
+    "T1:eclairage",
+    "T1:voirie-nid"
+   ]
+  ]
+ }
+}

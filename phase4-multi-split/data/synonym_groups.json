@@ -1,0 +1,30 @@
+{
+ "split-origine": [
+  [
+   "E1"
+  ],
+  [
+   "E2"
+  ]
+ ],
+ "split-seul": [
+  [
+   "M1"
+  ]
+ ],
+ "split-faux": [
+  [
+   "N1"
+  ]
+ ],
+ "split-vague": [
+  [
+   "V1"
+  ]
+ ],
+ "split-trois": [
+  [
+   "T1"
+  ]
+ ]
+}
