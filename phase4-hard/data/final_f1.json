@@ -1,0 +1,633 @@
+[
+  {
+    "scenario": "syn-panne",
+    "classique": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "A1",
+          "A2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": true,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "syn-fuite",
+    "classique": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "B1",
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "B1",
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "B1",
+          "B2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": true,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "syn-nid",
+    "classique": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "C1",
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "C1",
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "C1",
+          "C2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": true,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "syn-eclairage",
+    "classique": {
+      "groups": [
+        [
+          "D1"
+        ],
+        [
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "D1",
+          "D2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": true,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "dist-2inc",
+    "classique": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": []
+  },
+  {
+    "scenario": "dist-1event",
+    "classique": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "F1",
+          "F2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": false,
+        "meta_fusionne": true,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "contra-1",
+    "classique": {
+      "groups": [
+        [
+          "G1",
+          "G2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "G1",
+          "G2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "G1",
+          "G2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": []
+  },
+  {
+    "scenario": "inc-vide",
+    "classique": {
+      "groups": [
+        [
+          "I1"
+        ],
+        [
+          "I2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "I1"
+        ],
+        [
+          "I2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "I1",
+          "I2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "I1",
+          "I2"
+        ],
+        "classique_fusionne": false,
+        "synonymes_fusionne": false,
+        "meta_fusionne": true,
+        "vrai_fusionne": false
+      }
+    ]
+  },
+  {
+    "scenario": "inc-sans-lieu",
+    "classique": {
+      "groups": [
+        [
+          "K1",
+          "K2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "K1",
+          "K2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "K1"
+        ],
+        [
+          "K2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": [
+      {
+        "pair": [
+          "K1",
+          "K2"
+        ],
+        "classique_fusionne": true,
+        "synonymes_fusionne": true,
+        "meta_fusionne": false,
+        "vrai_fusionne": true
+      }
+    ]
+  },
+  {
+    "scenario": "inc-sans-temps",
+    "classique": {
+      "groups": [
+        [
+          "L1",
+          "L2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "L1",
+          "L2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "meta": {
+      "groups": [
+        [
+          "L1",
+          "L2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "appel_en_echec": false
+    },
+    "desaccords": []
+  }
+]

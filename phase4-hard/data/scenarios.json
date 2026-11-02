@@ -1,0 +1,380 @@
+{
+  "source": "Scenarios DEV fictifs ecrits pour phase4-hard, partitions reprises de data/truth.json (ecrite avant tout appel Meta).",
+  "note": "Coordonnees en km (grille fictive), t en minutes. x/y ou t null = information absente, jamais inventee.",
+  "scenarios": [
+    {
+      "id": "syn-panne",
+      "label": "Synonymes : coupure / panne electrique",
+      "reports": [
+        {
+          "id": "A1",
+          "text": "coupure courant quartier nord immeubles",
+          "category": "coupure-electrique",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "A2",
+          "text": "panne electrique quartier nord immeubles",
+          "category": "coupure-electrique",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 540,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "truth_note": "Meme incident : coupure de courant / panne electrique, memes lieu et temps proches."
+    },
+    {
+      "id": "syn-fuite",
+      "label": "Synonymes : fuite / ecoulement",
+      "reports": [
+        {
+          "id": "B1",
+          "text": "fuite eau rue basse trottoir inonde",
+          "category": "fuite-eau",
+          "x": 2.0,
+          "y": 2.0,
+          "t": 500,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "B2",
+          "text": "ecoulement eau rue basse trottoir mouille",
+          "category": "fuite-eau",
+          "x": 2.0,
+          "y": 2.0,
+          "t": 545,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "B1",
+          "B2"
+        ]
+      ],
+      "truth_note": "Meme incident : fuite / ecoulement, memes lieu et temps proches."
+    },
+    {
+      "id": "syn-nid",
+      "label": "Synonymes : nid-de-poule / trou",
+      "reports": [
+        {
+          "id": "C1",
+          "text": "nid poule rue lilas chaussee degradee",
+          "category": "nid-de-poule",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "C2",
+          "text": "trou rue lilas chaussee degradee",
+          "category": "nid-de-poule",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 530,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "C1",
+          "C2"
+        ]
+      ],
+      "truth_note": "Meme incident : nid-de-poule / trou dans la chaussee, memes lieu et temps proches."
+    },
+    {
+      "id": "syn-eclairage",
+      "label": "Synonymes : reverbere / eclairage public",
+      "reports": [
+        {
+          "id": "D1",
+          "text": "reverbere eteint avenue nord nuit",
+          "category": "eclairage",
+          "x": 4.0,
+          "y": 4.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "D2",
+          "text": "lampadaire defaillant avenue nord nuit",
+          "category": "eclairage",
+          "x": 4.0,
+          "y": 4.0,
+          "t": 550,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "truth_note": "Meme incident : reverbere eteint / eclairage public defaillant, memes lieu et temps proches."
+    },
+    {
+      "id": "dist-2inc",
+      "label": "Meme texte, lieux eloignes : 2 incidents",
+      "reports": [
+        {
+          "id": "E1",
+          "text": "fuite eau trottoir inonde canalisation locale",
+          "category": "fuite-eau",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "E2",
+          "text": "fuite eau trottoir inonde canalisation locale",
+          "category": "fuite-eau",
+          "x": 8.0,
+          "y": 1.0,
+          "t": 530,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "truth_note": "DEUX incidents distincts : textes quasi identiques mais lieux a 7 km. Ne pas fusionner."
+    },
+    {
+      "id": "dist-1event",
+      "label": "Evenement etendu : 1 incident, 2 quartiers",
+      "reports": [
+        {
+          "id": "F1",
+          "text": "coupure electrique generale reseau quartier courant coupe",
+          "category": "coupure-electrique",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "F2",
+          "text": "coupure electrique generale reseau quartier courant coupe",
+          "category": "coupure-electrique",
+          "x": 8.0,
+          "y": 1.0,
+          "t": 520,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "truth_note": "UN incident etendu (coupure generale de reseau touchant deux quartiers eloignes). Fusion conventionnelle : elle n'est PAS deducible du seul texte ni de la seule distance ; une separation y est defendable, et le F1 compte ici la convention predefinie, pas une verite absolue d'inference."
+    },
+    {
+      "id": "contra-1",
+      "label": "Contradictions gravite et exposition",
+      "reports": [
+        {
+          "id": "G1",
+          "text": "fuite eau rue basse trottoir inonde",
+          "category": "fuite-eau",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 500,
+          "severityHint": 2,
+          "exposureHint": 0,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "G2",
+          "text": "fuite eau rue basse trottoir inonde",
+          "category": "fuite-eau",
+          "x": 3.0,
+          "y": 3.0,
+          "t": 540,
+          "severityHint": 4,
+          "exposureHint": 3,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "G1",
+          "G2"
+        ]
+      ],
+      "truth_note": "Meme incident, declarations CONTRADICTOIRES : gravite declaree 2 contre 4, exposition declaree 0 contre 3. Aucune gravite ni exposition unique ne doit etre inventee ; statut attendu : contradictoire, valeurs conservees."
+    },
+    {
+      "id": "inc-vide",
+      "label": "Textes vides",
+      "reports": [
+        {
+          "id": "I1",
+          "text": "",
+          "category": "non-precisee",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 500,
+          "severityHint": null,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "I2",
+          "text": "",
+          "category": "non-precisee",
+          "x": 1.0,
+          "y": 1.0,
+          "t": 530,
+          "severityHint": null,
+          "exposureHint": null,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "I1"
+        ],
+        [
+          "I2"
+        ]
+      ],
+      "truth_note": "Textes vides : aucune preuve de sameness. Ne pas fusionner, ne rien inventer."
+    },
+    {
+      "id": "inc-sans-lieu",
+      "label": "Lieu inconnu (coordonnees absentes)",
+      "reports": [
+        {
+          "id": "K1",
+          "text": "fuite eau trottoir inonde",
+          "category": "fuite-eau",
+          "x": null,
+          "y": null,
+          "t": 500,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "K2",
+          "text": "fuite eau trottoir inonde",
+          "category": "fuite-eau",
+          "x": null,
+          "y": null,
+          "t": 530,
+          "severityHint": 3,
+          "exposureHint": 2,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "K1",
+          "K2"
+        ]
+      ],
+      "truth_note": "Meme incident probable (texte identique, temps proches), mais LIEU INCONNU (coordonnees absentes, aucun lieu dans le texte). Fusion incertaine, aucun lieu ne doit etre invente."
+    },
+    {
+      "id": "inc-sans-temps",
+      "label": "Temps inconnu (t absent)",
+      "reports": [
+        {
+          "id": "L1",
+          "text": "nid poule chaussee degradee",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": null,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        },
+        {
+          "id": "L2",
+          "text": "nid poule chaussee degradee",
+          "category": "nid-de-poule",
+          "x": 1.0,
+          "y": 1.0,
+          "t": null,
+          "severityHint": 2,
+          "exposureHint": 1,
+          "photo": null,
+          "source": "scenario-dev-fictif"
+        }
+      ],
+      "truth_groups": [
+        [
+          "L1",
+          "L2"
+        ]
+      ],
+      "truth_note": "Meme incident probable (texte identique, meme lieu), mais TEMPS INCONNU (t absent). Fusion incertaine, aucun temps ne doit etre invente."
+    }
+  ]
+}

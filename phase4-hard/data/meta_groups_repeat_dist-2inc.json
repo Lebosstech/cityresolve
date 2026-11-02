@@ -1,0 +1,99 @@
+{
+  "scenario": "dist-2inc",
+  "run1": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "confidence": 0.4,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.60"
+      ],
+      "justification": "E1 maintenu isole : x=1.0 y=1.0 t=500 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale'. Analyse exhaustive : elements E1 et E2 examines, seule paire (E1,E2) examinee. Distance euclidienne=7.0 (dx=7.0 dy=0.0, meme y=1.0), delai=30 (E2 apres E1). Categorie identique fuite-eau. Texte identique a 100% : 6/6 mots identiques meme ordre : fuite / eau / trottoir / inonde / canalisation / locale, generiques sans toponyme ni adresse ni detail discriminant. Unites et echelle de x,y,t absentes et non verifiables, precision et erreur de localisation absentes, seuil de meme incident absent, gravite et etendue absentes et non verifiables. Type fuite-eau canalisation locale evoque source ponctuelle locale mais propagation par ruissellement le long de l'axe x non exclue et non verifiable sans plan reseau ni topographie. Non-fusion prudente : ecart de 7.0 interdit fusion aveugle malgre similarite totale et delai court relatif ; hypothese residuelle de doublon avec erreur de localisation ou nappe allongee possible et douteuse. Incertitude 0.6 car separation probable mais ambiguite textuelle-temporelle non levee.",
+      "incertitude": 0.6
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "confidence": 0.4,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.60"
+      ],
+      "justification": "E2 maintenu isole : x=8.0 y=1.0 t=530 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale'. Analyse exhaustive : elements E1 et E2 examines, seule paire (E1,E2) examinee. Distance euclidienne=7.0 (dx=7.0 dy=0.0, meme y=1.0), delai=30 (E2 apres E1). Categorie identique fuite-eau. Texte identique a 100% : 6/6 mots identiques meme ordre : fuite / eau / trottoir / inonde / canalisation / locale, generiques sans toponyme ni adresse ni detail discriminant. Unites et echelle de x,y,t absentes et non verifiables, precision et erreur de localisation absentes, seuil de meme incident absent, gravite et etendue absentes et non verifiables. Type fuite-eau canalisation locale evoque source ponctuelle locale mais propagation par ruissellement le long de l'axe x non exclue et non verifiable sans plan reseau ni topographie. Non-fusion prudente : ecart de 7.0 interdit fusion aveugle malgre similarite totale et delai court relatif ; hypothese residuelle de doublon avec erreur de localisation ou nappe allongee possible et douteuse. Incertitude 0.6 car separation probable mais ambiguite textuelle-temporelle non levee.",
+      "incertitude": 0.6
+    }
+  ],
+  "run2": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "E1 maintenu isole, non fusionne avec E2. E1: x=1.0 y=1.0 t=500 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale'. E2: x=8.0 y=1.0 t=530 categorie=fuite-eau meme texte. Paire unique (E1,E2): meme categorie, texte identique mot-a-mot 6/6 mots. Distance euclidienne = sqrt((8.0-1.0)^2+(1.0-1.0)^2)=7.0 en unites spatiales non precisees; echelle, projection, precision absentes donc qualification lieux eloignes non verifiable et non affirmee, valeur numerique seule constatee sans approximation non signalee. Delai = |530-500|=30 en unites temporelles non precisees; difference numerique constatee mais interpretation minutes/heures/secondes absente donc non verifiable. Analyse mots: 'fuite'=ecoulement anormal; 'eau'=fluide; 'trottoir'=support pieton; 'inonde'=recouvrement; 'canalisation'=reseau; 'locale'=portee restreinte. Pesee type d'evenement: fuite-eau canalisation locale avec trottoir inonde est ponctuel tres localise, incompatible a priori avec 7.0 unites si unites=km ou hectometres, compatible si unites=metres; unite absente donc douteux. Pas de fusion aveugle malgre texte identique. Absences signalees explicitement: unites x,y,t absentes, methode geolocalisation absente, source/fiabilite absentes, gravite absente et non inventee, lieu reel/temps reel non inventes, aucun fait/certitude/signalement invente. Separation par prudence, incertitude moderee due aux unites manquantes.",
+      "incertitude": 0.4
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "E2 maintenu isole, non fusionne avec E1. E2: x=8.0 y=1.0 t=530 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale'. E1: x=1.0 y=1.0 t=500 meme categorie meme texte. Paire unique (E1,E2): meme categorie, texte identique mot-a-mot 6/6 mots. Distance euclidienne = sqrt((8.0-1.0)^2+(1.0-1.0)^2)=7.0 en unites spatiales non precisees; echelle et precision absentes donc caractere eloigne non verifiable. Delai = |530-500|=30 en unites temporelles non precisees, interpretation absente donc non verifiable. Analyse mots identique a E1: 'fuite' 'eau' 'trottoir' 'inonde' 'canalisation' 'locale' indiquent incident infrastructurel ponctuel localise. Pesee type: une meme fuite locale ne peut expliquer deux points distants de 7.0 unites sauf si unite tres petite, information absente. Texte copie-colle possible, non verifiable, ne suffit pas a fusionner. Absences signalees explicitement: unites x,y,t absentes, echelle absente, precision absente, source absente, gravite absente et non inventee, lieu/temps reels non inventes. Separation par prudence, incertitude moderee due aux unites manquantes.",
+      "incertitude": 0.4
+    }
+  ],
+  "run3": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "E1 seul: x=1.0 y=1.0 t=500 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale' (6 mots). Seule paire E1-E2 examinee: distance euclidienne = sqrt((8.0-1.0)^2+(1.0-1.0)^2)=7.0 unites, delai = |530-500|=30 unites. Categorie identique, texte mot-a-mot identique mais generique non distinctif, possible gabarit. Type fuite-eau trottoir canalisation locale ponctuel: ecart de 7.0 sans preuve de meme troncon, echelle des x,y absente non verifiable, seuil spatial absent, unite temporelle et tolerance absentes, lieu precis rue/quartier absent, gravite absente, etendue absente. Fusion aveugle evitee malgre proximite temporelle et identite textuelle. Maintien isole presume incident distinct. Incertitude residuelle due a echelle inconnue.",
+      "incertitude": 0.4
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "E2 seul: x=8.0 y=1.0 t=530 categorie=fuite-eau texte='fuite eau trottoir inonde canalisation locale' (6 mots). Seule paire E1-E2 examinee: distance euclidienne = 7.0 unites, delai = 30 unites. Categorie identique, texte mot-a-mot identique mais generique non distinctif, possible gabarit. Type fuite-eau trottoir canalisation locale ponctuel: ecart de 7.0 sans preuve de meme troncon, echelle des x,y absente non verifiable, seuil spatial absent, unite temporelle et tolerance absentes, lieu precis rue/quartier absent, gravite absente, etendue absente. Fusion aveugle evitee malgre proximite temporelle et identite textuelle. Maintien isole presume incident distinct. Incertitude residuelle due a echelle inconnue.",
+      "incertitude": 0.4
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "contra-1": {
+    "G1": {
+      "probleme": "fuite eau",
+      "description": "fuite eau rue basse trottoir inonde",
+      "localisationMentionnee": "rue basse, trottoir",
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Segment 'rue basse' : impossible de determiner s'il s'agit d'un toponyme ou d'une description generique, localisation reelle non verifiable a partir du seul texte",
+        "Segment 'trottoir' : quel trottoir, quel cote, quel numero ou repere, non precise et non verifiable",
+        "Segment 'inonde' : etendue, profondeur, dynamique et persistance non precisees et non verifiables, ne constitue pas une gravite chiffree",
+        "Absence de toute mention temporelle explicite dans le texte",
+        "Absence de toute gravite chiffree de 1 a 5 exprimee dans le texte, aucune deduction de gravite effectuee a partir de 'inonde'",
+        "Absence de toute exposition de personne, population ou bien explicitement mentionnee"
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle d'une fuite d'eau",
+        "Realite effective de l'inondation du trottoir",
+        "Lien causal entre la fuite allegee et l'inondation allegee",
+        "Existence et localisation reelle de la 'rue basse' mentionnee",
+        "Etat actuel et persistance de la situation au moment de l'analyse"
+      ]
+    }
+  },
+  "inc-vide": {
+    "I1": {
+      "probleme": "indéterminé - signalement vide",
+      "description": "aucune description fournie - contenu vide",
+      "localisationMentionnee": null,
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "signalement I1 contient une chaîne vide : aucun mot à analyser",
+        "aucun élément, aucune paire, aucune distance, aucun délai analysable",
+        "catégorie déclarée 'non-precisee' : ne permet pas de déduire un problème",
+        "problème impossible à déterminer faute de contenu",
+        "localisation absente et non déductible",
+        "temps ou délai absent et non déductible",
+        "gravité non exprimée et non déductible",
+        "exposition non mentionnée et non déductible"
+      ],
+      "elementsNonVerifies": [
+        "aucun fait fourni : rien de vérifiable",
+        "aucun lieu, temps, gravité ou fait ne peut être vérifié faute de contenu"
+      ]
+    }
+  },
+  "inc-sans-lieu": {
+    "K1": {
+      "probleme": "fuite eau",
+      "description": "fuite eau trottoir inonde",
+      "localisationMentionnee": "trottoir",
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Localisation precise absente : seul le terme generique 'trottoir' est present, sans rue, numero, quartier, ville ou repere identifiable.",
+        "Temporalite absente : aucun moment, date, heure, duree, frequence ou evolution n'est mentionne.",
+        "Gravite chiffree 1 a 5 non exprimee : le mot 'inonde' ne constitue pas une echelle numerique et ne permet pas d'attribuer un niveau.",
+        "Exposition non mentionnee.",
+        "Structure syntaxique et orthographique incertaine : suite de quatre mots sans ponctuation ni verbe conjugue explicite, 'inonde' sans accent, relation exacte entre 'fuite', 'eau', 'trottoir' et 'inonde' non explicitee.",
+        "Portee de 'inonde' indeterminee : etendue, surface, profondeur ou degre d'inondation non precises.",
+        "Origine, cause, debit et nature de l'eau de la fuite alleguee non precises."
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle d'une fuite d'eau",
+        "Existence reelle d'une inondation",
+        "Localisation effective sur un trottoir identifiable",
+        "Lien causal entre la fuite alleguee et l'inondation alleguee"
+      ]
+    }
+  },
+  "inc-sans-temps": {
+    "L1": {
+      "probleme": "nid-de-poule",
+      "description": "nid poule chaussee degradee",
+      "localisationMentionnee": null,
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Aucune localisation mentionnee dans le texte source",
+        "Aucun temps, date ou delai mentionne dans le texte source",
+        "Aucune gravite exprimee sur echelle 1 a 5 ; le terme 'degradee' ne constitue pas une notation chiffree 1..5",
+        "Aucune exposition mentionnee dans le texte source",
+        "Texte source sans accents ni ponctuation : 'nid poule chaussee degradee' ; orthographe et segmentation incertaines",
+        "Nature exacte, nombre, dimensions et position des degradations non precisees",
+        "Lien exact entre 'nid poule' et 'chaussee degradee' non explicite : equivalence, precision ou constats distincts"
+      ],
+      "elementsNonVerifies": [
+        "Existence reelle d'un nid-de-poule non verifiee",
+        "Etat degrade reel de la chaussee non verifie",
+        "Categorie declaree 'nid-de-poule' non verifiee par observation independante",
+        "Localisation, temps, gravite chiffree et exposition non verifiables car absents du texte"
+      ]
+    }
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "syn-panne": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1",
+        "A2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "syn-fuite": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "B1",
+        "B2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "syn-nid": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "C1",
+        "C2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "syn-eclairage": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "dist-2inc": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "dist-1event": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "F1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "F2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "contra-1": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "G1",
+        "G2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "gravites declarees contradictoires dans le groupe (ecart >= 2)",
+        "expositions declarees contradictoires dans le groupe (ecart >= 2)"
+      ],
+      "justification": null
+    }
+  ],
+  "inc-vide": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "I1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "I2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "inc-sans-lieu": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "K1",
+        "K2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "coordonnees manquantes : porte distance passante, sans lieu invente"
+      ],
+      "justification": null
+    }
+  ],
+  "inc-sans-temps": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "L1",
+        "L2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "temps manquant : porte temps passante, sans temps invente"
+      ],
+      "justification": null
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "note": "VERITE TERRAIN PREDEFINIE, ecrite AVANT tout appel Meta. Donnees DEV fictives uniquement. Ne jamais modifier apres avoir vu une sortie Meta.",
+  "scenarios": {
+    "syn-panne": {
+      "truth_groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "note": "Meme incident : coupure de courant / panne electrique, memes lieu et temps proches."
+    },
+    "syn-fuite": {
+      "truth_groups": [
+        [
+          "B1",
+          "B2"
+        ]
+      ],
+      "note": "Meme incident : fuite / ecoulement, memes lieu et temps proches."
+    },
+    "syn-nid": {
+      "truth_groups": [
+        [
+          "C1",
+          "C2"
+        ]
+      ],
+      "note": "Meme incident : nid-de-poule / trou dans la chaussee, memes lieu et temps proches."
+    },
+    "syn-eclairage": {
+      "truth_groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "note": "Meme incident : reverbere eteint / eclairage public defaillant, memes lieu et temps proches."
+    },
+    "dist-2inc": {
+      "truth_groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "note": "DEUX incidents distincts : textes quasi identiques mais lieux a 7 km. Ne pas fusionner."
+    },
+    "dist-1event": {
+      "truth_groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "note": "UN incident etendu (coupure generale de reseau touchant deux quartiers eloignes). Fusion conventionnelle : elle n'est PAS deducible du seul texte ni de la seule distance ; une separation y est defendable, et le F1 compte ici la convention predefinie, pas une verite absolue d'inference."
+    },
+    "contra-1": {
+      "truth_groups": [
+        [
+          "G1",
+          "G2"
+        ]
+      ],
+      "note": "Meme incident, declarations CONTRADICTOIRES : gravite declaree 2 contre 4, exposition declaree 0 contre 3. Aucune gravite ni exposition unique ne doit etre inventee ; statut attendu : contradictoire, valeurs conservees."
+    },
+    "inc-vide": {
+      "truth_groups": [
+        [
+          "I1"
+        ],
+        [
+          "I2"
+        ]
+      ],
+      "note": "Textes vides : aucune preuve de sameness. Ne pas fusionner, ne rien inventer."
+    },
+    "inc-sans-lieu": {
+      "truth_groups": [
+        [
+          "K1",
+          "K2"
+        ]
+      ],
+      "note": "Meme incident probable (texte identique, temps proches), mais LIEU INCONNU (coordonnees absentes, aucun lieu dans le texte). Fusion incertaine, aucun lieu ne doit etre invente."
+    },
+    "inc-sans-temps": {
+      "truth_groups": [
+        [
+          "L1",
+          "L2"
+        ]
+      ],
+      "note": "Meme incident probable (texte identique, meme lieu), mais TEMPS INCONNU (t absent). Fusion incertaine, aucun temps ne doit etre invente."
+    }
+  }
+}
