@@ -13,6 +13,7 @@ import '../lib/oracle.dart';
 import '../lib/policy.dart';
 import '../lib/mongo_store.dart';
 import '../lib/scenarios.dart';
+import '../lib/server_lock.dart';
 import '../lib/simulator.dart';
 import '../lib/store.dart';
 import '../lib/types.dart';
@@ -368,6 +369,17 @@ Future<void> main(List<String> args) async {
   }
   final base =
       File(Platform.script.toFilePath()).parent.parent.path;
+  // Patch local : refuser un second serveur sur le même répertoire data/,
+  // au lieu de laisser deux processus écrire le même état.
+  if (!args.contains('--check')) {
+    final lock = tryAcquireServerLock('$base/data');
+    if (!lock.acquired) {
+      print('Refus : un serveur CityResolve tourne déjà sur ce répertoire '
+          'data/ (PID ${lock.holderPid}, démarré ${lock.holderStartedAt}). '
+          'Si aucun serveur ne tourne, supprimer data/server.lock puis relancer.');
+      exit(2);
+    }
+  }
   final s = _initState(base, restore: !args.contains('--check'));
   if (!args.contains('--check')) {
     await _initMongo(s);

@@ -87,8 +87,14 @@ void main() {
       Report(id: 'G2', text: 'nid poule rue basse chaussee trou abimee', category: 'nid-de-poule', x: 4.8, y: 4.8, t: 505, severityHint: 2, exposureHint: 1),
     ];
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
-    observe('E4 contradiction géographique arbitrée (1 incident)', g.length == 1,
-        '${g.length} incident(s) pour un même texte à 6,5 km d\'écart : doublon planifiable, paire trop éloignée pour le signal d\'ambiguïté (seuil 2×distMax)');
+    final amb4 = ambiguousPairs(reps, g,
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    // Patch local : la séparation subsiste (deux incidents réels peuvent
+    // partager un texte), mais elle doit être SIGNALÉE comme doublon
+    // distant à vérifier, et non imposée en silence.
+    observe('E4 contradiction géographique signalée (séparation + alerte)',
+        g.length == 2 && amb4.isNotEmpty,
+        '${g.length} incident(s) pour un même texte à 6,5 km d\'écart, ambiguës=${amb4.map((a) => a['reason']).toList()}');
   }
 
   // E5. Gravité inconnue (indice absent, catégorie renseignée).

@@ -189,6 +189,13 @@ List<Map<String, dynamic>> ambiguousPairs(
       } else if (s >= simMin && dKm > distMaxKm && dKm <= distMaxKm * 2) {
         reason =
             'texte similaire mais distance ${(dKm * 1000).round()} m au-delà du seuil ${distMaxM.round()} m : séparation incertaine';
+      } else if (s >= simMin && dt <= deltaTMaxMin && dKm > distMaxKm * 2) {
+        // E4 (patch local, non poussé) : même texte, très loin. Ne pas
+        // fusionner de force (deux incidents réels peuvent partager un
+        // texte), mais ne pas séparer en silence : signaler le doublon
+        // distant à vérifier par un humain.
+        reason =
+            'texte similaire (Jaccard ${s.toStringAsFixed(2)}) mais distance ${(dKm * 1000).round()} m, bien au-delà du seuil ${distMaxM.round()} m : séparation incertaine, doublon distant à vérifier, non fusionné';
       }
       if (reason != null) {
         out.add({

@@ -12,6 +12,7 @@ import '../lib/metrics.dart';
 import '../lib/optimizer.dart';
 import '../lib/oracle.dart';
 import '../lib/scenarios.dart';
+import '../lib/server_lock.dart';
 import '../lib/simulator.dart';
 import '../lib/store.dart';
 import '../lib/types.dart';
@@ -702,6 +703,25 @@ Future<void> main() async {
             metaHttpErrorLabel(429).contains('limite') &&
             metaHttpErrorLabel(503).contains('temporaire'),
         'T22e erreurs HTTP distinguées');
+  }
+
+  // 23. Verrou mono-instance (patch local) : second serveur refusé.
+  {
+    final tmp = Directory.systemTemp.createTempSync('cityresolve-lock-');
+    try {
+      final first = tryAcquireServerLock(tmp.path);
+      check(first.acquired, 'T23a premier serveur acquiert le verrou');
+      final second = tryAcquireServerLock(tmp.path);
+      check(!second.acquired && second.holderPid == pid,
+          'T23b second serveur refusé, PID du premier signalé',
+          'holderPid=${second.holderPid}');
+      releaseServerLock(first.path);
+      final third = tryAcquireServerLock(tmp.path);
+      check(third.acquired, 'T23c verrou libéré puis réacquis');
+      releaseServerLock(third.path);
+    } finally {
+      tmp.deleteSync(recursive: true);
+    }
   }
 
   print('== $_pass PASS, $_fail FAIL ==');
