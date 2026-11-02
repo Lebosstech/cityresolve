@@ -1,0 +1,509 @@
+[
+  {
+    "scenario": "contra-resolu",
+    "classique": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "A1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "A2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "A1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "A2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  },
+  {
+    "scenario": "distinct-temps",
+    "classique": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "B1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "B2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "B1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "B2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  },
+  {
+    "scenario": "distinct-detail",
+    "classique": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "C1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "C2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "C1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "C2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  },
+  {
+    "scenario": "categorie-contredit",
+    "classique": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "D1",
+            "D2"
+          ],
+          "confidence": 0.8571428571428571,
+          "singleton": false,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "D1",
+            "D2"
+          ],
+          "confidence": 0.8571428571428571,
+          "singleton": false,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  },
+  {
+    "scenario": "multi-probleme",
+    "classique": {
+      "groups": [
+        [
+          "E1",
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "E1",
+            "E2"
+          ],
+          "confidence": 0.75,
+          "singleton": false,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "E1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "E2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  },
+  {
+    "scenario": "typo-abreviation",
+    "classique": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "F1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "F2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "classique",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "detail": [
+        {
+          "id": "G1",
+          "reportIds": [
+            "F1"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        },
+        {
+          "id": "G2",
+          "reportIds": [
+            "F2"
+          ],
+          "confidence": 0.0,
+          "singleton": true,
+          "method": "synonymes",
+          "uncertain": false,
+          "uncertaintyReasons": [],
+          "justification": null
+        }
+      ]
+    }
+  }
+]

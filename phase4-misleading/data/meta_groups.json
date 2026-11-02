@@ -1,0 +1,128 @@
+{
+  "contra-resolu": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1"
+      ],
+      "confidence": 0.7,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "A1 isole : x=2.0 y=2.0 t=500 categorie fuite-eau texte fuite eau rue basse trottoir sec travaux termines fuite resolue donc etat declare resolu. Analyse paire A1-A2 : distance euclidienne 0.0 car 2.0,2.0 vs 2.0,2.0 donc lieu strictement identique, delai 20 car 520-500 donc proche en valeur mais unite de temps absente et unite de distance absente non verifiables. Mots communs : fuite eau rue basse trottoir, mais mots d'etat opposes : sec + travaux termines + resolue pour A1 vs inonde + coule pour A2. Chaque signalement decrit un seul probleme de fuite eau, pas deux problemes distincts dans un meme texte. Categorie declaree fuite-eau coherente avec texte pour A1 et A2, pas de contradiction categorie-texte. En revanche contradiction explicite d'etat resolu contre en cours entre A1 et A2. Fusion en meme incident reel non imposee a l'aveugle car elle exigerait de supposer erreur d'observation ou recurrence en 20 unites, hypotheses absentes et non verifiables. Gravite, cause, adresse precise au-dela de rue basse non fournies et non inventees. Donc maintien separe avec doute residuel lie aux coordonnees exactes identiques et meme categorie.",
+      "incertitude": 0.3
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "A2"
+      ],
+      "confidence": 0.7,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "A2 isole : x=2.0 y=2.0 t=520 categorie fuite-eau texte fuite eau rue basse trottoir inonde eau coule donc etat declare en cours actif. Analyse paire A1-A2 : distance 0.0 lieu identique, delai 20 temps proche mais unites absentes non verifiables. Recouvrement lexical fuite eau rue basse trottoir mais opposition d'etat : inonde + coule pour A2 vs sec + travaux termines + resolue pour A1. Un seul probleme par signalement, pas de double probleme interne. Categories fuite-eau coherentes avec textes, pas de contradiction categorie-texte. Contradiction explicite d'etat resolu contre en cours entre A1 et A2 signalee ici. Ne pas fusionner a l'aveugle malgre lieu identique et delai court car meme infrastructure avec recurrence ou observation erronee reste possible mais non verifiable. Informations sur gravite, cause, fiabilite des observateurs absentes et non inventees. Donc maintien separe avec doute residuel.",
+      "incertitude": 0.3
+    }
+  ],
+  "distinct-temps": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "B1",
+        "B2"
+      ],
+      "confidence": 0.6,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "Regroupement de B1 (x=1.0 y=1.0 t=500 catégorie=nid-de-poule texte=\"nid poule rue lilas chaussee degradee\") et B2 (x=1.0 y=1.0 t=4820 catégorie=nid-de-poule texte=\"nid poule rue lilas chaussee degradee important\"). Paire unique analysée (B1,B2): distance euclidienne = 0.0 car dx=0 et dy=0, positions strictement identiques; unité spatiale absente des données donc non vérifiable mais distance nulle quelle que soit l'unité. Délai = 4820-500 = 4320; unité temporelle absente des données donc information non vérifiable, impossible de dire si délai court ou éloigné sans approximation. Analyse mot à mot: tokens communs \"nid\", \"poule\", \"rue\", \"lilas\", \"chaussee\", \"degradee\" identiques dans le même ordre; B2 ajoute seul mot supplémentaire \"important\", sans contradiction lexicale. Lieux textuels identiques \"rue lilas\", cohérents avec coordonnées identiques. Catégories déclarées identiques \"nid-de-poule\" et cohérentes avec textes, aucune contradiction catégorie/texte. Aucun signalement ne décrit deux problèmes distincts. Aucune mention d'état résolu contre en cours dans les textes, donc absence d'information sur l'état, pas de contradiction d'état constatable. Type d'événement \"nid-de-poule\" = dégradation persistante de chaussée pouvant persister dans le temps, ce qui rend plausible qu'un même incident réel soit signalé deux fois à 4320 d'écart. Ambiguïté résiduelle signalée explicitement: unité de temps absente, et mot additionnel \"important\" peut indiquer évolution/aggravation ou perception différente sans permettre de trancher avec certitude; on ne peut exclure totalement une récidive ou un second nid au même point exact, mais coordonnées identiques + texte quasi-identique favorisent même incident.",
+      "incertitude": 0.4
+    }
+  ],
+  "distinct-detail": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "C1"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "Singleton C1 maintenu isolé après analyse exhaustive. C1: x=1.0 y=1.0 t=500 catégorie nid-de-poule texte nid poule trottoir nord rue lilas. C2: x=1.0 y=1.0 t=510 catégorie nid-de-poule texte nid poule trottoir sud rue lilas. Paire unique C1-C2: distance euclidienne 0.0 car 1.0-1.0=0 sur x et y, échelle et projection et unité de x y absentes donc portée réelle non vérifiable, précision à une décimale 1.0 fait douter d un arrondi grossier non vérifiable. Délai 510-500=10, unité et référentiel de t absents donc caractère court ou long non vérifiable. Catégories identiques et cohérentes avec textes, pas de contradiction catégorie-texte. Analyse mot à mot: nid commun, poule commun, trottoir commun, rue commun, lilas commun, seul distinctif nord pour C1 contre sud pour C2, antonymes directionnels explicites. Chaque signalement décrit un seul problème, pas de double problème. Aucune mention d état résolu contre en cours donc aucune contradiction d état vérifiable, information absente signalée. Type d événement nid-de-poule ponctuel: trottoir nord contre trottoir sud suggère deux supports physiques possiblement distincts, pèse contre fusion aveugle malgré distance nulle et délai numérique 10 et catégorie commune. Fusion imposée contredirait le distinctif explicite sans preuve. Doute résiduel car distance nulle et temps proches et même rue pourraient s expliquer par erreur nord-sud d un déclarant ou arrondi de coordonnées, non vérifiable sans visite terrain, d où incertitude non nulle. Gravité lieu exact temps absolu fiabilité déclarants absents et non inventés.",
+      "incertitude": 0.4
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "C2"
+      ],
+      "confidence": 0.6,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modèle 0.40"
+      ],
+      "justification": "Singleton C2 maintenu isolé après analyse exhaustive symétrique. C2: x=1.0 y=1.0 t=510 catégorie nid-de-poule texte nid poule trottoir sud rue lilas. C1: x=1.0 y=1.0 t=500 catégorie nid-de-poule texte nid poule trottoir nord rue lilas. Paire unique C1-C2: distance 0.0, échelle projection unité absentes non vérifiables, précision 1.0 douteuse possible arrondi. Délai 10 unités absentes non vérifiable. Catégories identiques cohérentes avec textes. Mots communs nid poule trottoir rue lilas, opposition nord contre sud antonymes. Un seul problème par signalement, pas de double. Pas d info résolu en cours donc pas de contradiction d état, absence signalée. Pour objet ponctuel nid-de-poule, nord contre sud indique possiblement deux nids distincts sur trottoirs opposés de rue lilas, interdit fusion aveugle sur seule base distance nulle et proximité numérique temporelle. Doute résiduel inverse: possible même nid avec erreur d orientation ou coordonnées arrondies identiques, non vérifiable, gravité lieu exact temps absolu non inventés, d où incertitude non nulle sur isolement.",
+      "incertitude": 0.4
+    }
+  ],
+  "categorie-contredit": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2"
+      ],
+      "confidence": 0.8,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "Paire unique D1-D2 analysée : D1 x=2.0 y=2.0 t=500 catégorie=nid-de-poule texte=fuite eau rue basse trottoir inonde ; D2 x=2.0 y=2.0 t=520 catégorie=fuite-eau texte=fuite eau rue basse trottoir inonde canalisation. Distance spatiale calculée = 0.0 sur x et 0.0 sur y, donc coordonnées strictement identiques, unités et échelle non fournies donc interprétation métrique non vérifiable. Délai temporel = 520-500 = 20, unités et seuil non fournis donc qualification court ou long non vérifiable, seul l'écart arithmétique est constaté. Analyse lexicale mot à mot : D1 contient 6 tokens fuite + eau + rue + basse + trottoir + inonde ; D2 contient les mêmes 6 tokens dans le même ordre plus 1 token additionnel canalisation en fin, donc recouvrement total sans mot contradictoire, ajout compatible avec précision et non avec incident distinct. Lieu textuel identique rue basse trottoir, phénomène identique fuite eau avec conséquence inonde. Anomalie explicite à signaler : la catégorie déclarée de D1 nid-de-poule contredit son propre texte qui décrit une fuite d'eau et inondation, alors que D2 déclare fuite-eau cohérente avec son texte et avec D1, donc erreur probable de catégorisation de D1 et non preuve de deux incidents. Aucun signalement ne décrit deux problèmes distincts en interne. Aucune mention d'état résolu contre en cours, donc aucune contradiction d'état vérifiable. Gravité, cause, auteur, conditions absentes et non inventées. Regroupement en même incident réel retenu malgré l'anomalie de catégorie, d'où incertitude non nulle.",
+      "incertitude": 0.2
+    }
+  ],
+  "multi-probleme": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1",
+        "E2"
+      ],
+      "confidence": 0.8,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "Distance spatiale 0.0 (x=1.0 y=1.0 identiques pour E1 et E2). Ecart temporel 10 (t=500 vs t=510). Categorie declaree identique : nid-de-poule / nid-de-poule. Analyse mot-a-mot : tronc commun exact 'nid poule rue lilas chaussee degradee' present dans E1 et E2 ; mots supplementaires uniquement dans E1 : 'reverbere eteint'. E1 decrit donc deux problemes distincts : 1) nid-de-poule / chaussee degradee rue lilas, 2) reverbere eteint. La categorie declaree nid-de-poule ne couvre que le premier volet, decalage categorie-texte signale explicitement pour le second volet eclairage qui n'a pas de correspondant dans E2. Regroupement propose uniquement au titre du volet nid-de-poule, tres coherent en lieu, temps et texte. Aucune mention d'etat resolu vs en cours, donc pas de contradiction d'etat verifiable. Incertitude non nulle car fusion integrale des signalements impossible sans reserve du fait du second probleme porte par E1 seul.",
+      "incertitude": 0.2
+    }
+  ],
+  "typo-abreviation": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "F1",
+        "F2"
+      ],
+      "confidence": 0.85,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "F1: x=1.0 y=1.0 t=500 categorie=nid-de-poule texte='nid poule rue lilas chaussee degradee'. F2: x=1.0 y=1.0 t=510 categorie=nid-de-poule texte='ndp rue lilas chaus abim'. Distance spatiale = 0.0 (dx=0, dy=0) donc co-localisation exacte fournie; systeme de coordonnees, precision reelle et arrondi non precises = information absente, resolution a 0.1 seulement donc micro-ecart inferieur a la precision non excluable et non verifiable. Delai = 10 (510-500); unite temporelle absente donc duree reelle non verifiable, mais ecart numerique faible. Categories declarees identiques et coherentes avec textes, aucune contradiction categorie-texte. Analyse mot a mot: nid poule vs ndp = abreviation plausible mais non verifiee; rue identique; lilas identique; chaussee vs chaus = troncation meme objet suppose mais non verifie; degradee vs abim = synonymes probables de chaussee abimee, sans contradiction. Aucun signalement ne decrit deux problemes distincts. Aucune mention d'etat resolu vs en cours donc aucune contradiction d'etat, information absente. Pas de numero de rue, pas de gravite, pas de lieu precis au-dela de rue lilas et coordonnees = absent. Type d'evenement ponctuel nid-de-poule compatible avec fusion a lieu identique et delai court, pas de cas meme texte a lieux/temps eloignes. Seule paire possible F1-F2 analysee.",
+      "incertitude": 0.15
+    }
+  ]
+}

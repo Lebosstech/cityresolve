@@ -1,0 +1,30 @@
+{
+  "note": "VERITE TERRAIN PREDEFINIE, ecrite AVANT tout appel Meta. Donnees DEV fictives uniquement. Ne jamais modifier apres avoir vu une sortie Meta. Le F1 par paires compte la convention predefinie, pas une verite absolue d'inference, la ou la note le dit explicitement.",
+  "scenarios": {
+    "contra-resolu": {
+      "truth_groups": [["A1", "A2"]],
+      "required_status": "fusion avec statut contradictoire a verifier : un signalement dit fuite resolue / rue seche, l'autre dit inondation en cours, meme lieu et temps proches. La fusion seule ne suffit pas : il faut le drapeau contradiction, sinon la fusion est trompeuse.",
+      "note": "Meme fuite presumee, etats contradictoires. Convention : fusionnee, mais jamais comme fusion propre."
+    },
+    "distinct-temps": {
+      "truth_groups": [["B1"], ["B2"]],
+      "note": "DEUX nids-de-poule distincts, textes quasi identiques, meme lieu, mais 3 jours d'intervalle (t=500 contre t=4820). Ne pas fusionner malgre le texte."
+    },
+    "distinct-detail": {
+      "truth_groups": [["C1"], ["C2"]],
+      "note": "DEUX incidents distincts, meme lieu et meme temps, textes quasi identiques sauf un detail discriminant : trottoir nord contre trottoir sud. Ne pas fusionner malgre le texte."
+    },
+    "categorie-contredit": {
+      "truth_groups": [["D1", "D2"]],
+      "note": "Meme fuite d'eau d'apres le TEXTE des deux signalements. La categorie declaree de D1 (nid-de-poule) contredit son texte : c'est la categorie qui est fausse, pas le texte. Fusion attendue sur le texte, avec signalement de l'incoherence categorie/texte."
+    },
+    "multi-probleme": {
+      "truth_groups": [["E1"], ["E2"]],
+      "note": "CONVENTION de niveau regroupement : E1 contient DEUX problemes (nid-de-poule + reverbere eteint) dans un seul signalement, E2 ne decrit que le nid-de-poule. Le regroupement ne peut pas decouper E1, donc fusionner E1 et E2 masquerait le probleme d'eclairage. Verite de regroupement = separes, avec un drapeau multi-probleme requis (non implemente). Ce n'est pas une affirmation que les deux signalements ne parlent pas du meme nid-de-poule."
+    },
+    "typo-abreviation": {
+      "truth_groups": [["F1", "F2"]],
+      "note": "Meme nid-de-poule, F2 avec fautes fortes et abreviations (ndp, chaus, abim) mais meme lieu et temps proches. Fusion attendue par robustesse semantique."
+    }
+  }
+}

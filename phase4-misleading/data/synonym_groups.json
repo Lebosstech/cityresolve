@@ -1,0 +1,147 @@
+{
+  "contra-resolu": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "A2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "distinct-temps": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "B1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "B2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "distinct-detail": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "C1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "C2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "categorie-contredit": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2"
+      ],
+      "confidence": 0.8571428571428571,
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "multi-probleme": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ],
+  "typo-abreviation": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "F1"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "F2"
+      ],
+      "confidence": 0.0,
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": null
+    }
+  ]
+}

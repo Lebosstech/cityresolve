@@ -1,0 +1,66 @@
+{
+  "source": "Scenarios DEV fictifs ecrits pour phase4-misleading, partitions reprises de data/truth.json (ecrite avant tout appel Meta).",
+  "note": "Coordonnees en km (grille fictive), t en minutes. Aucune severite/exposition de verite d'allocation n'est definie pour ces scenarios : voir le rapport pour pourquoi le Q n'est pas calcule.",
+  "scenarios": [
+    {
+      "id": "contra-resolu",
+      "label": "Meme incident, etats contradictoires (resolu contre en cours)",
+      "reports": [
+        {"id": "A1", "text": "fuite eau rue basse trottoir sec travaux termines fuite resolue", "category": "fuite-eau", "x": 2.0, "y": 2.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "A2", "text": "fuite eau rue basse trottoir inonde eau coule", "category": "fuite-eau", "x": 2.0, "y": 2.0, "t": 520, "severityHint": 3, "exposureHint": 2, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["A1", "A2"]],
+      "truth_note": "Meme fuite presumee, etats contradictoires. Convention : fusionnee, mais jamais comme fusion propre."
+    },
+    {
+      "id": "distinct-temps",
+      "label": "Deux incidents distincts, textes quasi identiques, 3 jours d'intervalle",
+      "reports": [
+        {"id": "B1", "text": "nid poule rue lilas chaussee degradee", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "B2", "text": "nid poule rue lilas chaussee degradee important", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 4820, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["B1"], ["B2"]],
+      "truth_note": "DEUX nids-de-poule distincts, textes quasi identiques, meme lieu, mais 3 jours d'intervalle. Ne pas fusionner malgre le texte."
+    },
+    {
+      "id": "distinct-detail",
+      "label": "Deux incidents distincts, meme lieu et temps, detail discriminant nord/sud",
+      "reports": [
+        {"id": "C1", "text": "nid poule trottoir nord rue lilas", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "C2", "text": "nid poule trottoir sud rue lilas", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 510, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["C1"], ["C2"]],
+      "truth_note": "DEUX incidents distincts, meme lieu et meme temps, textes quasi identiques sauf trottoir nord contre trottoir sud. Ne pas fusionner malgre le texte."
+    },
+    {
+      "id": "categorie-contredit",
+      "label": "Categorie declaree contredisant le texte",
+      "reports": [
+        {"id": "D1", "text": "fuite eau rue basse trottoir inonde", "category": "nid-de-poule", "x": 2.0, "y": 2.0, "t": 500, "severityHint": 3, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "D2", "text": "fuite eau rue basse trottoir inonde canalisation", "category": "fuite-eau", "x": 2.0, "y": 2.0, "t": 520, "severityHint": 3, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["D1", "D2"]],
+      "truth_note": "Meme fuite d'eau d'apres le TEXTE. La categorie declaree de D1 est fausse. Fusion attendue sur le texte, avec signalement de l'incoherence."
+    },
+    {
+      "id": "multi-probleme",
+      "label": "Un signalement, deux problemes distincts",
+      "reports": [
+        {"id": "E1", "text": "nid poule rue lilas chaussee degradee reverbere eteint", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "E2", "text": "nid poule rue lilas chaussee degradee", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 510, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["E1"], ["E2"]],
+      "truth_note": "CONVENTION de regroupement : E1 contient deux problemes, fusionner masquerait l'eclairage. Separes + drapeau multi-probleme requis (non implemente)."
+    },
+    {
+      "id": "typo-abreviation",
+      "label": "Doublon evident, fautes fortes et abreviations",
+      "reports": [
+        {"id": "F1", "text": "nid poule rue lilas chaussee degradee", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 500, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"},
+        {"id": "F2", "text": "ndp rue lilas chaus abim", "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 510, "severityHint": 2, "exposureHint": 1, "photo": null, "source": "scenario-dev-fictif"}
+      ],
+      "truth_groups": [["F1", "F2"]],
+      "truth_note": "Meme nid-de-poule, F2 avec fautes fortes et abreviations, meme lieu et temps proches. Fusion attendue par robustesse semantique."
+    }
+  ]
+}

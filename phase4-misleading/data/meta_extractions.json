@@ -1,0 +1,61 @@
+{
+  "categorie-contredit": {
+    "D1": {
+      "probleme": "fuite d'eau; trottoir inondé",
+      "description": "Mention d'une 'fuite eau rue basse' et d'un 'trottoir inonde', sans autre détail dans le texte.",
+      "localisationMentionnee": "rue basse",
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "Contradiction entre catégorie déclarée et texte : catégorie déclarée 'nid-de-poule' alors que le texte mentionne uniquement 'fuite eau' et 'trottoir inonde' sans mentionner de nid-de-poule ; aucun arbitrage possible sur la nature réelle du problème à partir du seul texte.",
+        "Relation entre 'fuite eau' et 'trottoir inonde' non explicitée : juxtaposition sans connecteur causal explicite, la causalité ne peut pas être affirmée.",
+        "Localisation 'rue basse' imprécise : aucun numéro, commune, ville, tronçon ou point de repère précisé.",
+        "Temporalité absente : aucune date, heure, durée ou ancienneté mentionnée.",
+        "Gravité non exprimée sur échelle 1 à 5 : le mot 'inonde' décrit un état sans quantification ni terme de gravité explicite.",
+        "Nature, origine, débit et étendue de l'eau et de l'inondation non précisés.",
+        "Exposition des personnes ou des biens non mentionnée."
+      ],
+      "elementsNonVerifies": [
+        "Existence réelle de la fuite d'eau",
+        "Existence réelle et étendue de l'inondation du trottoir",
+        "Exactitude et unicité de la localisation 'rue basse'",
+        "Existence d'un nid-de-poule correspondant à la catégorie déclarée, non mentionné dans le texte",
+        "Lien causal éventuel entre fuite et inondation"
+      ]
+    }
+  },
+  "multi-probleme": {
+    "E1": {
+      "probleme": "nid poule ; chaussee degradee ; reverbere eteint",
+      "description": "Texte brut : \"nid poule rue lilas chaussee degradee reverbere eteint\"",
+      "localisationMentionnee": "rue lilas",
+      "tempsMentionne": null,
+      "graviteExprimee": null,
+      "expositionMentionnee": null,
+      "incertitudes": [
+        "La categorie declaree 'nid-de-poule' ne couvre pas l'ensemble du texte qui mentionne aussi 'reverbere eteint' : inadequation partielle entre categorie et contenu, sans possibilite de trancher a partir du seul texte",
+        "Relation incertaine entre 'nid poule' et 'chaussee degradee' : non verifiable s'il s'agit de deux problemes distincts ou d'une reformulation/description du meme desordre",
+        "Portee spatiale de 'rue lilas' incertaine : non verifiable si 'rue lilas' localise uniquement 'nid poule' ou aussi 'chaussee degradee' et 'reverbere eteint'",
+        "Localisation imprecise et non verifiee : 'rue lilas' sans numero, sans commune, sans repere ; denomination exacte non verifiable en l'etat",
+        "Nombre, dimensions, position precise et caracteristiques du ou des 'nid poule' non precises et non verifiables",
+        "Nature, etendue et cause de 'chaussee degradee' non precisees et non verifiees",
+        "Identification du 'reverbere' concerne, sa position exacte, et caractere permanent ou ponctuel de l'etat 'eteint' non precises et non verifiees",
+        "Aucune mention explicite de temps/date/delai dans le texte : 'eteint' decrit un etat, pas un temps mentionne",
+        "Aucune mention explicite de distance dans le texte",
+        "Aucune expression explicite de gravite echelle 1..5 dans le texte : 'degradee' et 'eteint' sont des etats, pas une gravite quantifiee",
+        "Aucune mention d'exposition (personne, public, usage expose) dans le texte",
+        "Incertitudes lexicales : texte sans accents ni ponctuation ni majuscules ; segmentation en mots 'nid' 'poule' 'rue' 'lilas' 'chaussee' 'degradee' 'reverbere' 'eteint' et en paires successives fondee uniquement sur l'ordre brut, sans certitude sur les regroupements intentionnels"
+      ],
+      "elementsNonVerifies": [
+        "Existence, nombre et caracteristiques du 'nid poule' mentionne",
+        "Existence, localisation exacte et etat reel de la 'chaussee degradee'",
+        "Existence, identification et etat reel d'extinction du 'reverbere'",
+        "Existence et denomination exacte de 'rue lilas' comme lieu des desordres",
+        "Relation spatiale et temporelle entre 'nid poule', 'chaussee degradee' et 'reverbere eteint'",
+        "Toute gravite, urgence, cause, responsabilite ou exposition liee aux faits mentionnes",
+        "Toute date, heure, duree, distance ou delai relatif aux faits"
+      ]
+    }
+  }
+}
