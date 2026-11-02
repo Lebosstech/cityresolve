@@ -417,6 +417,48 @@ Future<Map<String, dynamic>> extractStructuredWithMeta(
   );
 }
 
+/// Listing Meta avec unités explicites (patch unités, local).
+///
+/// Correctif de l'échec distinct-temps de phase4-misleading, où le
+/// modèle écrivait que « l'unité temporelle était absente » et
+/// fusionnait deux nids-de-poule à 3 jours d'intervalle : chaque ligne
+/// donne t en minutes et x/y en kilomètres, jamais de nombre nu, et
+/// chaque paire affiche sa distance en km et son délai en minutes
+/// avec conversion (heures/jours). Le retest DEV avec ce listing
+/// (phase4-retest-units) sépare distinct-temps : le modèle y écrit
+/// explicitement « délai 4320 min = 3,0 jours, délai long pas court ».
+String _fmt1(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
+String _fmt2(double v) => v.toStringAsFixed(2).replaceAll('.', ',');
+
+String formatDelayMin(int dt) {
+  if (dt >= 1440) return '$dt min = ${_fmt1(dt / 1440)} jours';
+  if (dt >= 60) return '$dt min = ${_fmt1(dt / 60)} heures';
+  return '$dt min';
+}
+
+/// Listing complet : en-tête d'unités + lignes + paires calculées.
+String metaListingWithUnits(List<Report> reports) {
+  final lines = <String>[
+    'Unités (données ici, ne jamais les supposer absentes) : '
+        'x et y en kilomètres (km) sur une grille fictive, '
+        't en minutes (min) depuis le début du scénario. '
+        '60 min = 1 heure, 1440 min = 1 jour.'
+  ];
+  for (final r in reports) {
+    lines.add(
+        '${r.id} | x=${_fmt1(r.x)} km, y=${_fmt1(r.y)} km, t=${r.t} min | catégorie=${r.category} | "${r.text}"');
+  }
+  lines.add('Distances et délais calculés :');
+  for (var i = 0; i < reports.length; i++) {
+    for (var j = i + 1; j < reports.length; j++) {
+      final a = reports[i], b = reports[j];
+      lines.add(
+          'Paire ${a.id}-${b.id} : distance ${_fmt2(distKm(a, b))} km, délai ${formatDelayMin(dtMin(a, b))}.');
+    }
+  }
+  return lines.join('\n');
+}
+
 /// Proposition de rapprochement Meta : mêmes objets Group que le moteur
 /// classique (method: meta), avec justification et incertitude du modèle.
 Future<List<Group>> proposeMatchingWithMeta(
@@ -425,17 +467,24 @@ Future<List<Group>> proposeMatchingWithMeta(
   Duration timeout = const Duration(seconds: 45),
   void Function(MetaCallRecord)? onRecord,
 }) async {
-  final listing = reports
-      .map((r) =>
-          '${r.id} | x=${r.x} y=${r.y} t=${r.t} | catégorie=${r.category} | "${r.text}"')
-      .join('\n');
+  final listing = metaListingWithUnits(reports);
   final out = await c.chatJson(
     kind: 'rapprochement',
     system: 'Tu proposes un regroupement de signalements municipaux fictifs '
         'décrivant le même incident réel. Réponds UNIQUEMENT en JSON. '
         'Chaque signalement dans au plus un groupe. Si un rapprochement '
         'est douteux, dis-le dans "incertitude" (0=certain, 1=très douteux) '
-        'et justifie. N\'invente aucun signalement.',
+        'et justifie. N\'invente aucun signalement. '
+        "RÈGLE D'UNITÉS, À APPLIQUER SANS EXCEPTION : les unités SONT "
+        'données dans le listing (x et y en kilomètres, t en minutes). '
+        'Ne jamais écrire qu\'une unité est absente, inconnue ou non '
+        'vérifiable quand le listing la donne. Un délai de 4320 min vaut '
+        '3 jours, pas un délai court. Pour un incident ponctuel '
+        "(nid-de-poule, fuite d'eau), un délai de plusieurs jours au même "
+        "lieu ne prouve pas qu'il s'agit du même incident : deux "
+        'incidents distincts restent possibles même avec un texte quasi '
+        "identique, et la persistance d'une dégradation ne prouve pas "
+        "l'identité.",
     user: 'Signalements:\n$listing\n'
         'JSON attendu: {"groupes": [{"reportIds": [string], '
         '"justification": string, "incertitude": number 0..1}]}',
@@ -495,8 +544,9 @@ Future<List<Group>> proposeMatchingWithMeta(
         uncertaintyReasons: g.uncertaintyReasons,
         justification: g.justification);
   }
-  // Garde-fou déterministe post-modèle (poussé sur main) : même
-  // si le modèle propose une fusion impliquant un contenu insuffisant —
+  // Chaîne de filtres déterministes post-modèle, dans cet ordre :
+  // 1. Garde-fou contenu insuffisant (poussé sur main) : même si le
+  // modèle propose une fusion impliquant un contenu insuffisant —
   // c'est exactement l'échec inc-vide de phase4-hard, où le modèle avait
   // fusionné deux textes vides avec incertitude 1,0 — la fusion est
   // annulée et chaque signalement concerné redevient un singleton marqué
@@ -507,8 +557,25 @@ Future<List<Group>> proposeMatchingWithMeta(
   // l'incertitude du modèle. Un pré-filtre (ne pas envoyer ces textes au
   // modèle) n'a pas été choisi : il masquerait la proposition du modèle
   // au lieu de la corriger visiblement.
+  // 2. Porte temps Meta (patch unités, local) : découpe les fusions
+  // proposées au-delà du seuil (360 min local, 10080 min étendu).
+  // Chaque découpe est comptée (splitGroups) et tracée par une raison
+  // 'porte-temps-meta'. Sur le retest DEV, la porte n'a rien eu à
+  // découper (le nouveau listing avait déjà corrigé distinct-temps),
+  // mais appliquée aux anciennes sorties elle corrige distinct-temps
+  // (1 découpe, F1 0,0 -> 1,0) : c'est un filet de sécurité, pas la
+  // cause du gain du nouveau listing.
+  // 3. Statuts (patch unités, local) : marquent les groupes
+  // contradictoires et multi-problème, SANS les découper. Un groupe
+  // fusionné signalé n'est pas un incident propre : l'optimiseur et
+  // l'humain doivent le voir comme « à vérifier », pas comme une
+  // fusion validée. Les statuts ne remplacent pas une vérification
+  // humaine, surtout pour la contradiction d'état (résolu contre en
+  // cours) et pour le second problème d'un signalement multi-problème.
   final filtered = applyContentGuardrail(reports, groups);
-  return filtered.groups;
+  final gated = applyMetaTimeGate(reports, filtered.groups);
+  final statused = applyGroupStatuses(reports, gated.groups);
+  return statused.groups;
 }
 
 /// Regroupement IA synchrone conservé pour compatibilité : toujours refusé

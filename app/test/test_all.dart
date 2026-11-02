@@ -813,6 +813,131 @@ Future<void> main() async {
         'T24g groupe normal conservé', kept.groups.toString());
   }
 
+  // 25. Patch unités / statuts / porte temps (poussé sur main).
+  {
+    Report repCat(String id, String text, String category, double x,
+            double y, int t,
+            {int? sev, int? exp}) =>
+        Report(
+            id: id,
+            text: text,
+            category: category,
+            x: x,
+            y: y,
+            t: t,
+            severityHint: sev,
+            exposureHint: exp);
+    Group fakeGroup(List<String> ids) => Group(
+        id: 'G1',
+        reportIds: ids,
+        confidence: 0.9,
+        singleton: ids.length == 1,
+        method: 'meta',
+        justification: 'proposition modele');
+    // T25a : le listing serveur donne les unités, partout.
+    final listing = metaListingWithUnits([
+      repCat('B1', 'nid poule rue lilas chaussee degradee', 'nid-de-poule',
+          1.0, 1.0, 500),
+      repCat('B2', 'nid poule rue lilas chaussee degradee important',
+          'nid-de-poule', 1.0, 1.0, 4820),
+    ]);
+    check(listing.contains('km') && listing.contains('min') &&
+        listing.contains('4320 min = 3,0 jours') &&
+        listing.contains('0,00 km'),
+        'T25a listing avec unités explicites', listing);
+    // T25b : la porte temps découpe distinct-temps (3 jours, local).
+    final temps = [
+      repCat('B1', 'nid poule rue lilas chaussee degradee', 'nid-de-poule',
+          1.0, 1.0, 500),
+      repCat('B2', 'nid poule rue lilas chaussee degradee important',
+          'nid-de-poule', 1.0, 1.0, 4820),
+    ];
+    final gated = applyMetaTimeGate(temps, [fakeGroup(['B1', 'B2'])]);
+    check(gated.splitGroups == 1 && gated.groups.length == 2 &&
+        gated.groups.every((g) => g.singleton),
+        'T25b porte temps découpe distinct-temps', gated.toString());
+    check(gated.groups.every((g) =>
+        g.uncertaintyReasons.any((r) => r.contains('porte-temps-meta'))),
+        'T25b-bis découpes tracées porte-temps-meta',
+        gated.groups.map((g) => g.uncertaintyReasons).toString());
+    // T25c : l'exception étendue ne découpe PAS une coupure réseau
+    // persistante (5000 min < 10080 min).
+    final etendu = [
+      repCat('P1', 'coupure electrique quartier ouest', 'coupure-electrique',
+          1.0, 1.0, 500),
+      repCat('P2', 'coupure electrique quartier ouest ascenseurs',
+          'coupure-electrique', 1.0, 1.0, 5500),
+    ];
+    final kept = applyMetaTimeGate(etendu, [fakeGroup(['P1', 'P2'])]);
+    check(kept.splitGroups == 0 && kept.groups.length == 1 &&
+        !kept.groups.single.singleton,
+        'T25c événement étendu non découpé', kept.toString());
+    // T25d : catégorie mixte -> seuil local conservateur (découpe).
+    final mixte = [
+      repCat('M1', 'nid poule rue lilas', 'nid-de-poule', 1.0, 1.0, 500),
+      repCat('M2', 'coupure electrique quartier ouest', 'coupure-electrique',
+          1.0, 1.0, 1000),
+    ];
+    final mixGated = applyMetaTimeGate(mixte, [fakeGroup(['M1', 'M2'])]);
+    check(mixGated.splitGroups == 1,
+        'T25d catégorie mixte -> seuil local', mixGated.toString());
+    // T25e : statut contradictoire (résolu contre en cours).
+    final contra = [
+      repCat('A1', 'fuite eau rue basse trottoir sec travaux termines fuite resolue',
+          'fuite-eau', 2.0, 2.0, 500, sev: 2, exp: 1),
+      repCat('A2', 'fuite eau rue basse trottoir inonde eau coule',
+          'fuite-eau', 2.0, 2.0, 520, sev: 3, exp: 2),
+    ];
+    final flagged = applyGroupStatuses(contra, [fakeGroup(['A1', 'A2'])]);
+    check(flagged.contradictoryGroups == 1,
+        'T25e groupe contradictoire compté', flagged.toString());
+    check(flagged.groups.length == 1 &&
+        flagged.groups.single.reportIds.toSet().containsAll(['A1', 'A2']),
+        'T25e-bis statut ne découpe pas le groupe',
+        flagged.groups.toString());
+    check(flagged.groups.single.uncertain &&
+        flagged.groups.single.uncertaintyReasons
+            .any((r) => r.contains('statut-contradictoire')),
+        'T25e-ter groupe marqué statut-contradictoire',
+        flagged.groups.single.uncertaintyReasons.toString());
+    // T25f : drapeau multi-problème (E1) ; cas simple non signalé.
+    final multi = [
+      repCat('E1', 'nid poule rue lilas chaussee degradee reverbere eteint',
+          'nid-de-poule', 1.0, 1.0, 500),
+      repCat('E2', 'nid poule rue lilas chaussee degradee', 'nid-de-poule',
+          1.0, 1.0, 510),
+    ];
+    final mFlag = applyGroupStatuses(multi, [fakeGroup(['E1', 'E2'])]);
+    check(mFlag.multiProblemGroups == 1,
+        'T25f groupe multi-problème compté', mFlag.toString());
+    check(mFlag.groups.single.uncertaintyReasons
+        .any((r) => r.contains('drapeau-multi-probleme') && r.contains('E1')),
+        'T25f-bis drapeau cite E1',
+        mFlag.groups.single.uncertaintyReasons.toString());
+    final simple = applyGroupStatuses(
+        multi, [fakeGroup(['E2'])]);
+    check(simple.multiProblemGroups == 0 && simple.contradictoryGroups == 0,
+        'T25f-ter cas simple non signalé', simple.toString());
+    // T25g : les statuts seuls ne changent pas les reportIds.
+    final keptIds = applyGroupStatuses(multi, [fakeGroup(['E1', 'E2'])]);
+    check(keptIds.groups.single.reportIds.length == 2,
+        'T25g statuts conservent les reportIds', keptIds.toString());
+    // T25h : non-régression E4 (doublon distant signalé, non fusionné).
+    final e4 = [
+      repCat('R1', 'nid poule rue lilas', 'nid-de-poule', 1.0, 1.0, 500),
+      repCat('R2', 'nid poule rue lilas', 'nid-de-poule', 7.5, 1.0, 510),
+    ];
+    final gE4 = groupReports(e4,
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    final amb = ambiguousPairs(e4, gE4,
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    check(gE4.length == 2,
+        'T25h E4 séparé, non fusionné', gE4.toString());
+    check(amb.any((a) =>
+        (a['reason'] as String).contains('doublon distant')),
+        'T25h-bis E4 doublon distant signalé', amb.toString());
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

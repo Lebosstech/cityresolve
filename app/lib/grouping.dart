@@ -94,6 +94,259 @@ const String guardrailReason =
   return (groups: out, cancelledMerges: cancelled);
 }
 
+/// --- Patch unités / statuts / porte temps (poussé sur main) ---
+///
+/// Choix de représentation, sans casser les tests ni la persistance :
+/// le type `Group` n'a pas de champ statut dédié, donc les statuts
+/// sont portés par `uncertain = true` + une raison explicite dans
+/// `uncertaintyReasons` (préfixe `statut-contradictoire` ou
+/// `drapeau-multi-probleme`). Aucun champ n'est ajouté à `Group`,
+/// donc `toJson` / `fromJson` et le serveur sont inchangés. Les statuts
+/// ne découpent JAMAIS un groupe : ils le signalent. Seule la porte
+/// temps (post-modèle, comme le garde-fou) découpe, et chaque découpe
+/// est comptée dans `splitGroups` et tracée par une raison
+/// `porte-temps-meta` sur chaque composante issue du découpage.
+
+/// Familles de problèmes DEV (lexique limité, vocabulaire des
+/// scénarios trompeurs + cas étendus). Ne prétend pas couvrir le
+/// français général : une forme abrégée inconnue du lexique (ex.
+/// « ndp » pour la voirie est couverte, mais une abréviation inédite
+/// ne le serait pas) échappe au drapeau — limite documentée.
+const Map<String, Set<String>> _problemFamilies = {
+  'voirie-nid': {
+    'nid', 'poule', 'ndp', 'trou', 'chaussee', 'chaus',
+    'degradee', 'degrade', 'abimee', 'abim'
+  },
+  'eclairage': {'reverbere', 'lampadaire', 'eclairage', 'eteint', 'defaillant'},
+  'eau': {'fuite', 'eau', 'inonde', 'canalisation', 'ecoulement'},
+  'electricite': {'coupure', 'courant', 'electrique', 'electricite', 'panne'},
+};
+
+const Set<String> _resolvedTokens = {
+  'resolue', 'resolu', 'sec', 'seche', 'termines', 'termine',
+  'repares', 'repare'
+};
+const Set<String> _ongoingTokens = {'inonde', 'inondee', 'coule', 'coulee'};
+
+/// Familles touchées par le texte d'un signalement.
+Set<String> reportProblemFamilies(Report r) {
+  final toks = tokens(r.text);
+  return {
+    for (final e in _problemFamilies.entries)
+      if (toks.intersection(e.value).isNotEmpty) e.key
+  };
+}
+
+/// Un signalement liste-t-il au moins deux problèmes distincts ?
+bool hasMultiProblem(Report r) => reportProblemFamilies(r).length >= 2;
+
+/// Raison de contradiction d'état (résolu contre en cours), ou null.
+String? stateContradictionReason(List<Report> members) {
+  final toks = <String>{};
+  for (final r in members) {
+    toks.addAll(tokens(r.text));
+  }
+  if (toks.intersection(_resolvedTokens).isNotEmpty &&
+      toks.intersection(_ongoingTokens).isNotEmpty) {
+    return "contradiction d'état : marques résolu et en cours dans le même groupe";
+  }
+  return null;
+}
+
+/// Raisons de contradiction d'un groupe : état + écarts de
+/// gravité/exposition déclarées >= 2. Les valeurs sont conservées,
+/// jamais moyennées.
+List<String> groupContradictionReasons(
+    List<Report> reports, List<String> reportIds) {
+  final byId = {for (final r in reports) r.id: r};
+  final members = [
+    for (final id in reportIds)
+      if (byId[id] != null) byId[id]!
+  ];
+  final reasons = <String>[];
+  final state = stateContradictionReason(members);
+  if (state != null) reasons.add(state);
+  for (final entry in {
+    'gravité': members.map((r) => r.severityHint).whereType<int>(),
+    'exposition': members.map((r) => r.exposureHint).whereType<int>(),
+  }.entries) {
+    final vals = entry.value.toList();
+    if (vals.isNotEmpty &&
+        vals.reduce((a, b) => a > b ? a : b) -
+                vals.reduce((a, b) => a < b ? a : b) >=
+            2) {
+      reasons.add(
+          'contradiction de ${entry.key} : valeurs déclarées $vals, écart >= 2, conservées sans moyenne');
+    }
+  }
+  return reasons;
+}
+
+/// Applique les statuts aux groupes, sans changer leurs reportIds.
+/// Retourne aussi le nombre de groupes contradictoires et le nombre
+/// de groupes multi-problème (traces comptables, comme
+/// `cancelledMerges` pour le garde-fou).
+({List<Group> groups, int contradictoryGroups, int multiProblemGroups})
+    applyGroupStatuses(List<Report> reports, List<Group> groups) {
+  final byId = {for (final r in reports) r.id: r};
+  final out = <Group>[];
+  var nContra = 0;
+  var nMulti = 0;
+  for (final g in groups) {
+    final reasons = [...g.uncertaintyReasons];
+    final contra = groupContradictionReasons(reports, g.reportIds);
+    if (contra.isNotEmpty) {
+      nContra++;
+      for (final r in contra) {
+        final labelled = 'statut-contradictoire : $r';
+        if (!reasons.contains(labelled)) reasons.add(labelled);
+      }
+    }
+    final multiIds = [
+      for (final id in g.reportIds)
+        if (byId[id] != null && hasMultiProblem(byId[id]!)) id
+    ];
+    if (multiIds.isNotEmpty) {
+      nMulti++;
+      reasons.add(
+          'drapeau-multi-probleme : signalement(s) ${multiIds.join(',')} listant >= 2 problèmes distincts ; groupe non comptable comme un seul incident propre');
+    }
+    out.add(Group(
+      id: g.id,
+      reportIds: g.reportIds,
+      confidence: g.confidence,
+      singleton: g.singleton,
+      abstained: g.abstained,
+      method: g.method,
+      uncertain: g.uncertain || contra.isNotEmpty || multiIds.isNotEmpty,
+      uncertaintyReasons: reasons,
+      justification: g.justification,
+    ));
+  }
+  return (
+    groups: out,
+    contradictoryGroups: nContra,
+    multiProblemGroups: nMulti
+  );
+}
+
+/// Porte temps post-modèle (déterministe, comptée).
+///
+/// Seuil local : 360 min (6 h), aligné sur la porte classique
+/// (deltaTMaxH = 6 h) pour les incidents ponctuels. Exception
+/// événements étendus : si TOUS les signalements du groupe ont une
+/// catégorie dans `extendedCategories` (coupure de réseau, panne
+/// réseau — un événement réseau peut persister plusieurs jours),
+/// seuil 10080 min (7 jours). Catégorie mixte ou ponctuelle -> seuil
+/// local (choix conservateur : on découpe). La porte ne doit pas
+/// casser les événements étendus : c'est pourquoi l'exception est
+/// explicite et testée (T25c), et pourquoi un groupe mixte retombe
+/// sur le seuil local plutôt que sur le seuil étendu.
+const int localTimeGateMin = 360;
+const int extendedTimeGateMin = 10080;
+const Set<String> extendedCategories = {
+  'coupure-electrique',
+  'panne-reseau'
+};
+
+({int gateMin, String kind}) timeGateFor(
+    List<Report> reports, List<String> reportIds) {
+  final byId = {for (final r in reports) r.id: r};
+  final cats = {
+    for (final id in reportIds)
+      if (byId[id] != null) byId[id]!.category
+  };
+  if (cats.isNotEmpty &&
+      cats.every((c) => extendedCategories.contains(c))) {
+    return (gateMin: extendedTimeGateMin, kind: 'étendu');
+  }
+  return (gateMin: localTimeGateMin, kind: 'local');
+}
+
+/// Découpe post-modèle les groupes violant la porte temps.
+/// Retourne les groupes découpés + le nombre de groupes découpés.
+/// Chaque composante issue d'un découpage porte une raison
+/// `porte-temps-meta` ; les groupes non découpés sont inchangés.
+({List<Group> groups, int splitGroups}) applyMetaTimeGate(
+    List<Report> reports, List<Group> groups) {
+  final byId = {for (final r in reports) r.id: r};
+  final out = <Group>[];
+  var split = 0;
+  for (final g in groups) {
+    final ids = g.reportIds;
+    if (ids.length <= 1) {
+      out.add(g);
+      continue;
+    }
+    final gate = timeGateFor(reports, ids);
+    final parent = {for (final id in ids) id: id};
+    String find(String x) {
+      var r = x;
+      while (parent[r] != r) {
+        r = parent[r]!;
+      }
+      while (parent[x] != r) {
+        final nxt = parent[x]!;
+        parent[x] = r;
+        x = nxt;
+      }
+      return r;
+    }
+
+    for (var i = 0; i < ids.length; i++) {
+      for (var j = i + 1; j < ids.length; j++) {
+        final a = byId[ids[i]];
+        final b = byId[ids[j]];
+        if (a != null && b != null && (a.t - b.t).abs() <= gate.gateMin) {
+          parent[find(ids[i])] = find(ids[j]);
+        }
+      }
+    }
+    final comps = <String, List<String>>{};
+    for (final id in ids) {
+      comps.putIfAbsent(find(id), () => []).add(id);
+    }
+    if (comps.length == 1) {
+      out.add(g);
+      continue;
+    }
+    split++;
+    for (final comp in comps.values) {
+      comp.sort();
+      final reasons = [...g.uncertaintyReasons];
+      reasons.add(
+          'porte-temps-meta : fusion proposée découpée, délai > ${gate.gateMin} min (seuil ${gate.kind})');
+      out.add(Group(
+        id: '',
+        reportIds: comp,
+        confidence: comp.length == 1 ? 0.0 : g.confidence,
+        singleton: comp.length == 1,
+        abstained: g.abstained,
+        method: g.method,
+        uncertain: true,
+        uncertaintyReasons: reasons,
+        justification: g.justification,
+      ));
+    }
+  }
+  out.sort((a, b) => a.reportIds.first.compareTo(b.reportIds.first));
+  for (var i = 0; i < out.length; i++) {
+    final g = out[i];
+    out[i] = Group(
+      id: 'G${i + 1}',
+      reportIds: g.reportIds,
+      confidence: g.confidence,
+      singleton: g.singleton,
+      abstained: g.abstained,
+      method: g.method,
+      uncertain: g.uncertain,
+      uncertaintyReasons: g.uncertaintyReasons,
+      justification: g.justification,
+    );
+  }
+  return (groups: out, splitGroups: split);
+}
+
 double jaccard(String a, String b) {
   final ta = tokens(a);
   final tb = tokens(b);
@@ -232,6 +485,19 @@ List<Group> groupReports(
                   sevHints.reduce((a, b) => a < b ? a : b) >=
               2) {
         reasons.add('gravités déclarées contradictoires dans le groupe');
+      }
+      // Patch unités/statuts : le classique porte aussi les statuts
+      // (raisons seulement, regroupement inchangé).
+      final members = comp.map((i) => reports[i]).toList();
+      final state = stateContradictionReason(members);
+      if (state != null) reasons.add('statut-contradictoire : $state');
+      final multiIds = members
+          .where((r) => hasMultiProblem(r))
+          .map((r) => r.id)
+          .toList();
+      if (multiIds.isNotEmpty) {
+        reasons.add(
+            'drapeau-multi-probleme : signalement(s) ${multiIds.join(',')} listant >= 2 problèmes distincts ; groupe non comptable comme un seul incident propre');
       }
     }
     gi++;
