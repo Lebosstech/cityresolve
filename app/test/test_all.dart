@@ -938,6 +938,113 @@ Future<void> main() async {
         'T25h-bis E4 doublon distant signalé', amb.toString());
   }
 
+  // 26. Découpage multi-problème (patch local, poussé sur main).
+  {
+    Report repS(String id, String text) => Report(
+        id: id,
+        text: text,
+        category: 'nid-de-poule',
+        x: 1.0,
+        y: 1.0,
+        t: 500,
+        severityHint: 2,
+        exposureHint: 1);
+    // T26a : cas d'origine, E1 deux problèmes + E2 nid seul.
+    final origine = [
+      repS('E1', 'nid poule rue lilas chaussee degradee reverbere eteint'),
+      Report(
+          id: 'E2',
+          text: 'nid poule rue lilas chaussee degradee',
+          category: 'nid-de-poule',
+          x: 1.0,
+          y: 1.0,
+          t: 510,
+          severityHint: 2,
+          exposureHint: 1),
+    ];
+    final gSplit = groupSplitReports(origine,
+        distMaxM: dDist, deltaTMaxH: dDt);
+    final idsSplit = gSplit.map((g) => g.reportIds).toList();
+    check(gSplit.length == 2,
+        'T26a origine découpée en 2 groupes', idsSplit.toString());
+    check(idsSplit.any((g) =>
+            g.toSet().containsAll(['E1:voirie-nid', 'E2:voirie-nid'])) &&
+        idsSplit.any((g) => g.length == 1 && g.single == 'E1:eclairage'),
+        'T26a-bis éclairage survit en incident propre',
+        idsSplit.toString());
+    final byIdOrig = {for (final r in origine) r.id: r};
+    final incSplit = aggregateSplitGroups(gSplit, byIdOrig);
+    check(incSplit.length == 2,
+        'T26a-ter 2 incidents pour l’optimiseur', incSplit.toString());
+    check(incSplit.any((i) => i.reportIds.single == 'E1:eclairage'),
+        'T26a-quater incident éclairage traçable', incSplit.toString());
+    // T26b : un seul signalement à deux problèmes -> 2 incidents.
+    final seul = [
+      repS('M1', 'fuite eau rue basse trottoir inonde reverbere eteint')
+    ];
+    final gSeul = groupSplitReports(seul, distMaxM: dDist, deltaTMaxH: dDt);
+    check(gSeul.length == 2,
+        'T26b signalement seul découpé en 2', gSeul.toString());
+    // T26c : même problème deux fois -> pas de découpage.
+    final faux = [
+      repS('N1', 'nid poule rue lilas chaussee degradee trou grand')
+    ];
+    final gFaux = groupSplitReports(faux, distMaxM: dDist, deltaTMaxH: dDt);
+    check(gFaux.length == 1 && gFaux.single.reportIds.single == 'N1:voirie-nid',
+        'T26c faux multi-problème non découpé', gFaux.toString());
+    // T26d : mention vague -> pas de découpage automatique.
+    final vague = [
+      repS('V1',
+          'nid poule rue lilas chaussee degradee quelque chose aussi la nuit')
+    ];
+    final gVague =
+        groupSplitReports(vague, distMaxM: dDist, deltaTMaxH: dDt);
+    check(gVague.length == 1,
+        'T26d vague non découpé automatiquement', gVague.toString());
+    // T26e : trois problèmes -> 3 incidents.
+    final trois = [
+      repS('T1',
+          'nid poule rue lilas chaussee degradee reverbere eteint fuite eau trottoir inonde')
+    ];
+    final gTrois =
+        groupSplitReports(trois, distMaxM: dDist, deltaTMaxH: dDt);
+    check(gTrois.length == 3,
+        'T26e trois problèmes découpés en 3', gTrois.toString());
+    // T26f : post-filtre sur le groupe classique [E1, E2].
+    final gClass = groupReports(origine,
+        distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
+    final post = splitGroupsByFamily(origine, gClass);
+    check(post.splitGroups == 1 && post.groups.length == 2,
+        'T26f post-filtre découpe le groupe classique',
+        post.groups.toString());
+    // T26g : réversibilité, chaque sous-signalement retrouve son origine.
+    final units = expandToSubunits(origine);
+    check(units.every((u) => byIdOrig.containsKey(u.originId)) &&
+        units.map((u) => u.originId).toSet().containsAll(['E1', 'E2']),
+        'T26g origines récupérables', units.map((u) => u.id).toString());
+    // T26h : famille inconnue ne fusionne jamais.
+    final inconnus = [
+      Report(
+          id: 'X1',
+          text: 'xyz abc',
+          category: 'autre',
+          x: 1.0,
+          y: 1.0,
+          t: 500),
+      Report(
+          id: 'X2',
+          text: 'xyz abc',
+          category: 'autre',
+          x: 1.0,
+          y: 1.0,
+          t: 510),
+    ];
+    final gInc =
+        groupSplitReports(inconnus, distMaxM: dDist, deltaTMaxH: dDt);
+    check(gInc.length == 2,
+        'T26h inconnus jamais fusionnés', gInc.toString());
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

@@ -347,6 +347,217 @@ const Set<String> extendedCategories = {
   return (groups: out, splitGroups: split);
 }
 
+/// --- Patch découpage multi-problème (local, poussé sur main) ---
+///
+/// Un signalement peut décrire plusieurs problèmes distincts. Le
+/// drapeau multi-problème existant signale ce cas, il ne le résout
+/// pas : un groupe [E1, E2] reste un seul incident pour l'optimiseur,
+/// et le problème secondaire (éclairage) disparaît du plan.
+///
+/// Le découpage résout ce cas au niveau du regroupement, sans
+/// inventer de problème : chaque signalement est expansé en
+/// sous-signalements, un par famille DEV explicite
+/// (`reportProblemFamilies`, lexique limité documenté, pas de
+/// prétention au français général). Un sous-signalement s'identifie
+/// `ORIGINE:FAMILLE` (ex. `E1:eclairage`) : l'origine est
+/// récupérable en lecture en coupant au premier `:` (voir
+/// `originIdOfSubunit`), donc le découpage est réversible.
+///
+/// Règles :
+/// - deux sous-signalements ne sont groupés que s'ils partagent la
+///   MÊME famille (famille `inconnu` exclue : jamais de fusion) et
+///   passent les portes distance et temps du regroupement classique.
+///   Aucun seuil Jaccard n'est appliqué après découpage : la famille
+///   explicite est l'appariement sémantique. Limite assumée : cette
+///   règle est plus permissive que le classique ; elle ne vaut que
+///   parce que la famille est explicite.
+/// - un contenu insuffisant (garde-fou) ne fusionne jamais.
+/// - un signalement à une seule famille n'est pas découpé ; une
+///   mention vague sans famille explicite ne crée aucun
+///   sous-signalement, donc aucun découpage automatique.
+/// - `aggregate()` classique NE DOIT PAS être appelé sur des groupes
+///   de sous-signalements : il chercherait `E1:eclairage` dans la
+///   table des signalements et échouerait. Utiliser
+///   `aggregateSplitGroups()` (lib/incidents.dart), qui agrège par
+///   sous-signalement et conserve les identifiants découpés dans
+///   l'incident. La persistance des sous-signalements par le serveur
+///   réel (MongoDB / JSON) reste à vérifier sur serveur réel.
+/// - les groupes découpés portent `method: 'split'` et une raison
+///   `découpage-multi-problème` quand ils proviennent d'un
+///   signalement multi-problème ; ils sont marqués incertains, car
+///   le découpage repose sur un lexique DEV, pas sur une vérification
+///   terrain.
+class Subunit {
+  final String id; // ORIGINE:FAMILLE, ex. E1:eclairage
+  final String originId;
+  final String family;
+  final Report report;
+  const Subunit(
+      {required this.id,
+      required this.originId,
+      required this.family,
+      required this.report});
+}
+
+/// Origine d'un identifiant de sous-signalement (réversibilité).
+String originIdOfSubunit(String subunitId) {
+  final i = subunitId.indexOf(':');
+  return i < 0 ? subunitId : subunitId.substring(0, i);
+}
+
+/// Expansion déterministe : un sous-signalement par famille DEV.
+/// Ordre des familles = ordre du lexique (voirie-nid, eclairage, eau,
+/// electricite). Aucune famille -> un seul sous-signalement `inconnu`,
+/// qui ne fusionnera jamais.
+List<Subunit> expandToSubunits(List<Report> reports) {
+  final out = <Subunit>[];
+  for (final r in reports) {
+    final fams = reportProblemFamilies(r);
+    if (fams.isEmpty) {
+      out.add(Subunit(
+          id: '${r.id}:inconnu', originId: r.id, family: 'inconnu', report: r));
+    } else {
+      for (final f in fams) {
+        out.add(Subunit(
+            id: '${r.id}:$f', originId: r.id, family: f, report: r));
+      }
+    }
+  }
+  return out;
+}
+
+class _UnionFindSplit {
+  final List<int> _p;
+  _UnionFindSplit(int n) : _p = List.generate(n, (i) => i);
+  int find(int x) {
+    while (_p[x] != x) {
+      _p[x] = _p[_p[x]];
+      x = _p[x];
+    }
+    return x;
+  }
+
+  void union(int a, int b) {
+    _p[find(a)] = find(b);
+  }
+}
+
+/// Regroupement par sous-signalements (global, pas post-filtre).
+List<Group> groupSplitReports(
+  List<Report> reports, {
+  required double distMaxM,
+  required double deltaTMaxH,
+}) {
+  final units = expandToSubunits(reports);
+  final distMaxKm = distMaxM / 1000.0;
+  final deltaTMaxMin = (deltaTMaxH * 60).round();
+  final uf = _UnionFindSplit(units.length);
+  for (var i = 0; i < units.length; i++) {
+    for (var j = i + 1; j < units.length; j++) {
+      final a = units[i], b = units[j];
+      if (a.family != b.family || a.family == 'inconnu') continue;
+      if (hasInsufficientContent(a.report.text) ||
+          hasInsufficientContent(b.report.text)) {
+        continue;
+      }
+      if (distKm(a.report, b.report) <= distMaxKm &&
+          dtMin(a.report, b.report) <= deltaTMaxMin) {
+        uf.union(i, j);
+      }
+    }
+  }
+  final comps = <int, List<int>>{};
+  for (var i = 0; i < units.length; i++) {
+    comps.putIfAbsent(uf.find(i), () => []).add(i);
+  }
+  final ordered = comps.values.toList()
+    ..sort((a, b) => units[a.first].id.compareTo(units[b.first].id));
+  final groups = <Group>[];
+  var gi = 0;
+  for (final comp in ordered) {
+    comp.sort((a, b) => units[a].id.compareTo(units[b].id));
+    gi++;
+    final ids = [for (final i in comp) units[i].id];
+    final origins = {for (final i in comp) units[i].originId};
+    final multi = origins.any((id) => hasMultiProblem(
+        reports.firstWhere((r) => r.id == id)));
+    final reasons = <String>[];
+    if (multi) {
+      reasons.add(
+          'découpage-multi-problème : groupe issu d’un signalement listant >= 2 problèmes distincts ; vérifier le découpage (lexique DEV)');
+    }
+    groups.add(Group(
+      id: 'G$gi',
+      reportIds: ids,
+      confidence: 0.0,
+      singleton: ids.length == 1,
+      method: 'split',
+      uncertain: multi,
+      uncertaintyReasons: reasons,
+      justification: multi
+          ? 'Découpage multi-problème par famille DEV ; origine(s) : ${origins.join(',')}'
+          : null,
+    ));
+  }
+  return groups;
+}
+
+/// Post-filtre : découpe chaque groupe de signalements en
+/// sous-groupes par famille, SANS fusionner entre groupes d'origine.
+/// Un groupe sans signalement multi-problème est retourné inchangé
+/// (identifiants de signalements, pas de sous-signalements).
+/// Retourne les groupes découpés + le nombre de groupes découpés.
+({List<Group> groups, int splitGroups}) splitGroupsByFamily(
+    List<Report> reports, List<Group> groups) {
+  final byId = {for (final r in reports) r.id: r};
+  final out = <Group>[];
+  var split = 0;
+  for (final g in groups) {
+    final members = [for (final id in g.reportIds) if (byId[id] != null) byId[id]!];
+    if (!members.any(hasMultiProblem)) {
+      out.add(g);
+      continue;
+    }
+    split++;
+    final units = expandToSubunits(members);
+    final byFamily = <String, List<String>>{};
+    for (final u in units) {
+      byFamily.putIfAbsent(u.family, () => []).add(u.id);
+    }
+    for (final entry in byFamily.entries) {
+      entry.value.sort();
+      out.add(Group(
+        id: '',
+        reportIds: entry.value,
+        confidence: 0.0,
+        singleton: entry.value.length == 1,
+        method: 'split',
+        uncertain: true,
+        uncertaintyReasons: [
+          'découpage-multi-problème : groupe ${g.id} découpé par famille DEV (${entry.key}) ; origine(s) : ${members.map((r) => r.id).join(',')}'
+        ],
+        justification: g.justification,
+      ));
+    }
+  }
+  out.sort((a, b) => a.reportIds.first.compareTo(b.reportIds.first));
+  for (var i = 0; i < out.length; i++) {
+    final g = out[i];
+    out[i] = Group(
+      id: 'G${i + 1}',
+      reportIds: g.reportIds,
+      confidence: g.confidence,
+      singleton: g.singleton,
+      abstained: g.abstained,
+      method: g.method,
+      uncertain: g.uncertain,
+      uncertaintyReasons: g.uncertaintyReasons,
+      justification: g.justification,
+    );
+  }
+  return (groups: out, splitGroups: split);
+}
+
 double jaccard(String a, String b) {
   final ta = tokens(a);
   final tb = tokens(b);

@@ -31,6 +31,86 @@ _Attr _aggregateAttr(List<int?> hints) {
   return _Attr(null, statusContradictoire, values);
 }
 
+/// Domaine métier d'une famille DEV (découpage). Aligné sur
+/// `categoryDomain` : l'éclairage y est rattaché à la voirie, comme
+/// la catégorie `eclairage`, pour rester assignable aux équipes
+/// existantes (equipe-1 : voirie, espaces-verts ; equipe-2 : voirie,
+/// reseaux). Aucune gravité n'est déduite de la famille.
+const Map<String, String> familyDomain = {
+  'voirie-nid': 'voirie',
+  'eclairage': 'voirie',
+  'eau': 'reseaux',
+  'electricite': 'reseaux',
+  'inconnu': 'voirie',
+};
+
+/// Agrégation pour groupes de SOUS-signalements (voir
+/// `groupSplitReports` / `splitGroupsByFamily`).
+/// NE PAS appeler `aggregate()` sur ces groupes : il chercherait
+/// `E1:eclairage` dans la table des signalements et échouerait.
+/// Ici, chaque identifiant est résolu vers son signalement d'origine
+/// (partie avant `:`), et l'incident conserve les identifiants
+/// découpés dans `reportIds` : l'origine est donc traçable, et
+/// l'optimiseur voit autant de tâches que de groupes découpés.
+/// Limite : deux volets d'un même signalement partagent les mêmes
+/// gravité/exposition déclarées (celles de l'origine) ; le découpage
+/// ne crée ni gravité ni exposition propres à un volet.
+List<Incident> aggregateSplitGroups(
+    List<Group> groups, Map<String, Report> byId) {
+  final out = <Incident>[];
+  var ii = 0;
+  for (final g in groups) {
+    ii++;
+    final origins = <Report>[];
+    final fams = <String>{};
+    for (final sid in g.reportIds) {
+      final i = sid.indexOf(':');
+      final originId = i < 0 ? sid : sid.substring(0, i);
+      final fam = i < 0 ? 'inconnu' : sid.substring(i + 1);
+      final rep = byId[originId];
+      if (rep != null) origins.add(rep);
+      fams.add(fam);
+    }
+    if (origins.isEmpty) continue;
+    final sev = _aggregateAttr(origins.map((r) => r.severityHint).toList());
+    final expo = _aggregateAttr(origins.map((r) => r.exposureHint).toList());
+    var sx = 0.0, sy = 0.0;
+    var first = origins.first.t;
+    for (final r in origins) {
+      sx += r.x;
+      sy += r.y;
+      if (r.t < first) first = r.t;
+    }
+    final dom = fams.length == 1
+        ? (familyDomain[fams.single] ?? 'voirie')
+        : 'voirie';
+    out.add(Incident(
+      id: 'I$ii',
+      reportIds: g.reportIds,
+      severity: sev.value,
+      severityStatus: sev.status,
+      severityValues: sev.values,
+      exposure: expo.value,
+      exposureStatus: expo.status,
+      exposureValues: expo.values,
+      domain: dom,
+      domainConflict: fams.length > 1,
+      x: sx / origins.length,
+      y: sy / origins.length,
+      firstSeen: first,
+      confidence: g.confidence,
+    ));
+  }
+  out.sort((a, b) {
+    final dw = b.weight.compareTo(a.weight);
+    if (dw != 0) return dw;
+    final dd = a.deadline.compareTo(b.deadline);
+    if (dd != 0) return dd;
+    return a.id.compareTo(b.id);
+  });
+  return out;
+}
+
 List<Incident> aggregate(
     List<Group> groups, Map<String, Report> byId) {
   final out = <Incident>[];
