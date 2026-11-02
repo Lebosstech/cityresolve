@@ -1,0 +1,42 @@
+{
+  "contra-resolu": [
+    [
+      "A1",
+      "A2"
+    ]
+  ],
+  "distinct-temps": [
+    [
+      "B1"
+    ],
+    [
+      "B2"
+    ]
+  ],
+  "distinct-detail": [
+    [
+      "C1"
+    ],
+    [
+      "C2"
+    ]
+  ],
+  "categorie-contredit": [
+    [
+      "D1",
+      "D2"
+    ]
+  ],
+  "multi-probleme": [
+    [
+      "E1",
+      "E2"
+    ]
+  ],
+  "typo-abreviation": [
+    [
+      "F1",
+      "F2"
+    ]
+  ]
+}

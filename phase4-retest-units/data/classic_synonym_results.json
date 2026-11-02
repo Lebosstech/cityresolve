@@ -1,0 +1,224 @@
+{
+  "contra-resolu": {
+    "classique": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    }
+  },
+  "distinct-temps": {
+    "classique": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "distinct-detail": {
+    "classique": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "categorie-contredit": {
+    "classique": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "f1": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "multi-probleme": {
+    "classique": {
+      "groups": [
+        [
+          "E1",
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "typo-abreviation": {
+    "classique": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "synonymes": {
+      "groups": [
+        [
+          "F1"
+        ],
+        [
+          "F2"
+        ]
+      ],
+      "f1": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "precision": 1.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    }
+  }
+}

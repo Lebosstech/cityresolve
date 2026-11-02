@@ -1,0 +1,125 @@
+{
+  "contra-resolu": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "A2"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ],
+  "distinct-temps": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "B1"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "B2"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ],
+  "distinct-detail": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "C1"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "C2"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ],
+  "categorie-contredit": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2"
+      ],
+      "singleton": false,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ],
+  "multi-probleme": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "E2"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ],
+  "typo-abreviation": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "F1"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "F2"
+      ],
+      "singleton": true,
+      "method": "synonymes",
+      "uncertain": false,
+      "uncertaintyReasons": []
+    }
+  ]
+}

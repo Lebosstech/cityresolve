@@ -1,0 +1,944 @@
+{
+  "per_scenario": [
+    {
+      "scenario": "contra-resolu",
+      "truth_groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "meta_old_f1": 0.0,
+      "meta_old_groups": [
+        [
+          "A1"
+        ],
+        [
+          "A2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "A1",
+            "A2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "A1",
+            "A2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "A1",
+            "A2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "n_contradictoire": 1,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "A1",
+            "A2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "n_contradictoire": 1,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      }
+    },
+    {
+      "scenario": "distinct-temps",
+      "truth_groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "meta_old_f1": 0.0,
+      "meta_old_groups": [
+        [
+          "B1",
+          "B2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      }
+    },
+    {
+      "scenario": "distinct-detail",
+      "truth_groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "meta_old_f1": 1.0,
+      "meta_old_groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 0,
+          "merged_clean": 0,
+          "merged_flagged": 0
+        }
+      }
+    },
+    {
+      "scenario": "categorie-contredit",
+      "truth_groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "meta_old_f1": 1.0,
+      "meta_old_groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      }
+    },
+    {
+      "scenario": "multi-probleme",
+      "truth_groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "meta_old_f1": 0.0,
+      "meta_old_groups": [
+        [
+          "E1",
+          "E2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "n_contradictoire": 0,
+        "n_multi": 1,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "f1": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.0,
+          "recall": 1.0,
+          "f1": 0.0
+        },
+        "splits": 0,
+        "n_contradictoire": 0,
+        "n_multi": 1,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 0,
+          "merged_flagged": 1
+        }
+      }
+    },
+    {
+      "scenario": "typo-abreviation",
+      "truth_groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "meta_old_f1": 1.0,
+      "meta_old_groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "meta_raw": {
+        "groups": [
+          [
+            "F1",
+            "F2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      },
+      "meta_gate": {
+        "groups": [
+          [
+            "F1",
+            "F2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "gate_details": []
+      },
+      "meta_flag": {
+        "groups": [
+          [
+            "F1",
+            "F2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      },
+      "meta_full": {
+        "groups": [
+          [
+            "F1",
+            "F2"
+          ]
+        ],
+        "f1": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "splits": 0,
+        "n_contradictoire": 0,
+        "n_multi": 0,
+        "clean_flagged": {
+          "merged_total": 1,
+          "merged_clean": 1,
+          "merged_flagged": 0
+        }
+      }
+    }
+  ],
+  "stages": {
+    "meta_old_f1": {
+      "mean_per_scenario": 0.5,
+      "values": [
+        0.0,
+        0.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    "meta_raw": {
+      "mean_per_scenario": 0.8333333333333334,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    "meta_gate": {
+      "mean_per_scenario": 0.8333333333333334,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    "meta_flag": {
+      "mean_per_scenario": 0.8333333333333334,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    },
+    "meta_full": {
+      "mean_per_scenario": 0.8333333333333334,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "status_on_truth": {
+    "contra-resolu": {
+      "groups": [
+        [
+          "A1",
+          "A2"
+        ]
+      ],
+      "n_contradictoire": 1,
+      "n_multi": 0,
+      "reasons": [
+        [
+          "statut-contradictoire : contradiction d'etat : marques resolu et en cours dans le meme groupe"
+        ]
+      ]
+    },
+    "distinct-temps": {
+      "groups": [
+        [
+          "B1"
+        ],
+        [
+          "B2"
+        ]
+      ],
+      "n_contradictoire": 0,
+      "n_multi": 0,
+      "reasons": [
+        [],
+        []
+      ]
+    },
+    "distinct-detail": {
+      "groups": [
+        [
+          "C1"
+        ],
+        [
+          "C2"
+        ]
+      ],
+      "n_contradictoire": 0,
+      "n_multi": 0,
+      "reasons": [
+        [],
+        []
+      ]
+    },
+    "categorie-contredit": {
+      "groups": [
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "n_contradictoire": 0,
+      "n_multi": 0,
+      "reasons": [
+        []
+      ]
+    },
+    "multi-probleme": {
+      "groups": [
+        [
+          "E1"
+        ],
+        [
+          "E2"
+        ]
+      ],
+      "n_contradictoire": 0,
+      "n_multi": 1,
+      "reasons": [
+        [
+          "drapeau-multi-probleme : signalement(s) E1 listant >= 2 problemes distincts ; groupe non comptable comme un seul incident propre"
+        ],
+        []
+      ]
+    },
+    "typo-abreviation": {
+      "groups": [
+        [
+          "F1",
+          "F2"
+        ]
+      ],
+      "n_contradictoire": 0,
+      "n_multi": 0,
+      "reasons": [
+        []
+      ]
+    }
+  },
+  "status_on_classic_synonym": {
+    "contra-resolu": {
+      "classique": {
+        "groups": [
+          [
+            "A1"
+          ],
+          [
+            "A2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "A1"
+          ],
+          [
+            "A2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      }
+    },
+    "distinct-temps": {
+      "classique": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "B1"
+          ],
+          [
+            "B2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      }
+    },
+    "distinct-detail": {
+      "classique": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "C1"
+          ],
+          [
+            "C2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      }
+    },
+    "categorie-contredit": {
+      "classique": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "D1",
+            "D2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      }
+    },
+    "multi-probleme": {
+      "classique": {
+        "groups": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 1
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "E1"
+          ],
+          [
+            "E2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 1
+      }
+    },
+    "typo-abreviation": {
+      "classique": {
+        "groups": [
+          [
+            "F1"
+          ],
+          [
+            "F2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      },
+      "synonymes": {
+        "groups": [
+          [
+            "F1"
+          ],
+          [
+            "F2"
+          ]
+        ],
+        "n_contradictoire": 0,
+        "n_multi": 0
+      }
+    }
+  }
+}

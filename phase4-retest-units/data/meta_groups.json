@@ -1,0 +1,132 @@
+{
+  "contra-resolu": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "A1",
+        "A2"
+      ],
+      "confidence": 0.15000000000000002,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modele 0.85"
+      ],
+      "justification": "Analyse exhaustive sans raccourci. Unites donnees et utilisees : x et y en kilometres (km), t en minutes (min). A1 : x=2,0 km, y=2,0 km, t=500 min, categorie=fuite-eau, texte mots : fuite / eau / rue / basse / trottoir / sec / travaux / termines / fuite / resolue. A2 : x=2,0 km, y=2,0 km, t=520 min, categorie=fuite-eau, texte mots : fuite / eau / rue / basse / trottoir / inonde / eau / coule. Paire unique A1-A2 : distance 0,00 km, delai 20 min soit 20 minutes soit 0,33 heure, delai court tres inferieur a 1440 min=1 jour. Lexique commun : fuite eau rue basse trottoir dans les deux. Divergence explicite d'etat : A1 trottoir sec + travaux termines + fuite resolue = etat resolu/ferme, A2 trottoir inonde + eau coule = etat en cours/actif. Contradiction resolu contre en cours signalee explicitement ici. Categories : les deux fuite-eau, coherentes avec textes qui mentionnent fuite eau, pas de contradiction categorie-texte. Pas de signalement a deux problemes distincts detecte : chaque texte decrit une fuite et son etat. Type d'evenement ponctuel fuite d'eau : meme lieu exact et delai court de 20 minutes ne prouvent pas a eux seuls l'identite d'incident reel ; persistance possible mais deux incidents distincts restent possibles et la contradiction d'etat augmente le doute. Regroupement propose uniquement sur identite stricte de lieu 0,00 km + proximite temporelle 20 minutes + meme objet rue basse trottoir + meme categorie, mais identite de meme incident reel tres douteuse du fait de l'incompatibilite d'etat sec/resolue vs inonde/coule a 20 minutes d'intervalle. Aucune gravite, lieu, temps, fait ou certitude supplementaire invente.",
+      "incertitude": 0.85
+    }
+  ],
+  "distinct-temps": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "B1"
+      ],
+      "confidence": 0.5,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modele 0.50"
+      ],
+      "justification": "Groupe singleton B1 pour ne pas fusionner aveuglément. B1: x=1,0 km, y=1,0 km, t=500 min, categorie=nid-de-poule cohérente avec texte 'nid poule rue lilas chaussee degradee'. B2: x=1,0 km, y=1,0 km, t=4820 min, categorie=nid-de-poule, texte 'nid poule rue lilas chaussee degradee important'. Unités données dans listing: x et y en kilomètres (km), t en minutes (min). Paire B1-B2: distance 0,00 km donc même lieu exact, délai 4320 min = 3,0 jours car 3x1440 min, délai long pas court. Mots communs: nid, poule, rue, lilas, chaussee, degradee; mot supplémentaire en B2 seul: important, interprété comme intensifieur lexical sans second problème distinct, sans contradiction d'état résolu contre en cours, sans contradiction catégorie contre texte. Type ponctuel nid-de-poule: même lieu à 0,00 km et texte quasi identique ne prouvent pas même incident, deux incidents distincts restent possibles à 3 jours d'intervalle même avec texte quasi identique, persistance d'une dégradation ne prouve pas identité. Ambiguïté résiduelle signalée.",
+      "incertitude": 0.5
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "B2"
+      ],
+      "confidence": 0.5,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modele 0.50"
+      ],
+      "justification": "Groupe singleton B2 pour ne pas fusionner aveuglément. B2: x=1,0 km, y=1,0 km, t=4820 min, categorie=nid-de-poule cohérente avec texte 'nid poule rue lilas chaussee degradee important'. B1: x=1,0 km, y=1,0 km, t=500 min, categorie=nid-de-poule, texte 'nid poule rue lilas chaussee degradee'. Unités données dans listing: x et y en kilomètres (km), t en minutes (min). Paire B1-B2: distance 0,00 km donc même lieu exact, délai 4320 min = 3,0 jours car 3x1440 min, délai long pas court. Comparaison mot à mot: nid, poule, rue, lilas, chaussee, degradee présents dans les deux; important présent seul en B2, sans créer un second problème distinct, sans indication d'état résolu contre en cours, sans contradiction catégorie contre texte. Type ponctuel nid-de-poule: délai de plusieurs jours au même lieu ne prouve pas même incident, deux incidents distincts restent possibles même avec texte quasi identique, persistance ne prouve pas identité. Ambiguïté résiduelle signalée.",
+      "incertitude": 0.5
+    }
+  ],
+  "distinct-detail": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "C1"
+      ],
+      "confidence": 0.65,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modele 0.35"
+      ],
+      "justification": "C1 isolé: x=1,0 km, y=1,0 km, t=500 min, catégorie nid-de-poule cohérente avec texte 'nid poule trottoir nord rue lilas', pas de double problème, pas de mention résolu/en cours. Paire C1-C2 analysée: distance 0,00 km, délai 10 min soit 10 minutes. Non-fusion malgré identité de coordonnées et catégorie car opposition textuelle nord (C1) contre sud (C2) pour trottoir rue lilas: contradiction de localisation incompatible avec un même nid-de-poule ponctuel sans supposition d'erreur; deux incidents distincts sur trottoirs opposés restent possibles.",
+      "incertitude": 0.35
+    },
+    {
+      "id": "G2",
+      "reportIds": [
+        "C2"
+      ],
+      "confidence": 0.65,
+      "singleton": true,
+      "method": "meta",
+      "uncertain": true,
+      "uncertaintyReasons": [
+        "incertitude modele 0.35"
+      ],
+      "justification": "C2 isolé: x=1,0 km, y=1,0 km, t=510 min, catégorie nid-de-poule cohérente avec texte 'nid poule trottoir sud rue lilas', pas de double problème, pas de mention résolu/en cours. Même paire C1-C2: distance 0,00 km, délai 10 min soit 10 minutes. Non-fusion pour même raison: sud (C2) contre nord (C1); pour incident ponctuel type nid-de-poule la proximité spatio-temporelle ne prouve pas l'identité et la persistance ne peut être invoquée ici.",
+      "incertitude": 0.35
+    }
+  ],
+  "categorie-contredit": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "D1",
+        "D2"
+      ],
+      "confidence": 0.8,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "Regroupement D1 (x=2,0 km, y=2,0 km, t=500 min, categorie=nid-de-poule, texte=\"fuite eau rue basse trottoir inonde\") et D2 (x=2,0 km, y=2,0 km, t=520 min, categorie=fuite-eau, texte=\"fuite eau rue basse trottoir inonde canalisation\"). Distance calculee donnee : 0,00 km. Delai calcule donne : 20 min, soit 20 minutes. Analyse lexicale : mots communs \"fuite\", \"eau\", \"rue\", \"basse\", \"trottoir\", \"inonde\" identiques dans le meme ordre ; D2 ajoute seul \"canalisation\" en fin, precisant la cause presumee sans contredire D1. Localisation identique au metre pres d'apres coordonnees fournies, compatibilite temporelle elevee pour une fuite d'eau ponctuelle avec 20 minutes d'ecart. Anomalie a signaler explicitement : la categorie declaree de D1 (nid-de-poule) contredit son propre texte qui decrit une fuite d'eau et aucun nid-de-poule ; la categorie de D2 (fuite-eau) est coherente avec son texte et avec le texte de D1. Pas de description de deux problemes distincts dans un meme signalement : chaque texte ne decrit qu'un seul probleme de fuite/inondation. Pas de contradiction verifiable sur l'etat resolu contre en cours : aucun des deux textes ne mentionne resolu, en cours, persiste ou repare. Aucune information supplementaire de gravite ou d'adresse detaillee au-dela de \"rue basse\" et des coordonnees fournies n'est presente dans le listing, donc non evaluable. Malgre la contradiction de categorie de D1, l'identite d'incident reste tres probable vu lieu, temps et texte.",
+      "incertitude": 0.2
+    }
+  ],
+  "multi-probleme": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "E1",
+        "E2"
+      ],
+      "confidence": 0.85,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "E1: x=1,0 km, y=1,0 km, t=500 min, categorie=nid-de-poule, texte='nid poule rue lilas chaussee degradee reverbere eteint'. E2: x=1,0 km, y=1,0 km, t=510 min, categorie=nid-de-poule, texte='nid poule rue lilas chaussee degradee'. Paire unique E1-E2: distance 0,00 km, delai 10 min, soit 10 minutes, delai court. Mots communs: nid, poule, rue, lilas, chaussee, degradee. Mots propres a E1: reverbere, eteint. Categories declarees identiques. E1 decrit deux problemes distincts: 1) nid poule / chaussee degradee, 2) reverbere eteint, signalement explicite. La categorie declaree nid-de-poule couvre le premier volet mais pas le second qui releve de l'eclairage, donc decalage categorie-texte pour E1 signale explicitement. Aucune mention d'etat resolu contre en cours dans les textes, donc pas de contradiction d'etat constatable, absence signalee sans invention. Incident de type nid-de-poule, ponctuel a degradation persistante: avec 0,00 km et 10 minutes au meme lieu, la compatibilite avec un meme incident reel est forte; ce n'est pas le cas ambigu d'un delai de plusieurs jours (ex 4320 min = 3 jours) qui n'aurait pas prouve l'identite. Regroupement propose sur le volet nid-de-poule commun rue lilas; le volet reverbere eteint de E1 reste sans correspondant dans E2, d'ou legere incertitude maintenue.",
+      "incertitude": 0.15
+    }
+  ],
+  "typo-abreviation": [
+    {
+      "id": "G1",
+      "reportIds": [
+        "F1",
+        "F2"
+      ],
+      "confidence": 1.0,
+      "singleton": false,
+      "method": "meta",
+      "uncertain": false,
+      "uncertaintyReasons": [],
+      "justification": "F1 x=1,0 km y=1,0 km t=500 min categorie=nid-de-poule texte='nid poule rue lilas chaussee degradee' ; F2 x=1,0 km y=1,0 km t=510 min categorie=nid-de-poule texte='ndp rue lilas chaus abim' ; paire unique F1-F2 distance 0,00 km delai 10 min soit 10 minutes ; categories identiques et coherentes avec les textes qui decrivent tous deux un nid-de-poule rue des lilas chaussee degradee/abimee ; proximite spatiale exacte et proximite temporelle courte compatibles avec meme incident ponctuel, sans l'ambiguite des delais de plusieurs jours ; aucun texte ne decrit deux problemes distincts, aucune contradiction d'etat resolu contre en cours, aucune contradiction categorie-texte.",
+      "incertitude": 0.0
+    }
+  ]
+}
