@@ -795,10 +795,14 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     final bytes = await File('$dir/$mid.$foundExt').readAsBytes();
     try {
+      // Vision pixels seuls : le texte déclaré n'est PAS transmis (mesuré
+      // nov. 2026 : le modèle projetait le texte déclaré — lampadaires —
+      // dans les « observations visibles » d'un schéma qui n'en contenait
+      // pas). Le rapprochement texte/image se fait en aval, pas dans l'œil.
       final out = await analyzeImageWithMeta(s.meta, bytes,
           mime: (meta['mime'] ?? mimeForExt(foundExt)) as String,
           reportId: rep?.id,
-          descriptionDeclaree: rep?.text,
+          descriptionDeclaree: null,
           onRecord: (r) => s.metaCalls.add(r));
       s.visualAnalyses[mid] = {
         'reportId': rep?.id,

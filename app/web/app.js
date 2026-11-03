@@ -73,7 +73,11 @@ function drawMap(reports, incidents) {
     const c = cols[(gOf[r.id] || 0) % cols.length];
     const s5 = inc && inc.severity >= 5;
     const unk = !inc || inc.severity === null || inc.severity === undefined;
-    const tip = `${r.id}: ${r.text}`;
+    // Info-bulle §9 : domaine, gravité (ou à vérifier), nombre de
+    // signalements de l'incident — jamais une position GPS prétendue.
+    const tip = inc
+      ? `${r.id} → ${inc.id} [${inc.domain}] gravité ${inc.severity === null || inc.severity === undefined ? 'à vérifier' : inc.severity} (${inc.reportIds.length} signalement(s)) : ${r.text}`
+      : `${r.id} (sans incident) : ${r.text}`;
     if (unk) {
       h += `<rect x="${x-8}" y="${y-8}" width="16" height="16" fill="${c}"><title>${esc(tip)} — gravité à vérifier</title></rect>`;
     } else {

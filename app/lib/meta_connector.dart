@@ -468,12 +468,16 @@ Future<Map<String, dynamic>> analyzeImageWithMeta(
   final b64 = base64Encode(bytes);
   final out = await c.chatJson(
     kind: 'analyse-visuelle',
-    system: 'Tu analyses une photo de signalement urbain fictif. Tu distingues '
-        'OBLIGATOIREMENT : ce qui est visible sur l\'image, ce qui est déclaré '
-        'par l\'usager, tes hypothèses, et ce qui reste à vérifier. Réponds '
-        'UNIQUEMENT en JSON. N\'invente jamais de gravité, de nombre de '
-        'personnes exposées, de localisation GPS ni de danger. Une photo de '
-        'jour ne prouve jamais une panne d\'éclairage nocturne.',
+    system: 'Tu analyses une photo de signalement urbain fictif. Décris '
+        'UNIQUEMENT ce qui est visible sur les pixels de l\'image, sans '
+        'utiliser aucune information extérieure : tu ne reçois pas la '
+        'description de l\'usager. Tu distingues OBLIGATOIREMENT : ce qui '
+        'est visible sur l\'image, tes hypothèses, et ce qui reste à '
+        'vérifier. Tout élément non visible va dans les incertitudes, '
+        'jamais dans les observations. Réponds UNIQUEMENT en JSON. '
+        'N\'invente jamais de gravité, de nombre de personnes exposées, '
+        'de localisation GPS ni de danger. Une photo de jour ne prouve '
+        'jamais une panne d\'éclairage nocturne.',
     user: 'Analyse cette photo de signalement urbain fictif.'
         '${reportId != null ? ' Signalement $reportId.' : ''}'
         '${descriptionDeclaree != null && descriptionDeclaree.isNotEmpty ? ' Description déclarée par l\'usager (à ne pas confondre avec le visible) : "$descriptionDeclaree".' : ''}\n'

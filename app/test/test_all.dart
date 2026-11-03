@@ -1291,6 +1291,66 @@ Future<void> main() async {
         'T30f gravité inconnue conservée sur les deux volets');
   }
 
+  // T31 : comparePlans ne plante pas quand un incident apparié n'a plus
+  // de tâche dans le nouveau plan (régression inject team_down, nov. 2026).
+  {
+    const oldP = Plan(
+        tasks: [
+          Task(
+              incidentId: 'I1',
+              teamId: 'equipe-2',
+              order: 1,
+              startMin: 500,
+              endMin: 600,
+              travelKm: 1.0,
+              cost: 10.0),
+          Task(
+              incidentId: 'I2',
+              teamId: 'equipe-1',
+              order: 1,
+              startMin: 500,
+              endMin: 600,
+              travelKm: 1.0,
+              cost: 10.0),
+        ],
+        unassigned: {},
+        escalations: [],
+        totalCost: 20.0,
+        q: 50.0,
+        feasible: true,
+        violations: [],
+        justifications: {});
+    const newP = Plan(
+        tasks: [
+          Task(
+              incidentId: 'I2',
+              teamId: 'equipe-1',
+              order: 1,
+              startMin: 500,
+              endMin: 600,
+              travelKm: 1.0,
+              cost: 10.0),
+        ],
+        unassigned: {'I1': 'aucune équipe compétente'},
+        escalations: [],
+        totalCost: 10.0,
+        q: 25.0,
+        feasible: true,
+        violations: [],
+        justifications: {});
+    final d = comparePlans(oldP, newP,
+        oldReports: {
+          'I1': {'R3:eau'},
+          'I2': {'R1:voirie-nid'}
+        },
+        newReports: {
+          'I1': {'R3:eau'},
+          'I2': {'R1:voirie-nid'}
+        });
+    check(d.material, 'T31 incident abandonné = changement matériel',
+        d.detail);
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

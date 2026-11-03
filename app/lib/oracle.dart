@@ -172,7 +172,14 @@ PlanDiff comparePlans(
   }
   final n = {for (final t in newPlan.tasks) t.incidentId: t};
   for (final t in oldPlan.tasks) {
-    final u = n[match[t.incidentId]!]!;
+    // Un incident apparié mais sans tâche dans le nouveau plan (ex. plus
+    // aucune équipe compétente après team_down) est un changement matériel,
+    // jamais un plantage : l'ancien code déréférençait n[...] sans contrôle.
+    final u = n[match[t.incidentId]!];
+    if (u == null) {
+      return PlanDiff(true,
+          'Incident ${t.incidentId} non repris dans le nouveau plan.');
+    }
     if (t.teamId != u.teamId) {
       return PlanDiff(true, 'Réaffectation de ${t.incidentId}.');
     }
