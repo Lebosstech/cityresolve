@@ -29,6 +29,8 @@ input, select { padding:7px; border:1px solid var(--line); border-radius:6px; }
 .prop { background:#0e7c7b; } .hum { background:#2e7d32; }
 #map { background:#fff; border:1px solid var(--line); border-radius:8px; }
 #planBox, #simBox, #injBox, #f1Box { margin-top:10px; }
+img.thumb { height:48px; border:1px solid var(--line); border-radius:6px; vertical-align:middle; }
+img.preview { max-height:160px; border:1px solid var(--line); border-radius:8px; }
 pre.dump { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; overflow:auto; }
 .ok { color:#2e7d32; font-weight:700; } .ko { color:#b3261e; font-weight:700; }
 .err { background:#fdecea; color:#7a1f1f; border-bottom:1px solid #e5b4b0; padding:8px 26px; font-size:13px; font-weight:600; }

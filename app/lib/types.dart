@@ -11,7 +11,8 @@ class Report {
   final int t; // minutes depuis début du scénario
   final int? severityHint; // 1..5 ou null = INCONNUE (jamais déduite)
   final int? exposureHint; // bande 0..4 ou null = inconnue
-  final String? photo; // étiquette photo (prototype), optionnel
+  final String? photo; // mediaId (24 hex, voir lib/media.dart) si photo
+  // téléversée, sinon étiquette libre historique ; jamais d'octets ici
   final String source; // scenario | manuel | injection (provenance)
 
   const Report({

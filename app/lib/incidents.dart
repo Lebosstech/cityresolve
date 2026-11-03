@@ -41,6 +41,7 @@ const Map<String, String> familyDomain = {
   'eclairage': 'voirie',
   'eau': 'reseaux',
   'electricite': 'reseaux',
+  'assainissement': 'reseaux',
   'inconnu': 'voirie',
 };
 

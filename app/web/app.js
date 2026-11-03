@@ -48,29 +48,91 @@ async function loadDashboard() {
   drawMap(reps.reports, inc.incidents);
 }
 function card(n, label) { return `<div class="card"><b>${n}</b>${label}</div>`; }
+function isMediaId(s) { return /^[0-9a-f]{24}$/.test(String(s || '')); }
 function drawMap(reports, incidents) {
   const svg = $('map');
-  const gOf = {};
-  incidents.forEach((inc, i) => inc.reportIds.forEach((r) => (gOf[r] = i)));
+  const OX = 40, OY = 10, S = 100;
+  const X = (x) => OX + x * S, Y = (y) => OY + (5 - y) * S;
+  const gOf = {}, incOf = {};
+  incidents.forEach((inc, i) => inc.reportIds.forEach((r) => { gOf[r] = i; incOf[r] = inc; }));
   const cols = ['#1466b8','#b3261e','#2e7d32','#b87e14','#6a3fb5','#0e7c7b','#c2185b','#455a64'];
   let h = '';
   for (let i = 0; i <= 5; i++) {
-    h += `<line x1="${i*100}" y1="0" x2="${i*100}" y2="500" stroke="#dfe6ec"/>`;
-    h += `<line x1="0" y1="${i*100}" x2="500" y2="${i*100}" stroke="#dfe6ec"/>`;
+    h += `<line x1="${X(i)}" y1="${OY}" x2="${X(i)}" y2="${OY+500}" stroke="#dfe6ec"/>`;
+    h += `<line x1="${OX}" y1="${Y(i)}" x2="${OX+500}" y2="${Y(i)}" stroke="#dfe6ec"/>`;
+    h += `<text x="${X(i)-4}" y="${OY+518}" font-size="11" fill="#5b6b7b">${i}</text>`;
+    h += `<text x="${OX-24}" y="${Y(i)+4}" font-size="11" fill="#5b6b7b">${i}</text>`;
   }
-  h += '<circle cx="0" cy="500" r="7" fill="#000"/><text x="10" y="495" font-size="12">dépôt</text>';
+  h += `<text x="${OX+210}" y="${OY+534}" font-size="11" fill="#5b6b7b">x (km, fictif)</text>`;
+  h += `<text x="2" y="${OY+250}" font-size="11" fill="#5b6b7b" transform="rotate(-90 8 ${OY+250})">y (km, fictif)</text>`;
+  h += `<circle cx="${X(0)}" cy="${Y(0)}" r="7" fill="#000"/><text x="${X(0)+10}" y="${Y(0)-4}" font-size="12">dépôt</text>`;
+  const labeled = new Set();
   reports.forEach((r) => {
-    const x = r.x * 100, y = 500 - r.y * 100;
+    const x = X(r.x), y = Y(r.y);
+    const inc = incOf[r.id];
     const c = cols[(gOf[r.id] || 0) % cols.length];
-    h += `<circle cx="${x}" cy="${y}" r="8" fill="${c}"><title>${esc(r.id)}: ${esc(r.text)}</title></circle>`;
-    h += `<text x="${x+10}" y="${y+4}" font-size="11">${esc(r.id)}</text>`;
+    const s5 = inc && inc.severity >= 5;
+    const unk = !inc || inc.severity === null || inc.severity === undefined;
+    const tip = `${r.id}: ${r.text}`;
+    if (unk) {
+      h += `<rect x="${x-8}" y="${y-8}" width="16" height="16" fill="${c}"><title>${esc(tip)} — gravité à vérifier</title></rect>`;
+    } else {
+      h += `<circle cx="${x}" cy="${y}" r="8" fill="${c}"><title>${esc(tip)}</title></circle>`;
+    }
+    if (s5) h += `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#b3261e" stroke-width="3"><title>S5 — escalade humaine</title></circle>`;
+    if (inc && !labeled.has(inc.id)) {
+      labeled.add(inc.id);
+      h += `<text x="${x+12}" y="${y-8}" font-size="12" font-weight="bold" fill="${c}">${esc(inc.id)}</text>`;
+    } else if (!inc) {
+      h += `<text x="${x+10}" y="${y+4}" font-size="11">${esc(r.id)}</text>`;
+    }
   });
   svg.innerHTML = h;
+}
+function photoCell(r) {
+  if (isMediaId(r.photo)) {
+    return `<a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img class="thumb" src="/api/photos/${esc(r.photo)}" alt="photo ${esc(r.id)}"></a>`;
+  }
+  return esc(r.photo || '—');
 }
 async function loadReports() {
   const j = await api('/api/reports');
   $('repTable').querySelector('tbody').innerHTML = j.reports.map((r) =>
-    `<tr><td>${esc(r.id)}${j.manual.includes(r.id) ? ' <span class="tag hum">MANUEL</span>' : ''}</td><td>${esc(r.text)}</td><td>${esc(r.category)}</td><td>(${r.x.toFixed(2)}, ${r.y.toFixed(2)})</td><td>${fmtT(r.t)}</td><td>${r.severityHint ?? '?'} / ${r.exposureHint === null || r.exposureHint === undefined ? '<span class="tag unk">?</span>' : r.exposureHint}</td><td>${esc(r.photo || '—')}</td></tr>`).join('');
+    `<tr><td>${esc(r.id)}${j.manual.includes(r.id) ? ' <span class="tag hum">MANUEL</span>' : ''}</td><td>${esc(r.text)}</td><td>${esc(r.category)}</td><td>(${r.x.toFixed(2)}, ${r.y.toFixed(2)})</td><td>${fmtT(r.t)}</td><td>${r.severityHint ?? '?'} / ${r.exposureHint === null || r.exposureHint === undefined ? '<span class="tag unk">?</span>' : r.exposureHint}</td><td>${photoCell(r)}</td></tr>`).join('');
+}
+async function uploadPhoto() {
+  const f = $('fFile').files[0];
+  if (!f) throw new Error('choisissez un fichier image (jpeg/png/gif/webp, max 5 Mo)');
+  if (f.size > 5 * 1024 * 1024) throw new Error('fichier trop volumineux : ' + f.size + ' octets (max 5 Mo)');
+  const r = await fetch('/api/photos', { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  $('fMediaId').textContent = 'photo téléversée : ' + j.mediaId;
+  $('fMediaId').dataset.mediaId = j.mediaId;
+  const pv = $('fPreview');
+  pv.src = '/api/photos/' + j.mediaId;
+  pv.hidden = false;
+}
+async function runVisual() {
+  const rid = $('vReport').value.trim();
+  if (!rid) throw new Error('indiquez un ID de signalement');
+  try {
+    const j = await api('/api/meta/analyze-image', 'POST', { reportId: rid });
+    const a = j.analysis;
+    let h = `modèle : ${esc(j.model || '?')} — analyse IA, pas une vérité terrain\n`;
+    h += 'VISIBLE :\n' + (a.observationsVisibles || []).map((o) => '- ' + o).join('\n');
+    h += '\nHYPOTHÈSES :\n' + (a.problemesPossibles || []).map((p) => `- [${p.famille}] ${p.hypothese} (${p.confirmation})`).join('\n');
+    h += '\nINCERTITUDES :\n' + (a.incertitudes || []).map((o) => '- ' + o).join('\n');
+    h += `\ngravité IA : ${a.gravite === null || a.gravite === undefined ? 'non déterminable (inconnue conservée)' : a.gravite}`;
+    $('vOut').textContent = h;
+  } catch (e) {
+    const msg = e && e.message ? e.message : String(e);
+    if (/refus|unconfigured|non configuré|indisponible/i.test(msg)) {
+      $('vOut').textContent = 'analyse visuelle IA non disponible : ' + msg + '\nLa photo reste consultable comme pièce jointe ; l\'analyse se poursuit sur le texte.';
+    } else {
+      throw e;
+    }
+  }
 }
 function sevCell(i) {
   if (i.severity === null || i.severity === undefined) {
@@ -193,7 +255,9 @@ async function runCompareMethods() {
   $('c2Box').innerHTML = h;
 }
 $('scLoad').onclick = safe(async () => { await api('/api/scenario/load', 'POST', { kind: $('scKind').value, seed: +$('scSeed').value }); $('planBox').innerHTML = ''; $('simBox').innerHTML = ''; $('injBox').innerHTML = ''; $('vState').textContent = ''; loadDashboard(); loadReports(); await runGroup(); });
-$('fAdd').onclick = safe(async () => { await api('/api/reports', 'POST', { text: $('fText').value, category: $('fCat').value, x: +$('fX').value, y: +$('fY').value, t: +$('fT').value, photo: $('fPhoto').value || null, severityHint: $('fSev').value === '' ? null : +$('fSev').value, exposureHint: $('fExp').value === '' ? null : +$('fExp').value }); await loadReports(); await runGroup(); });
+$('fAdd').onclick = safe(async () => { await api('/api/reports', 'POST', { text: $('fText').value, category: $('fCat').value, x: +$('fX').value, y: +$('fY').value, t: +$('fT').value, photoMediaId: ($('fMediaId').dataset.mediaId || null), severityHint: $('fSev').value === '' ? null : +$('fSev').value, exposureHint: $('fExp').value === '' ? null : +$('fExp').value }); $('fMediaId').textContent = ''; $('fMediaId').dataset.mediaId = ''; $('fPreview').hidden = true; $('fFile').value = ''; await loadReports(); await runGroup(); });
+$('fUpload').onclick = safe(uploadPhoto);
+$('vRun').onclick = safe(runVisual);
 $('metaVerify').onclick = safe(verifyMeta);
 $('xRun').onclick = safe(runExtract);
 $('c2Run').onclick = safe(runCompareMethods);

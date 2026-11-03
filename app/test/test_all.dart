@@ -7,6 +7,7 @@ import 'dart:io';
 import '../lib/audit.dart';
 import '../lib/grouping.dart';
 import '../lib/incidents.dart';
+import '../lib/media.dart';
 import '../lib/meta_connector.dart';
 import '../lib/metrics.dart';
 import '../lib/optimizer.dart';
@@ -1148,6 +1149,146 @@ Future<void> main() async {
                 .intersection({'E1'})
                 .isNotEmpty,
         'T27f vérité liée via origine, pas via identifiant brut', '');
+  }
+
+  // T28 : médias — validation par octets magiques, jamais par extension.
+  {
+    check(validateImageBytes([0xFF, 0xD8, 0xFF, 0x00, 0x10]) == 'jpg',
+        'T28a JPEG détecté');
+    check(
+        validateImageBytes(
+                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]) ==
+            'png',
+        'T28b PNG détecté');
+    check(validateImageBytes([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]) == 'gif',
+        'T28c GIF détecté');
+    check(
+        validateImageBytes([
+          0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00,
+          0x57, 0x45, 0x42, 0x50
+        ]) ==
+            'webp',
+        'T28d WebP détecté');
+    var refused = 0;
+    try {
+      validateImageBytes([0x25, 0x50, 0x44, 0x46]);
+    } on MediaValidationError {
+      refused++;
+    }
+    try {
+      validateImageBytes([]);
+    } on MediaValidationError {
+      refused++;
+    }
+    try {
+      validateImageBytes(List<int>.filled(maxPhotoBytes + 1, 0xFF));
+    } on MediaValidationError {
+      refused++;
+    }
+    check(refused == 3, 'T28e PDF/vide/surdimensionné refusés');
+    final id = newMediaId();
+    check(isMediaId(id) && !isMediaId('../$id') && !isMediaId('photo.jpg'),
+        'T28f mediaId strict (anti chemin)', id);
+    check(mimeForExt('jpg') == 'image/jpeg' &&
+        mimeForExt('png') == 'image/png',
+        'T28g MIME mapping');
+    var traversal = 0;
+    try {
+      mediaFile('u', '../evil', 'jpg');
+    } on MediaValidationError {
+      traversal++;
+    }
+    try {
+      mediaFile('u', id, 'exe');
+    } on MediaValidationError {
+      traversal++;
+    }
+    check(traversal == 2, 'T28h traversal/extension bloqués');
+  }
+
+  // T29 : corps de requête chat — images uniquement en message user.
+  {
+    final txt = MetaConnector.buildChatRequest(
+        model: 'm', system: 's', user: 'u');
+    final msgs = txt['messages'] as List;
+    check((msgs[1]['content'] as String) == 'u',
+        'T29a texte seul reste une chaîne');
+    final withImg = MetaConnector.buildChatRequest(
+        model: 'm',
+        system: 's',
+        user: 'u',
+        images: [
+          {'mime': 'image/jpeg', 'base64': 'QUJD'}
+        ]);
+    final parts = (withImg['messages'] as List)[1]['content'] as List;
+    check(
+        parts.length == 2 &&
+            parts[0]['type'] == 'text' &&
+            parts[1]['type'] == 'image_url' &&
+            (parts[1]['image_url']['url'] as String)
+                .startsWith('data:image/jpeg;base64,'),
+        'T29b image en data URL dans le message user');
+    check(((withImg['messages'] as List)[0]['content'] as String) == 's',
+        'T29c système sans image (jamais de 400)');
+    final okAnalysis = {
+      'observationsVisibles': ['déchets près du caniveau', 'eau présente'],
+      'problemesPossibles': [
+        {
+          'famille': 'assainissement',
+          'hypothese': 'obstruction possible',
+          'confirmation': 'a_verifier'
+        }
+      ],
+      'localisation': null,
+      'gravite': null,
+      'exposition': null,
+      'incertitudes': ['degré d\'obstruction non confirmé'],
+    };
+    check(validateVisualAnalysis(okAnalysis) == null,
+        'T29d contrat visuel valide accepté');
+    check(
+        validateVisualAnalysis({
+              'observationsVisibles': ['x'],
+              'problemesPossibles': [],
+              'incertitudes': [],
+            }) !=
+            null,
+        'T29e incertitudes vides refusées');
+    check(
+        validateVisualAnalysis({
+              'observationsVisibles': [],
+              'problemesPossibles': [],
+              'incertitudes': ['?'],
+            }) !=
+            null,
+        'T29f observations vides refusées');
+  }
+
+  // T30 : démo §8 — « caniveau + lampadaires » : deux problèmes conservés.
+  {
+    final r = Report(
+        id: 'DEMO8',
+        text:
+            'Le caniveau est rempli de déchets et les lampadaires de la rue ne fonctionnent plus depuis plusieurs jours.',
+        category: 'autre',
+        x: 2.0,
+        y: 2.0,
+        t: 500);
+    final fams = reportProblemFamilies(r);
+    check(fams.contains('assainissement') && fams.contains('eclairage'),
+        'T30a deux familles détectées', '$fams');
+    check(hasMultiProblem(r), 'T30b multi-problème signalé');
+    final gs = groupSplitReports([r], distMaxM: 250.0, deltaTMaxH: 6.0);
+    check(gs.length == 2 && gs.every((g) => g.method == 'split'),
+        'T30c découpage en 2 groupes split',
+        gs.map((g) => g.reportIds).toString());
+    final incs = aggregateMixedGroups(gs, {'DEMO8': r});
+    check(incs.length == 2, 'T30d aucun problème perdu', '${incs.length}');
+    final doms = incs.map((i) => i.domain).toSet();
+    check(doms.contains('reseaux') && doms.contains('voirie'),
+        'T30e domaines distincts (assainissement→reseaux)', '$doms');
+    check(incs.every((i) => i.severity == null),
+        'T30f gravité inconnue conservée sur les deux volets');
   }
 
   print('== $_pass PASS, $_fail FAIL ==');
