@@ -1,0 +1,20 @@
+# CityResolve — Blueprint Render (à placer à la racine du dépôt).
+# Les secrets ne sont JAMAIS écrits ici : sync: false veut dire que la
+# valeur se renseigne dans le tableau de bord Render, après création.
+services:
+  - type: web
+    name: cityresolve
+    runtime: docker
+    repo: https://github.com/Lebosstech/cityresolve
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    autoDeploy: false
+    healthCheckPath: /api/health
+    envVars:
+      - key: CITYRESOLVE_MONGO_URI
+        sync: false
+      - key: MODEL_API_KEY
+        sync: false

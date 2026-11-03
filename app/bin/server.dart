@@ -1,5 +1,6 @@
 // Serveur CityResolve (bac à sable) : API JSON + interface statique.
-// Données fictives uniquement. Protocole NON GELÉ. Port : --port (défaut 8080).
+// Données fictives uniquement. Protocole NON GELÉ. Port : --port, sinon
+// variable d'environnement PORT, sinon 8080. Écoute sur 0.0.0.0.
 import 'dart:convert';
 import 'dart:io';
 
@@ -497,7 +498,10 @@ void _check(AppState s) {
 }
 
 Future<void> main(List<String> args) async {
-  var port = 8080;
+  // Port : --port gagne, sinon variable PORT (hébergeurs type Render),
+  // sinon 8080. L'écoute se fait sur 0.0.0.0 pour être joignable derrière
+  // un routeur ; en local, http://127.0.0.1:PORT continue de fonctionner.
+  var port = int.tryParse(Platform.environment['PORT'] ?? '') ?? 8080;
   for (var i = 0; i < args.length - 1; i++) {
     if (args[i] == '--port') port = int.parse(args[i + 1]);
   }
@@ -524,9 +528,9 @@ Future<void> main(List<String> args) async {
   }
   HttpServer server;
   try {
-    server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
+    server = await HttpServer.bind(InternetAddress.anyIPv4, port);
   } catch (e) {
-    print('Impossible d\u2019écouter sur 127.0.0.1:$port : $e');
+    print('Impossible d\u2019écouter sur 0.0.0.0:$port : $e');
     print('(port occupé ou sockets interdits par le bac à sable)');
     return;
   }
