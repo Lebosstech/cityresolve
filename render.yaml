@@ -18,3 +18,8 @@ services:
         sync: false
       - key: MODEL_API_KEY
         sync: false
+      # Jeton de l'espace municipal (OBLIGATOIRE en public : sans lui,
+      # regroupement, planification, journaux et appels Meta restent ouverts).
+      # Générer une valeur longue et aléatoire dans le tableau de bord Render.
+      - key: CITYRESOLVE_MUNICIPAL_TOKEN
+        sync: false

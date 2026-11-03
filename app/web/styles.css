@@ -34,3 +34,10 @@ img.preview { max-height:160px; border:1px solid var(--line); border-radius:8px;
 pre.dump { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px; font-size:12px; overflow:auto; }
 .ok { color:#2e7d32; font-weight:700; } .ko { color:#b3261e; font-weight:700; }
 .err { background:#fdecea; color:#7a1f1f; border-bottom:1px solid #e5b4b0; padding:8px 26px; font-size:13px; font-weight:600; }
+.login-overlay { position:fixed; inset:0; background:#1c2733; display:flex; align-items:center; justify-content:center; z-index:50; }
+.login-overlay[hidden] { display:none; }
+.login-card { background:#fff; border-radius:12px; padding:28px 32px; max-width:420px; box-shadow:0 12px 40px rgba(0,0,0,.35); }
+.login-card input { width:100%; margin:10px 0; }
+.login-card button { width:100%; }
+a.navlink { color:#cfe0f1; font-size:13px; margin-top:10px; text-decoration:none; }
+a.navlink:hover { text-decoration:underline; }

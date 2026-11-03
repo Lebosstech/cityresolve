@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Signalez un problème urbain</title>
+<link rel="stylesheet" href="/public.css">
+</head>
+<body>
+<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="#" data-nav="home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#0b5fff"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#fff"/><circle cx="17" cy="14" r="2.5" fill="#22c55e"/></svg>
+      <span class="brand-name">CityResolve</span>
+      <span class="brand-tag">Des signalements citoyens aux décisions d'intervention</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" data-nav="home" class="active">Accueil / Signaler</a>
+      <a href="#carte" data-nav="home" data-scroll="mapCard">Carte des incidents</a>
+      <a href="#" data-nav="suivi">Suivi des signalements</a>
+      <a href="#" data-nav="apropos">À propos</a>
+    </div>
+    <div class="nav-actions">
+      <a class="btn ghost" href="/municipal">Connexion</a>
+      <a class="btn primary" href="/municipal">Espace municipal</a>
+    </div>
+  </div>
+</nav>
+
+<main id="view-home" class="view active">
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1>Signalez un <span class="green">problème urbain</span></h1>
+        <p class="subtitle">Photo, message, localisation… CityResolve analyse votre signalement,
+        regroupe les informations similaires et aide la municipalité à planifier les interventions.</p>
+        <div class="hero-badges">
+          <div class="hbadge"><span class="hicon">⚡</span><span>Détection des<br>problèmes multiples</span></div>
+          <div class="hbadge"><span class="hicon">▤</span><span>Regroupement<br>intelligent</span></div>
+          <div class="hbadge"><span class="hicon">✓</span><span>Planification des<br>interventions</span></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Illustration d'un agent de terrain documentant un ouvrage">
+        <svg viewBox="0 0 420 300" role="img">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0b3d91"/><stop offset="1" stop-color="#0b5fff"/>
+            </linearGradient>
+          </defs>
+          <rect width="420" height="300" rx="18" fill="url(#sky)"/>
+          <g fill="#ffffff" opacity="0.18">
+            <rect x="30" y="150" width="34" height="90"/><rect x="70" y="120" width="28" height="120"/>
+            <rect x="104" y="165" width="40" height="75"/><rect x="290" y="130" width="30" height="110"/>
+            <rect x="326" y="160" width="44" height="80"/>
+          </g>
+          <ellipse cx="330" cy="70" rx="34" ry="34" fill="#fbbf24" opacity="0.9"/>
+          <g>
+            <rect x="150" y="120" width="120" height="120" rx="14" fill="#f8fafc"/>
+            <rect x="150" y="120" width="120" height="34" rx="14" fill="#22c55e"/>
+            <rect x="150" y="140" width="120" height="14" fill="#22c55e"/>
+            <circle cx="210" cy="195" r="26" fill="#0b5fff"/>
+            <rect x="200" y="185" width="20" height="14" rx="3" fill="#fff"/>
+            <circle cx="210" cy="192" r="5" fill="#0b5fff"/>
+            <rect x="165" y="230" width="90" height="6" rx="3" fill="#cbd5e1"/>
+          </g>
+          <g>
+            <rect x="60" y="90" width="52" height="52" rx="12" fill="#fbbf24"/>
+            <text x="86" y="124" font-size="26" text-anchor="middle">⚠</text>
+            <rect x="310" y="200" width="52" height="52" rx="12" fill="#22c55e"/>
+            <text x="336" y="234" font-size="26" text-anchor="middle">✓</text>
+          </g>
+          <text x="210" y="278" font-size="12" fill="#dbeafe" text-anchor="middle">Illustration — aucun habitant réel représenté</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <div class="columns">
+    <div class="col-main">
+      <section class="card" id="formCard">
+        <h2><span class="hicon blue">📣</span> Déclarer un problème</h2>
+        <p class="muted">Décrivez ce que vous observez dans votre quartier.</p>
+        <label class="field">Description du problème *
+          <textarea id="pText" rows="4" maxlength="500" placeholder="Ex. : Le caniveau est rempli de déchets et les lampadaires ne fonctionnent plus depuis plusieurs jours."></textarea>
+          <span class="counter"><span id="pCount">0</span> / 500</span>
+        </label>
+        <div class="field">Ajouter des preuves <span class="muted">(facultatif)</span>
+          <div class="uploads">
+            <label class="upload" id="upPhoto">
+              <input id="pFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
+              <span class="uicon">📷</span><b>Photo</b><small>JPG, PNG (≤ 5 Mo)</small>
+            </label>
+            <div class="upload disabled" title="Fonctionnalité future, non disponible dans cette démo">🎥<b>Vidéo</b><small>MP4 (≤ 25 Mo)</small><span class="soon">Bientôt disponible</span></div>
+            <div class="upload disabled" title="Fonctionnalité future, non disponible dans cette démo">🎙<b>Message vocal</b><small>MP3, M4A (≤ 10 Mo)</small><span class="soon">Bientôt disponible</span></div>
+            <div class="upload preview" id="pPreview" hidden><img id="pImg" alt="aperçu de la photo téléversée"><button id="pRemove" type="button" title="Retirer la photo">×</button></div>
+          </div>
+          <span class="note" id="pMedia"></span>
+        </div>
+        <div class="field-row">
+          <div class="field">Localisation *
+            <div class="btn-row">
+              <button class="btn ghost" id="pGps" disabled title="Géolocalisation GPS non implémentée : aucune position réelle n'est collectée">📍 Ma position (GPS)</button>
+              <button class="btn ghost" id="pPick">🗺 Choisir sur la carte</button>
+            </div>
+            <span class="note" id="pCoords">Position : non choisie (grille fictive 5×5 km)</span>
+          </div>
+          <label class="field">Catégorie principale <span class="muted">(facultatif)</span>
+            <select id="pCat">
+              <option value="autre" selected>Laisser CityResolve identifier (recommandé)</option>
+              <option value="fuite-eau">Assainissement / Drainage</option>
+              <option value="eclairage">Éclairage public</option>
+              <option value="nid-de-poule">Voirie — nids-de-poule</option>
+              <option value="chaussee">Voirie — chaussée</option>
+              <option value="coupure-electrique">Électricité</option>
+              <option value="arbre">Arbres / espaces verts</option>
+              <option value="autre">Autres (à préciser)</option>
+            </select>
+          </label>
+        </div>
+        <button class="btn primary big" id="pSend">➤ Envoyer le signalement</button>
+        <p class="errline" id="pErr" hidden></p>
+        <div class="confirm" id="pConfirm" hidden>
+          <h3>✓ Signalement enregistré</h3>
+          <p>Identifiant de suivi : <b id="pTrackId"></b></p>
+          <p class="muted">Conservez cet identifiant pour suivre votre signalement.
+          Démonstration : les données peuvent être réinitialisées à tout moment.</p>
+          <button class="btn primary" id="pTrackGo">Suivre ce signalement</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>💡 Types de problèmes que vous pouvez signaler</h2>
+        <div class="tiles">
+          <button class="tile" data-cat="fuite-eau"><span>💧</span><b>Assainissement</b><small>(drainage, eaux usées)</small></button>
+          <button class="tile" data-cat="eclairage"><span>💡</span><b>Éclairage public</b><small>(panne, lampadaire)</small></button>
+          <button class="tile" data-cat="nid-de-poule"><span>🚧</span><b>Voirie</b><small>(nids-de-poule, routes)</small></button>
+          <button class="tile" data-cat="autre"><span>🗑</span><b>Propreté</b><small>(déchets, dépotoirs)</small></button>
+          <button class="tile" data-cat="coupure-electrique"><span>⚡</span><b>Électricité</b><small>(coupure, câbles)</small></button>
+          <button class="tile" data-cat="autre"><span>⋯</span><b>Autres</b><small>(à préciser)</small></button>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-side">
+      <section class="card" id="mapCard">
+        <div class="card-head"><h2>📍 Incidents récents près de vous</h2><a href="#" id="mapBig">Voir la carte complète →</a></div>
+        <p class="fictive-tag">Carte de démonstration — Données fictives (grille 5×5 km, pas une vraie ville)</p>
+        <div class="map-wrap"><svg id="pMap" viewBox="0 0 560 540" role="img" aria-label="Carte fictive des incidents"></svg>
+          <ul class="legend">
+            <li><span class="dot" style="background:#0b5fff"></span>Votre point choisi</li>
+            <li><span class="dot" style="background:#b3261e"></span>Urgent (S5)</li>
+            <li><span class="dot" style="background:#f97316"></span>Élevé (S4)</li>
+            <li><span class="dot" style="background:#eab308"></span>Moyen (S3)</li>
+            <li><span class="dot" style="background:#22c55e"></span>Faible (S1-S2)</li>
+            <li><span class="dot" style="background:#94a3b8"></span>À vérifier</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>🕐 Signalements récents</h2><a href="#" id="recentAll">Tout voir →</a></div>
+        <ul class="recent" id="pRecent"></ul>
+        <p class="muted">Données de démonstration (fictives). Les signalements de scénario n'ont pas d'heure de réception réelle.</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<main id="view-suivi" class="view">
+  <section class="card narrow">
+    <h2>Suivre un signalement</h2>
+    <p class="muted">Saisissez l'identifiant reçu après l'envoi (ex. M101). Statuts calculés à partir des données réelles, sans délai promis.</p>
+    <div class="btn-row"><input id="tId" placeholder="Ex. M101" size="14"><button class="btn primary" id="tGo">Rechercher</button></div>
+    <p class="errline" id="tErr" hidden></p>
+    <div id="tOut"></div>
+  </section>
+</main>
+
+<main id="view-apropos" class="view">
+  <section class="card narrow">
+    <h2>À propos de CityResolve</h2>
+    <p>CityResolve transforme des observations urbaines désorganisées en incidents distincts,
+    géolocalisés et priorisés, puis en propositions d'interventions réalisables.</p>
+    <ol>
+      <li><b>Signaler</b> : description, photo, position sur la grille de démonstration.</li>
+      <li><b>Analyser</b> : détection des problèmes multiples, regroupement des signalements similaires, inconnues conservées.</li>
+      <li><b>Planifier</b> : l'espace municipal propose des interventions sous contraintes (équipes, délais, budget).</li>
+    </ol>
+    <p class="fictive-tag">Démonstration — Données fictives — Protocole scientifique NON GELÉ — Aucune preuve. Cette page ne remplace pas les services d'urgence.</p>
+    <p><a class="btn ghost" href="/municipal">Accéder à l'espace municipal (protégé)</a></p>
+  </section>
+</main>
+
+<div class="modal" id="pickModal" hidden>
+  <div class="modal-card">
+    <h3>Choisir une position sur la grille fictive</h3>
+    <p class="muted">Cliquez sur la grille (coordonnées fictives 0–5 km, pas une position GPS).</p>
+    <svg id="pickMap" viewBox="0 0 440 440"></svg>
+    <div class="btn-row"><button class="btn primary" id="pickOk">Valider cette position</button><button class="btn ghost" id="pickCancel">Annuler</button></div>
+  </div>
+</div>
+
+<footer><p>CityResolve — démonstration civic-tech. Données fictives, protocole non gelé. <a href="/municipal">Espace municipal</a></p></footer>
+<script src="/public.js"></script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 # sur un port dédié, vérifie persistance, identifiants permanents et journal.
 # Usage : python test/e2e_redemarrage.py   (depuis app/)
 import json
+import os
 import subprocess
 import sys
 import time
@@ -51,6 +52,12 @@ def stop(p):
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     p.wait(timeout=15)
     time.sleep(1)
+    # Arrêt brutal : le verrou mono-instance survit (limite documentée
+    # de server_lock.dart) ; le retirer, aucun serveur ne tourne plus ici.
+    try:
+        os.remove("data/server.lock")
+    except OSError:
+        pass
 
 
 p = start()
@@ -69,6 +76,10 @@ try:
         "text": "probleme vague sans gravite", "category": "fuite-eau",
         "x": 0.5, "y": 4.5, "t": 700})
     rid2 = rep2["id"]
+    # POST /api/reports ne regroupe plus (séparation public/municipal) :
+    # regroupement municipal explicite avant planification.
+    check(call("POST", "/api/group", {"method": "classique"})[0] == 200,
+          "E2E regroupement municipal explicite")
     st, plan = call("POST", "/api/plan", {})
     plan_id, plan_ver = plan["planId"], plan["version"]
     check(st == 200 and plan_ver >= 1, "E2E plan versionné", str(plan)[:120])
@@ -97,6 +108,7 @@ try:
         "text": "apres redemarrage identifiant nouveau",
         "category": "autre", "x": 2.5, "y": 2.5, "t": 800})
     check(rep3["id"] not in (rid, rid2), "E2E identifiant non réattribué", str(rep3))
+    call("POST", "/api/group", {"method": "classique"})
     st, inc = call("GET", "/api/incidents")
     vague = [i for i in inc["incidents"] if rid2 in i["reportIds"]]
     check(bool(vague) and vague[0]["severity"] is None and vague[0]["severityStatus"] == "inconnue",

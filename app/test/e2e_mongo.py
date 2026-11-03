@@ -4,6 +4,7 @@
 # Usage : python test/e2e_mongo.py   (depuis app/, mongod sur 127.0.0.1:27017)
 import concurrent.futures
 import json
+import os
 import subprocess
 import sys
 import time
@@ -51,6 +52,11 @@ def stop(p):
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     p.wait(timeout=15)
     time.sleep(1)
+    # Arrêt brutal : retirer le verrou mono-instance survivant.
+    try:
+        os.remove("data/server.lock")
+    except OSError:
+        pass
 
 
 p = start()
@@ -74,6 +80,9 @@ try:
     ids = [r[1]["id"] for r in results]
     check(all(r[0] == 200 for r in results), "MONGO 8 écritures concurrentes acceptées", str(results)[:200])
     check(len(ids) == len(set(ids)) == 8, "MONGO aucun doublon d'identifiant en concurrence", str(ids))
+    # POST /api/reports ne regroupe plus : regroupement municipal explicite.
+    check(call("POST", "/api/group", {"method": "classique"})[0] == 200,
+          "MONGO regroupement municipal explicite")
     st, plan = call("POST", "/api/plan", {})
     plan_id = plan["planId"]
     check(call("POST", "/api/plan/validate", {"decision": "valide"})[0] == 200, "MONGO validation")

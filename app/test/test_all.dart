@@ -13,6 +13,7 @@ import '../lib/metrics.dart';
 import '../lib/optimizer.dart';
 import '../lib/oracle.dart';
 import '../lib/scenarios.dart';
+import '../lib/security.dart';
 import '../lib/server_lock.dart';
 import '../lib/simulator.dart';
 import '../lib/store.dart';
@@ -1349,6 +1350,150 @@ Future<void> main() async {
         });
     check(d.material, 'T31 incident abandonné = changement matériel',
         d.detail);
+  }
+
+  // T32 : limiteur de débit — fenêtre glissante par clé.
+  {
+    var now = DateTime.utc(2026, 1, 1);
+    final rl = RateLimiter(now: () => now);
+    var ok = 0;
+    for (var i = 0; i < 20; i++) {
+      if (rl.allow('ip:1.2.3.4', max: 20, window: const Duration(minutes: 10))) {
+        ok++;
+      }
+    }
+    check(ok == 20, 'T32a 20 premiers acceptés');
+    check(!rl.allow('ip:1.2.3.4', max: 20, window: const Duration(minutes: 10)),
+        'T32b 21e refusé (429)');
+    check(rl.allow('ip:5.6.7.8', max: 20, window: const Duration(minutes: 10)),
+        'T32c autre IP indépendante');
+    now = now.add(const Duration(minutes: 11));
+    check(rl.allow('ip:1.2.3.4', max: 20, window: const Duration(minutes: 10)),
+        'T32d fenêtre expirée, de nouveau accepté');
+  }
+
+  // T33 : auth municipale — ouvert sans jeton, fermé avec jeton.
+  {
+    final open = MunicipalAuth.fromEnvironment({});
+    check(!open.enforced && open.isAuthorized(),
+        'T33a sans jeton : mode ouvert (dev local)');
+    final closed =
+        MunicipalAuth.fromEnvironment({'CITYRESOLVE_MUNICIPAL_TOKEN': 'secret-jeton'});
+    check(closed.enforced && !closed.isAuthorized(),
+        'T33b avec jeton : fermé par défaut');
+    check(!closed.checkToken('mauvais') && closed.checkToken('secret-jeton'),
+        'T33c jeton vérifié, mauvais rejeté');
+    final sid = closed.createSession();
+    check(closed.checkSession(sid) && !closed.checkSession('faux'),
+        'T33d session créée et vérifiée');
+    check(closed.isAuthorized(sessionId: sid),
+        'T33e session autorisée');
+    check(closed.isAuthorized(bearerToken: 'secret-jeton') &&
+        !closed.isAuthorized(bearerToken: 'x'),
+        'T33f porteur accepté/rejeté');
+    closed.revoke(sid);
+    check(!closed.checkSession(sid), 'T33g révocation effective');
+  }
+
+  // T34 : validation des entrées publiques.
+  {
+    check(publicTextError(null) == 'description requise' &&
+        publicTextError('   ') == 'description requise',
+        'T34a texte vide refusé');
+    check(publicTextError('nid de poule rue basse') == null,
+        'T34b texte valide accepté');
+    check(
+        publicTextError(List.filled(501, 'x').join()) != null &&
+            publicTextError(List.filled(500, 'x').join()) == null,
+        'T34c borne 500 exacte');
+    check(isPublicCategory('fuite-eau') && !isPublicCategory('mairie') &&
+        !isPublicCategory(''),
+        'T34d catégories fermées');
+  }
+
+  // T35 : DTO publics filtrés + statuts de suivi dérivés.
+  {
+    Report rep(String id) => Report(
+        id: id,
+        text: 'trou chaussée',
+        category: 'nid-de-poule',
+        x: 1.0,
+        y: 1.0,
+        t: 100,
+        severityHint: 2,
+        exposureHint: 1,
+        source: 'manuel',
+        receivedAt: '2026-01-01T00:00:00Z');
+    Incident inc(String id, List<String> ids, int? sev) => Incident(
+        id: id,
+        reportIds: ids,
+        severity: sev,
+        exposure: 1,
+        domain: 'voirie',
+        x: 1.0,
+        y: 1.0,
+        firstSeen: 100,
+        confidence: 0.8);
+    final r1 = rep('M1');
+    final dto = publicReportJson(r1, status: 'enregistre');
+    check(!dto.containsKey('severityHint') &&
+        !dto.containsKey('exposureHint') &&
+        !dto.containsKey('truth') &&
+        dto['receivedAt'] == '2026-01-01T00:00:00Z' &&
+        dto['fictive'] == true,
+        'T35a DTO public filtré (ni indices ni vérité)');
+    final gSolo = Group(
+        id: 'G1',
+        reportIds: ['M1'],
+        confidence: 0,
+        singleton: true,
+        method: 'classique');
+    final gPair = Group(
+        id: 'G1',
+        reportIds: ['M1', 'M2'],
+        confidence: 0.8,
+        singleton: false,
+        method: 'classique');
+    check(
+        trackingStatus(r1, [gSolo], [inc('I1', ['M1'], 2)], null) ==
+            'enregistre',
+        'T35b singleton → enregistré');
+    check(
+        trackingStatus(r1, [gPair], [inc('I1', ['M1', 'M2'], 2)], null) ==
+            'regroupe',
+        'T35c paire → regroupé');
+    final plan = Plan(
+        tasks: [
+          Task(
+              incidentId: 'I1',
+              teamId: 'equipe-1',
+              order: 1,
+              startMin: 100,
+              endMin: 200,
+              travelKm: 1.0,
+              cost: 10.0)
+        ],
+        unassigned: {},
+        escalations: [],
+        totalCost: 10.0,
+        q: 50.0,
+        feasible: true,
+        violations: [],
+        justifications: {});
+    check(
+        trackingStatus(r1, [gPair], [inc('I1', ['M1', 'M2'], 2)], plan) ==
+            'planifie',
+        'T35d tâche planifiée → planifié');
+    check(
+        trackingStatus(r1, [gPair], [inc('I1', ['M1', 'M2'], 5)], plan) ==
+            'escalade-s5',
+        'T35e S5 prioritaire → escalade');
+    final pub = publicIncidentJson(inc('I1', ['M1', 'M2'], null));
+    check(pub['severity'] == null &&
+        pub['reportCount'] == 2 &&
+        pub['fictive'] == true &&
+        !pub.containsKey('weight'),
+        'T35f incident public filtré');
   }
 
   print('== $_pass PASS, $_fail FAIL ==');
