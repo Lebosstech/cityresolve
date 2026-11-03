@@ -117,9 +117,14 @@ const Map<String, Set<String>> _problemFamilies = {
     'nid', 'poule', 'ndp', 'trou', 'chaussee', 'chaus',
     'degradee', 'degrade', 'abimee', 'abim'
   },
-  'eclairage': {'reverbere', 'lampadaire', 'eclairage', 'eteint', 'defaillant'},
+  'eclairage': {'reverbere', 'lampadaire', 'lampadaires', 'eclairage', 'eteint', 'defaillant'},
   'eau': {'fuite', 'eau', 'inonde', 'canalisation', 'ecoulement'},
   'electricite': {'coupure', 'courant', 'electrique', 'electricite', 'panne'},
+  // Famille DEMO §8 (caniveau + déchets) : ajout documenté, en fin de
+  // lexique pour ne pas modifier l'ordre d'expansion existant.
+  // Comme les autres familles : vocabulaire DEV limité, pas de
+  // compréhension générale du français.
+  'assainissement': {'caniveau', 'dechet', 'dechets', 'assainissement'},
 };
 
 const Set<String> _resolvedTokens = {

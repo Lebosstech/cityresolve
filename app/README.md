@@ -117,12 +117,30 @@ Règle « violation globale → Q=0 » de SPECIFICATION_D_SIMU §7 et
 PREENREGISTREMENT_V1.5 §3 (registre D-Q0 : validation métier requise),
 appliquée dans `lib/simulator.dart`. Formule Q inchangée.
 
+## Photos et analyse visuelle (P1, branche work/multimodal-vision)
+
+- `POST /api/photos` (octets bruts, jpeg/png/gif/webp ≤ 5 Mo, contrôle par
+  octets magiques) → `{mediaId, mime, size}` ; `GET /api/photos/<id>` sert
+  le fichier. Stockage : `app/data/uploads/` (jamais dans l'état JSON ni
+  en base ; `Report.photo` ne porte que le mediaId).
+- `POST /api/meta/analyze-image` `{reportId}` ou `{mediaId}` : appel réel
+  (images base64 uniquement en message `user`, modèle documenté compatible
+  : `muse-spark-1.3`), contrat validé côté serveur (observations /
+  hypothèses / incertitudes obligatoires, gravité non inventée). Sans clé :
+  refus 502 explicite, « analyse visuelle IA non disponible », la photo
+  reste une pièce jointe et l'analyse continue sur le texte.
+- Découpage multi-problème : la description « caniveau + lampadaires »
+  (§8) produit 2 volets (assainissement→reseaux, eclairage→voirie),
+  gravité inconnue conservée (test T30). Lexique DEV étendu de façon
+  documentée (famille `assainissement`, pluriel `lampadaires`).
+
 ## Tests
 
-- `dart test/test_all.dart` : 72 assertions (moteur, inconnues, incertitudes,
-  persistance unitaire, connecteur Meta + régression fournisseur api.meta.ai).
-- `dart test/test_exploratoire.dart` : 7 OK, 2 limites confirmées publiées
-  (contradiction géographique lointaine non signalée ; falaise Q politique).
+- `dart test/test_all.dart` : 139 assertions (moteur, inconnues, incertitudes,
+  persistance unitaire, connecteur Meta + régression fournisseur api.meta.ai,
+  médias T28, corps de requête image + contrat visuel T29, démo §8 T30).
+- `dart test/test_exploratoire.dart` : 9 OK, 1 limite confirmée publiée
+  (falaise Q politique).
 - `python test/e2e_redemarrage.py` : 14 vérifications réelles de redémarrage.
 - `python test/e2e_mongo.py` : 12 vérifications MongoDB réelles (backend
   principal, 8 écritures concurrentes sans doublon, redémarrage, collections).
@@ -134,6 +152,9 @@ appliquée dans `lib/simulator.dart`. Formule Q inchangée.
   ne pas lancer deux serveurs sur le même `data/`.
 - Moteur classique : fusions/scissions limites signalées mais non résolues
   sémantiquement (c'est le rôle attendu de la méthode META, non vérifiée ici).
-- Analyse d'image Meta : non branchée (les signalements n'ont qu'une
-  étiquette photo fictive, pas d'octets réels).
+- Analyse visuelle IA : implémentée et câblée, mais inférence réelle non
+  exécutée dans cet environnement (sans clé Meta) ; à prouver sur Windows
+  via docs/SERVER_END_TO_END_RUNBOOK.md. Sans clé : message explicite.
+- Audio/vidéo : NON entrepris (décision P2 explicite) — pas de fausse
+  transcription ni de fausse compréhension vidéo ; fonctionnalités futures.
 - Frontend testé réellement dans le navigateur, pas de harnais JS automatisé.

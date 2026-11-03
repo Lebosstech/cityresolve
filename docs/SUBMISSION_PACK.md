@@ -127,6 +127,13 @@ classical + split path only and say so — never simulate an AI result.
    banner and the fictitious local map.
 2. Reports: add one report by hand; note it is outside ground truth,
    so no metric is claimed for it.
+2-bis. Photo variant (P1): upload a jpeg/png/gif/webp photo (max 5 Mo)
+   via "Téléverser la photo", check the thumbnail in the table, add the
+   report with the photo attached. Then "Analyser la photo (Meta)":
+   with a verified key, show the real visual analysis (visible /
+   declared / hypotheses / uncertainties, never a fabricated severity);
+   without a key, show the explicit "analyse visuelle IA non
+   disponible" message and continue on text — never simulate.
 3. Group CLASSIQUE: show the groups, then group DÉCOUPÉ: show 11 groups
    and the report present twice (electricity + lighting). State the
    DEV numbers (5/9 vs 9/9 on the multi-problem set) and that they are

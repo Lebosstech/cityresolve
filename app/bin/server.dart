@@ -6,6 +6,7 @@ import 'dart:io';
 import '../lib/audit.dart';
 import '../lib/grouping.dart';
 import '../lib/incidents.dart';
+import '../lib/media.dart';
 import '../lib/meta_connector.dart';
 import '../lib/metrics.dart';
 import '../lib/optimizer.dart';
@@ -46,6 +47,7 @@ class AppState {
   List<Group> metaGroups = [];
   List<MetaCallRecord> metaCalls = [];
   Map<String, dynamic> extractions = {};
+  Map<String, dynamic> visualAnalyses = {}; // mediaId -> {reportId, model, at, analysis}
   bool restoredFromStore = false;
   bool storeRecovered = false;
   int? docAuditSeq;
@@ -100,7 +102,25 @@ Map<String, dynamic> stateDoc(AppState s) => {
     'metaGroups': s.metaGroups.map((g) => g.toJson()).toList(),
     'metaCalls': s.metaCalls.map((c) => c.toJson()).toList(),
     'extractions': s.extractions,
+    'visualAnalyses': s.visualAnalyses,
   };
+
+String _uploadsDir(String base) => '$base/data/uploads';
+
+/// Corps brut borné (upload photo). Les octets ne sont jamais du JSON.
+Future<List<int>> _rawBody(HttpRequest req, int maxBytes) async {
+  if (req.contentLength > maxBytes) {
+    throw const MediaValidationError('corps trop volumineux');
+  }
+  final bytes = <int>[];
+  await for (final chunk in req) {
+    bytes.addAll(chunk);
+    if (bytes.length > maxBytes) {
+      throw const MediaValidationError('corps trop volumineux');
+    }
+  }
+  return bytes;
+}
 
 void persist(AppState s) {
   final doc = stateDoc(s);
@@ -231,6 +251,7 @@ void regroup(AppState s, {bool keepPlan = false}) {
 AppState _initState(String base, {bool restore = true}) {
   final s = AppState();
   Directory('$base/data').createSync(recursive: true);
+  Directory(_uploadsDir(base)).createSync(recursive: true);
   s.audit = AuditLog(path: '$base/data/journal.jsonl');
   s.meta = MetaConnector.fromEnvironment(Platform.environment);
   s.store = JsonStore('$base/data');
@@ -378,6 +399,8 @@ void _restore(AppState s, Map<String, dynamic> doc) {
       .toList();
   s.extractions =
       ((doc['extractions'] as Map?) ?? {}).cast<String, dynamic>();
+  s.visualAnalyses =
+      ((doc['visualAnalyses'] as Map?) ?? {}).cast<String, dynamic>();
   // Groupes persistés capturés AVANT regroup() : regroup() écrase s.groups
   // par le classique, et un état découpé (méthode 'split', identifiants
   // ORIGINE:FAMILLE) serait sinon perdu au redémarrage. Le format 1 ne
@@ -678,6 +701,121 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       return _json(req, {'error': e.message, 'call': e.record.toJson()}, 502);
     }
   }
+  // --- Photos (P1) : octets sur disque, jamais dans l'état ni en base ---
+  if (m == 'POST' && p == '/api/photos') {
+    final ct = req.headers.contentType?.mimeType ?? '';
+    if (!ct.startsWith('image/')) {
+      return _json(req, {
+        'error':
+            'Content-Type image/* requis (jpeg/png/gif/webp), reçu : ${ct.isEmpty ? 'absent' : ct}'
+      }, 400);
+    }
+    List<int> bytes;
+    try {
+      bytes = await _rawBody(req, maxPhotoBytes + 1024);
+    } on MediaValidationError catch (e) {
+      return _json(req, {'error': e.message}, 413);
+    }
+    String ext;
+    try {
+      ext = validateImageBytes(bytes);
+    } on MediaValidationError catch (e) {
+      return _json(req, {'error': e.message}, 400);
+    }
+    final id = newMediaId();
+    final dir = _uploadsDir(base);
+    await mediaFile(dir, id, ext).writeAsBytes(bytes, flush: true);
+    final meta = {
+      'mediaId': id,
+      'ext': ext,
+      'mime': mimeForExt(ext),
+      'size': bytes.length,
+      'createdAt': DateTime.now().toUtc().toIso8601String(),
+    };
+    await mediaMetaFile(dir, id).writeAsString(jsonEncode(meta));
+    await auditPersist(
+        s, 'photo.uploaded', {'mediaId': id, 'mime': meta['mime'], 'size': bytes.length});
+    return _json(req, meta);
+  }
+  if (m == 'GET' && p.startsWith('/api/photos/')) {
+    final id = p.substring('/api/photos/'.length);
+    if (!isMediaId(id)) {
+      return _json(req, {'error': 'identifiant média invalide'}, 400);
+    }
+    final dir = _uploadsDir(base);
+    for (final ext in ['jpg', 'png', 'gif', 'webp']) {
+      final f = File('$dir/$id.$ext');
+      if (f.existsSync()) {
+        req.response.statusCode = 200;
+        req.response.headers.contentType =
+            ContentType.parse(mimeForExt(ext));
+        req.response.headers
+            .set('Cache-Control', 'private, max-age=3600');
+        await req.response.addStream(f.openRead());
+        await req.response.close();
+        return;
+      }
+    }
+    return _json(req, {'error': 'média introuvable'}, 404);
+  }
+  if (m == 'POST' && p == '/api/meta/analyze-image') {
+    final b = await _body(req);
+    final rid = (b['reportId'] ?? '') as String;
+    var mid = (b['mediaId'] ?? '') as String;
+    Report? rep;
+    for (final r in s.reports) {
+      if (r.id == rid) rep = r;
+    }
+    if (mid.isEmpty && rep != null && rep.photo != null && isMediaId(rep.photo!)) {
+      mid = rep.photo!;
+    }
+    if (mid.isEmpty || !isMediaId(mid)) {
+      return _json(req, {
+        'error':
+            'mediaId requis (ou reportId dont la photo est un média téléversé)'
+      }, 400);
+    }
+    final dir = _uploadsDir(base);
+    final metaFile = mediaMetaFile(dir, mid);
+    if (!metaFile.existsSync()) {
+      return _json(req, {'error': 'média introuvable : téléverser d\'abord'}, 404);
+    }
+    final meta =
+        jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+    String? foundExt;
+    for (final ext in ['jpg', 'png', 'gif', 'webp']) {
+      if (File('$dir/$mid.$ext').existsSync()) foundExt = ext;
+    }
+    if (foundExt == null) {
+      return _json(req, {'error': 'fichier média manquant'}, 404);
+    }
+    final bytes = await File('$dir/$mid.$foundExt').readAsBytes();
+    try {
+      final out = await analyzeImageWithMeta(s.meta, bytes,
+          mime: (meta['mime'] ?? mimeForExt(foundExt)) as String,
+          reportId: rep?.id,
+          descriptionDeclaree: rep?.text,
+          onRecord: (r) => s.metaCalls.add(r));
+      s.visualAnalyses[mid] = {
+        'reportId': rep?.id,
+        'model': s.meta.model,
+        'at': DateTime.now().toUtc().toIso8601String(),
+        'analysis': out,
+      };
+      await auditPersist(
+          s, 'meta.analyze-image', {'mediaId': mid, 'reportId': rep?.id});
+      return _json(req, {
+        'mediaId': mid,
+        'reportId': rep?.id,
+        'model': s.meta.model,
+        'analysis': out,
+      });
+    } on MetaException catch (e) {
+      await auditPersist(s, 'meta.analyze-image.error',
+          {'mediaId': mid, 'reportId': rep?.id, 'error': e.message});
+      return _json(req, {'error': e.message, 'call': e.record.toJson()}, 502);
+    }
+  }
   if (m == 'GET' && p == '/api/scenarios') {
     return _json(req, {
       'scenarios': [
@@ -710,6 +848,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     s.groupMethod = 'classique';
     s.metaGroups = [];
     s.extractions = {};
+    s.visualAnalyses = {};
     regroup(s);
     await auditPersist(s, 'scenario.loaded', {'id': sc.id, 'label': sc.label});
     return _json(req, {'scenario': sc.id, 'label': sc.label});
@@ -731,6 +870,18 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (expH != null && (expH < 0 || expH > 4)) {
       return _json(req, {'error': 'exposureHint hors 0..4 (ou null = inconnue)'}, 400);
     }
+    // Photo : soit un mediaId téléversé (vérifié), soit l'étiquette libre historique.
+    String? photoRef = b['photo'] as String?;
+    final mediaId = b['photoMediaId'] as String?;
+    if (mediaId != null && mediaId.isNotEmpty) {
+      if (!isMediaId(mediaId) ||
+          !mediaMetaFile(_uploadsDir(base), mediaId).existsSync()) {
+        return _json(req, {
+          'error': 'photoMediaId invalide ou média introuvable : téléverser d\'abord via POST /api/photos'
+        }, 400);
+      }
+      photoRef = mediaId;
+    }
     s.reportSeq++;
     final r = Report(
       id: 'M${s.reportSeq}',
@@ -741,7 +892,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       t: ((b['t'] ?? 500) as num).toInt(),
       severityHint: sevH,
       exposureHint: expH,
-      photo: b['photo'] as String?,
+      photo: photoRef,
       source: 'manuel',
     );
     s.reports.add(r);

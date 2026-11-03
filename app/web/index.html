@@ -30,8 +30,9 @@
   <section id="view-dashboard" class="view active">
     <h1>Tableau de bord</h1>
     <div id="dashCards" class="cards"></div>
-    <h2>Carte locale fictive (grille 5×5 km)</h2>
-    <svg id="map" viewBox="0 0 500 500" width="100%" height="320"></svg>
+    <h2>Carte locale fictive (grille 5×5 km — coordonnées fictives, pas une vraie ville)</h2>
+    <svg id="map" viewBox="0 0 560 540" width="100%" height="360"></svg>
+    <p class="note">Chaque couleur = un incident (lettre I1, I2…). Anneau rouge = S5 (escalade humaine). Carré = gravité à vérifier. Position = centroïde des signalements, pas une mesure GPS.</p>
     <h2>Scénario</h2>
     <div class="row">
       <select id="scKind"><option value="jouet-1">Jouet fixe nº1</option><option value="jouet-s5">Jouet S5</option><option value="dev">DEV généré</option></select>
@@ -48,12 +49,24 @@
       <input id="fText" placeholder="description" size="40">
       <select id="fCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select>
       <input id="fX" type="number" step="0.1" value="2.5" title="x km"> <input id="fY" type="number" step="0.1" value="2.5" title="y km">
-      <input id="fT" type="number" value="500" title="minutes"> <input id="fPhoto" placeholder="photo (optionnel)">
+      <input id="fT" type="number" value="500" title="minutes">
+      <input id="fFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp" title="photo (jpeg/png/gif/webp, max 5 Mo)">
+      <button id="fUpload" type="button">Téléverser la photo</button>
+      <span id="fMediaId" class="note"></span>
+    </div>
+    <div class="row"><img id="fPreview" class="preview" alt="aperçu photo" hidden></div>
+    <div class="form">
       <select id="fSev" title="gravité déclarée"><option value="">gravité inconnue</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
       <select id="fExp" title="exposition déclarée"><option value="">exposition inconnue</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
       <button id="fAdd">Ajouter</button>
     </div>
-    <p class="note">Les signalements ajoutés à la main sont hors vérité terrain (métriques non applicables).</p>
+    <p class="note">Les signalements ajoutés à la main sont hors vérité terrain (métriques non applicables). La photo est stockée sur le serveur et référencée par identifiant, jamais incluse dans l'état.</p>
+    <h2>Analyse visuelle Meta (photo réelle uniquement)</h2>
+    <div class="form">
+      <input id="vReport" placeholder="ID signalement avec photo (ex. M101)" size="30">
+      <button id="vRun">Analyser la photo (Meta)</button>
+    </div>
+    <pre id="vOut" class="dump"></pre>
   </section>
   <section id="view-incidents" class="view">
     <h1>Incidents regroupés <span class="tag calc">CALCULÉ</span></h1>

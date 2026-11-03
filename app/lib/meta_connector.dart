@@ -1,9 +1,9 @@
-// Connecteur Meta Llama API (serveur uniquement, clé jamais exposée).
+// Connecteur Meta Model API (serveur uniquement, clé jamais exposée).
 //
-// Documentation officielle (llama.developer.meta.com) : base
-// https://api.llama.com/v1, authentification "Authorization: Bearer
-// LLAMA_API_KEY", GET /models, POST /chat/completions (réponse native :
-// completion_message.content.text ; response_format json_schema supporté).
+// Documentation officielle (developer.meta.ai) : base https://api.meta.ai/v1,
+// authentification "Authorization: Bearer MODEL_API_KEY", GET /models,
+// POST /chat/completions (compatible OpenAI ; images via content parts
+// `image_url` en base64 uniquement dans les messages `user`).
 //
 // Trois états explicites : non configuré / vérifié / erreur d'accès.
 // Aucun résultat n'est simulé : sans accès vérifié, tout appel est refusé.
@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'grouping.dart';
+import 'media.dart';
 import 'types.dart';
 
 enum MetaState { unconfigured, verified, accessError }
@@ -164,10 +165,45 @@ class MetaConnector {
 
   static const List<String> capabilities = [
     'analyse-texte',
-    'analyse-image (non branchée)',
+    'analyse-image (vision via chat completions, base64, messages user)',
     'extraction-structuree',
     'rapprochement-signalements',
   ];
+
+  /// Corps de requête pur (testable sans réseau) : texte seul ou texte +
+  /// images. Les images ne sont placées QUE dans le message `user`
+  /// (l'API rejette en 400 les images ailleurs).
+  static Map<String, dynamic> buildChatRequest({
+    required String model,
+    required String system,
+    required String user,
+    List<Map<String, String>> images = const [],
+  }) {
+    dynamic userContent = user;
+    if (images.isNotEmpty) {
+      final parts = <Map<String, dynamic>>[
+        {'type': 'text', 'text': user},
+      ];
+      for (final img in images) {
+        parts.add({
+          'type': 'image_url',
+          'image_url': {
+            'url': 'data:${img['mime']};base64,${img['base64']}'
+          },
+        });
+      }
+      userContent = parts;
+    }
+    return {
+      'model': model,
+      'messages': [
+        {'role': 'system', 'content': system},
+        {'role': 'user', 'content': userContent},
+      ],
+      'response_format': {'type': 'json_object'},
+      'stream': false,
+    };
+  }
 
   Map<String, dynamic> toJson() => {
         'state': state.name,
@@ -282,7 +318,8 @@ class MetaConnector {
     required String system,
     required String user,
     required Map<String, dynamic> inputLog,
-    Duration timeout = const Duration(seconds: 30),
+    List<Map<String, String>> images = const [],
+    Duration timeout = const Duration(seconds: 60),
     void Function(MetaCallRecord)? onRecord,
   }) async {
     final sw = Stopwatch()..start();
@@ -301,15 +338,12 @@ class MetaConnector {
       throw MetaException(r.error!, r);
     }
     try {
-      final resp = await _request('POST', '/chat/completions', {
-        'model': mdl,
-        'messages': [
-          {'role': 'system', 'content': system},
-          {'role': 'user', 'content': user},
-        ],
-        'response_format': {'type': 'json_object'},
-        'stream': false,
-      }, timeout);
+      final resp = await _request(
+          'POST',
+          '/chat/completions',
+          buildChatRequest(
+              model: mdl, system: system, user: user, images: images),
+          timeout);
       final text = await utf8.decoder.bind(resp).join();
       sw.stop();
       if (resp.statusCode != 200) {
@@ -415,6 +449,70 @@ Future<Map<String, dynamic>> extractStructuredWithMeta(
     timeout: timeout,
     onRecord: onRecord,
   );
+}
+
+/// Analyse visuelle réelle d'une photo de signalement (P1, §7).
+/// Le modèle ne reçoit que les octets + le contexte déclaré ; le contrat
+/// de sortie exige observations / hypothèses / incertitudes, jamais de
+/// gravité fabriquée ni de localisation GPS prétendue. Tout écart de
+/// contrat lève MetaException (aucune fausse démo multimodale).
+Future<Map<String, dynamic>> analyzeImageWithMeta(
+  MetaConnector c,
+  List<int> bytes, {
+  required String mime,
+  String? reportId,
+  String? descriptionDeclaree,
+  Duration timeout = const Duration(seconds: 90),
+  void Function(MetaCallRecord)? onRecord,
+}) async {
+  final b64 = base64Encode(bytes);
+  final out = await c.chatJson(
+    kind: 'analyse-visuelle',
+    system: 'Tu analyses une photo de signalement urbain fictif. Tu distingues '
+        'OBLIGATOIREMENT : ce qui est visible sur l\'image, ce qui est déclaré '
+        'par l\'usager, tes hypothèses, et ce qui reste à vérifier. Réponds '
+        'UNIQUEMENT en JSON. N\'invente jamais de gravité, de nombre de '
+        'personnes exposées, de localisation GPS ni de danger. Une photo de '
+        'jour ne prouve jamais une panne d\'éclairage nocturne.',
+    user: 'Analyse cette photo de signalement urbain fictif.'
+        '${reportId != null ? ' Signalement $reportId.' : ''}'
+        '${descriptionDeclaree != null && descriptionDeclaree.isNotEmpty ? ' Description déclarée par l\'usager (à ne pas confondre avec le visible) : "$descriptionDeclaree".' : ''}\n'
+        'JSON attendu: {"observationsVisibles": [string], '
+        '"problemesPossibles": [{"famille": string, "hypothese": string, '
+        '"confirmation": "a_verifier"}], '
+        '"localisation": string|null, "gravite": integer 1..5|null, '
+        '"exposition": integer 0..4|null, '
+        '"incertitudes": [string]}',
+    images: [
+      {'mime': mime, 'base64': b64}
+    ],
+    inputLog: {
+      'reportId': reportId,
+      'mime': mime,
+      'bytes': bytes.length,
+      'imageInline': true,
+    },
+    timeout: timeout,
+    onRecord: onRecord,
+  );
+  final flaw = validateVisualAnalysis(out);
+  if (flaw != null) {
+    throw MetaException(
+        'Contrat d\'analyse visuelle non respecté : $flaw.',
+        MetaCallRecord(
+          id: 'META-local-${DateTime.now().millisecondsSinceEpoch}',
+          kind: 'analyse-visuelle',
+          model: c.model,
+          status: 'erreur',
+          error: 'contrat non respecté : $flaw',
+          latencyMs: 0,
+          usage: null,
+          at: DateTime.now().toUtc().toIso8601String(),
+          input: {'reportId': reportId, 'mime': mime},
+          output: out,
+        ));
+  }
+  return out;
 }
 
 /// Listing Meta avec unités explicites (patch unités, local).

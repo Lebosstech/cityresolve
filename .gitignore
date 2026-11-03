@@ -4,6 +4,8 @@ build/
 app/data/*.jsonl
 app/data/state.json*
 app/data/backup-*/
+app/data/uploads/
+app/data/server.lock
 .env
 *.bak
 node_modules/
