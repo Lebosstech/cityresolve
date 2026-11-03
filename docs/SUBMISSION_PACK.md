@@ -58,10 +58,40 @@ methods agree and where they differ.
 - S5 toy scenario: S5 incident escalated, never dispatched.
 - Injection after a plan: oracle says "keep the plan" (gain +0.0 < 5.0),
   demonstrating that not every new report should trigger a revision.
+- Justified revisions, verified on DEV seed 7 (VM, main code):
+  R1 team down (N1): PLAN-1 (all tasks on equipe-2, planned Q 60.98)
+  → injection team_down equipe-2 → PLAN-2 (all tasks on equipe-1,
+  planned Q 50.16; reseaux incidents I3/I5/I7 unassigned because
+  equipe-1 lacks that domain). Simulated Q stays 0.0 after revision
+  (realised budget 123.8 > 120) — the revision was necessary because
+  the team disappeared, NOT because Q improved.
+  R2 new S5 (N3-S5): a declared severity-5 report creates incident I9,
+  triggers human escalation, and creates NO new plan by design.
+  A Q-gain revision (N2) was attempted once and returned U
+  (gain +0.0) — not demonstrated, not fabricated.
 - Real Meta calls (not stubs): Muse Spark 1.3 via api.meta.ai, 9 models
   listed; a 3-call cost pilot (mean 5.5 s, 672 tokens per small call)
   and Phase 4 real calls (~20 s, ~3,670 tokens per call). The API does
   not return a monetary cost, so no money cost is stated.
+
+### Split benefit vs Meta contribution — kept separate on purpose
+- Split benefit (deterministic, no Meta involved): the secondary
+  problem survives grouping. DEV evidence: 5/9 incidents covered
+  without split, 9/9 with split, on the multi-problem DEV set. This
+  is a grouping-mechanics result, not an AI result.
+- Meta contribution (actually demonstrated): structured extraction
+  with unknowns kept as null, justified match proposals with
+  uncertainties, and disagreement cases against the classical baseline.
+  Phase 4 results are mixed and reported as such: on HARD pairs Meta
+  F1 0.80 vs a synonym baseline 0.90 (that baseline was written knowing
+  the test pairs, so it is not an independent validation); on
+  MISLEADING pairs Meta F1 0.57 vs classical 0.40 vs synonyms 0.50,
+  with no statistical power. On DEV seed 7, Meta did NOT improve
+  allocation over classical (same planned Q, same simulated Q 0.0).
+  Better grouping F1 does not imply better allocation — that
+  distinction is part of the demo.
+- What Meta has NOT demonstrated: image segmentation (SAM 3.1
+  untested), any gain on held-out data, any real-city impact.
 
 ### Limitations (stated plainly)
 - Level 1 — Idea. The confirmatory protocol is NOT frozen: the Q cliff,
@@ -109,10 +139,17 @@ classical + split path only and say so — never simulate an AI result.
    incidents and infeasibility reasons.
 6. Simulate: show the simulated outcomes, the budget violation and
    Q 0.0 on seed 7, and explain the Q cliff honestly.
-7. New information: inject a report after the plan; show the oracle
-   keeping the plan stable (gain +0.0 < 5.0). Then, if available, show a
-   justified-revision case (oracle R) — do not stage one that did not
-   occur.
+7. New information, three cases in order:
+   (a) Stability (U, verified): inject an ordinary report after the
+   plan; the oracle keeps the plan (gain +0.0 < 5.0).
+   (b) Justified revision R1 (N1, verified): inject team_down for
+   equipe-2; show necessity N1, PLAN-1 → PLAN-2, planned Q
+   60.98 → 50.16, and the simulated Q staying at 0.0 — revision
+   necessary, not a Q gain.
+   (c) S5 escalation (N3-S5, verified): inject a declared severity-5
+   report; show incident I9, human escalation, and NO new plan.
+   A Q-gain revision (N2) is NOT part of the demo: one attempt
+   returned U and no reproducible N2 case was found.
 8. S5: load the S5 toy scenario; show the escalation and that the S5
    incident is never dispatched. State clearly that the system does not
    replace emergency services.
@@ -123,9 +160,24 @@ classical + split path only and say so — never simulate an AI result.
 - Length: to be confirmed from the portal (UNVERIFIED — do not assume
   3 minutes until the portal says so).
 - Narration: English, from section A above, shortened to the demo steps.
+  Suggested narration (read slowly, one sentence per shot):
+  "Cities receive messy citizen reports, and one report can hide two
+  problems. CityResolve splits each report, so the second problem
+  survives. Classical grouping is our transparent baseline. Meta AI
+  reads the report, extracts what is actually there, and justifies its
+  matches — unknowns stay unknown. One optimiser plans the work for
+  both methods. On this demo, the simulated plan breaks the budget,
+  and we show that honestly. When a team goes down, the plan is
+  revised because it must be, not because the score improved. A
+  severity-five incident is never dispatched: it goes straight to a
+  human. This is a development prototype. The confirmatory protocol
+  is not frozen, and no real-city impact is claimed."
 - Shots: the 9 steps of section B, in order, on the real interface.
   No mockups, no simulated inference, no fictitious maps presented as
   real. The DEV banner and the fictitious-grid note must stay visible.
+  Show the split groups, the plan before and after the team-down
+  injection, the N1 justification, the S5 escalation, and the U
+  stability case. Show a worse score when it occurs.
 - If capture tools are unavailable on that machine, deliver this script
   and the narration text instead of claiming a video exists.
 

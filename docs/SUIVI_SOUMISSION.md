@@ -77,9 +77,59 @@ Ceci est un dossier de démonstration DEV, pas une preuve confirmatoire.
   Dart en continu), Hostinger non adapté sans conteneur — décision
   réservée au propriétaire, après l'échéance si besoin.
 
+## Révisions justifiées — vérifiées le 3 novembre 2026 au soir (VM, code main)
+
+Cas R1 — équipe indisponible (N1), reproductible, DEV graine 7 :
+- Plan avant : PLAN-1, 5 tâches toutes sur equipe-2 (I8, I4, I6, I1, I3),
+  Q planifié 60,98, coût 118,40, faisable en planifié ; simulation Q 0,0,
+  violation budget réalisé 142,2 > 120, manqués V2, V4, V7.
+- Injection : `team_down` equipe-2.
+- Nécessité : N1, necessary true, « Équipe equipe-2 indisponible :
+  réaffectation requise. »
+- Plan après : PLAN-2, 5 tâches toutes sur equipe-1 (I1, I2, I4, I6, I8),
+  Q planifié 50,16, coût 104,76, faisable en planifié ; I3/I5/I7 non
+  affectés (« aucune équipe compétente (reseaux) » — equipe-1 n'a pas
+  ce domaine, limite honnête).
+- Diff : material true, « Sélection d'incidents modifiée. »
+- Simulation après : Q 0,0, violation budget réalisé 123,8 > 120,
+  manqués V2, V5, V7. Lecture honnête : la révision était nécessaire
+  (l'équipe a disparu), mais elle n'améliore PAS le Q simulé, qui
+  reste à 0 à cause de la falaise budget — et le Q planifié baisse
+  de 60,98 à 50,16. Ne jamais présenter R1 comme un gain de Q.
+
+Cas R2 — nouveau S5 (N3-S5), reproductible, DEV graine 7 :
+- Plan avant : PLAN-1 (même plan que R1, serveur relancé à neuf).
+- Injection : signalement gravité déclarée 5, exposition 3.
+- Nécessité : N3-S5, necessary true, « S5 révélé : escalade humaine
+  exigée, pas de réaffectation. »
+- Nouvel incident I9 (gravité 5, déclarée, signalement M101) ; AUCUN
+  nouveau plan, par conception : un S5 ne réaffecte pas les équipes
+  ordinaires.
+
+Cas N2 (gain de Q) tenté une fois, NON démontré : injection d'un
+signalement gravité 4 / exposition 4 après plan → nécessité U
+(gain +0,0 < 5,0). Aucun cas N2 reproductible exhibé ; ne pas le
+fabriquer. Le code oracle (lib/oracle.dart) est identique entre main
+et la copie VM utilisée (vérifié par hash), donc ces résultats
+s'appliquent au code main.
+
+Quirk opérationnel constaté : après un arrêt brutal, le verrou
+data/server.lock peut survivre alors qu'aucun serveur ne tourne ; le
+serveur refuse alors de démarrer. Supprimer data/server.lock
+uniquement après avoir vérifié qu'aucun serveur ne tourne, puis
+relancer. Ne jamais lancer deux serveurs sur le même data/.
+
 ## Tâches P0 (bloquant soumission)
 
-- [ ] P0-1 Vérification serveur Windows (voir ci-dessus).
+- [x] P0-0 État frais de main confirmé le 3 novembre au soir :
+      commit 3350bcd1 (pack de soumission) ; découpage présent sur main
+      (incidents.dart / server.dart, recherché sur main) ; oracle main
+      identique à la copie VM ; secrets vérifiés dans les docs poussés
+      (aucune valeur de clé, seul le nom de variable MODEL_API_KEY).
+      Ne jamais pousser depuis repo-mirror ni run-local (périmés,
+      pré-split).
+- [ ] P0-1 Vérification serveur Windows (procédure d'une session :
+      docs/WINDOWS_VALIDATION.md).
 - [ ] P0-2 Réactivation Meta sur Windows + vérification d'une extraction
       réelle depuis l'interface.
 - [ ] P0-3 Vérification MongoDB / compteurs sur Windows.
