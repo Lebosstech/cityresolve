@@ -13,6 +13,7 @@ import '../lib/metrics.dart';
 import '../lib/optimizer.dart';
 import '../lib/oracle.dart';
 import '../lib/policy.dart';
+import '../lib/security.dart';
 import '../lib/mongo_store.dart';
 import '../lib/scenarios.dart';
 import '../lib/server_lock.dart';
@@ -59,6 +60,8 @@ class AppState {
   bool mongoPrimary = false;
   String? mongoError;
   Future<void> mongoQueue = Future<void>.value();
+  late MunicipalAuth municipal;
+  final RateLimiter rateLimiter = RateLimiter();
 }
 
 /// Audit PUIS persistance, ATTENDUE avant la réponse HTTP : quand le
@@ -255,6 +258,7 @@ AppState _initState(String base, {bool restore = true}) {
   Directory(_uploadsDir(base)).createSync(recursive: true);
   s.audit = AuditLog(path: '$base/data/journal.jsonl');
   s.meta = MetaConnector.fromEnvironment(Platform.environment);
+  s.municipal = MunicipalAuth.fromEnvironment(Platform.environment);
   s.store = JsonStore('$base/data');
   final sc = toyFixed1();
   s.scenario = sc;
@@ -509,6 +513,8 @@ Future<void> main(List<String> args) async {
       File(Platform.script.toFilePath()).parent.parent.path;
   // Patch local : refuser un second serveur sur le même répertoire data/,
   // au lieu de laisser deux processus écrire le même état.
+  // Le verrou est libéré à l'arrêt propre (SIGINT/SIGTERM) ; après un
+  // arrêt brutal, le fichier peut survivre (limite documentée).
   if (!args.contains('--check')) {
     final lock = tryAcquireServerLock('$base/data');
     if (!lock.acquired) {
@@ -516,6 +522,19 @@ Future<void> main(List<String> args) async {
           'data/ (PID ${lock.holderPid}, démarré ${lock.holderStartedAt}). '
           'Si aucun serveur ne tourne, supprimer data/server.lock puis relancer.');
       exit(2);
+    }
+    // SIGTERM n'existe pas sur Windows (l'erreur est asynchrone, donc
+    // un simple try/catch ne suffit pas) : écoute best-effort.
+    final signals = Platform.isWindows
+        ? [ProcessSignal.sigint]
+        : [ProcessSignal.sigint, ProcessSignal.sigterm];
+    for (final sig in signals) {
+      try {
+        sig.watch().listen((_) {
+          releaseServerLock(lock.path);
+          exit(0);
+        }, onError: (_) {});
+      } catch (_) {}
     }
   }
   final s = _initState(base, restore: !args.contains('--check'));
@@ -594,20 +613,122 @@ void _json(HttpRequest req, Object o, [int code = 200]) async {
   await req.response.close();
 }
 
+// --- Sécurité exposition publique (§6) ---
+String _clientIp(HttpRequest req) {
+  final xff = req.headers.value('x-forwarded-for');
+  if (xff != null && xff.trim().isNotEmpty) {
+    return xff.split(',').first.trim();
+  }
+  return req.connectionInfo?.remoteAddress.address ?? 'unknown';
+}
+
+String? _sessionCookie(HttpRequest req) {
+  for (final c in req.cookies) {
+    if (c.name == 'municipal_session') return c.value;
+  }
+  return null;
+}
+
+String? _bearer(HttpRequest req) {
+  final h = req.headers.value('authorization');
+  if (h != null && h.startsWith('Bearer ')) return h.substring(7).trim();
+  return null;
+}
+
+bool _municipalOk(HttpRequest req, AppState s) => s.municipal.isAuthorized(
+    sessionId: _sessionCookie(req), bearerToken: _bearer(req));
+
+void _denyMunicipal(HttpRequest req) {
+  _json(req, {
+    'error': 'espace municipal : authentification requise',
+    'loginRequired': true,
+  }, 401);
+}
+
+/// Limite de débit par IP. Retourne false + répond 429 si dépassée.
+Future<bool> _rateLimit(HttpRequest req, AppState s, String bucket,
+    {required int max, required Duration window}) async {
+  final ok = s.rateLimiter
+      .allow('$bucket:${_clientIp(req)}', max: max, window: window);
+  if (!ok) {
+    req.response.statusCode = 429;
+    req.response.headers.contentType = ContentType.json;
+    req.response.headers.set('Retry-After', window.inSeconds.toString());
+    req.response.write(jsonEncode({
+      'error': 'trop de requêtes, réessayez dans ${window.inMinutes} minute(s)',
+      'retryAfterSec': window.inSeconds,
+    }));
+    await req.response.close();
+  }
+  return ok;
+}
+
 Future<void> _handle(HttpRequest req, AppState s, String base) async {
   final p = req.uri.path;
   final m = req.method;
-  // --- Statique ---
-  if (m == 'GET' && (p == '/' || p == '/index.html')) {
-    return _static(req, '$base/web/index.html', ContentType.html);
+  // --- Statique : page publique ouverte, espace municipal protégé ---
+  if (m == 'GET' && p == '/') {
+    return _static(req, '$base/web/public.html', ContentType.html);
+  }
+  if (m == 'GET' && p == '/public.js') {
+    return _static(req, '$base/web/public.js',
+        ContentType('application', 'javascript', charset: 'utf-8'));
+  }
+  if (m == 'GET' && p == '/public.css') {
+    return _static(req, '$base/web/public.css',
+        ContentType('text', 'css', charset: 'utf-8'));
+  }
+  // Coquille municipale publique (aucune donnée dedans) : l'écran de
+  // connexion qu'elle contient ne peut s'afficher que si la page charge
+  // sans auth. Toutes les données et actions restent protégées par API.
+  if (m == 'GET' && (p == '/municipal' || p == '/index.html')) {
+    return _static(req, '$base/web/municipal.html', ContentType.html);
   }
   if (m == 'GET' && p == '/app.js') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _static(req, '$base/web/app.js',
         ContentType('application', 'javascript', charset: 'utf-8'));
   }
   if (m == 'GET' && p == '/styles.css') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _static(req, '$base/web/styles.css',
         ContentType('text', 'css', charset: 'utf-8'));
+  }
+  // --- Authentification municipale ---
+  if (m == 'GET' && p == '/api/municipal/status') {
+    return _json(req, {
+      'enforced': s.municipal.enforced,
+      'authenticated': _municipalOk(req, s),
+    });
+  }
+  if (m == 'POST' && p == '/api/municipal/login') {
+    if (!await _rateLimit(req, s, 'login',
+        max: 10, window: const Duration(minutes: 10))) {
+      return;
+    }
+    if (!s.municipal.enforced) {
+      return _json(req, {'authenticated': true, 'open': true});
+    }
+    final b = await _body(req);
+    final token = (b['token'] ?? '') as String;
+    if (!s.municipal.checkToken(token)) {
+      return _json(req, {'error': 'jeton invalide'}, 401);
+    }
+    final sid = s.municipal.createSession();
+    req.response.cookies.add(Cookie('municipal_session', sid)
+      ..httpOnly = true
+      ..sameSite = SameSite.lax
+      ..path = '/'
+      ..maxAge = 12 * 3600);
+    return _json(req, {'authenticated': true});
+  }
+  if (m == 'POST' && p == '/api/municipal/logout') {
+    s.municipal.revoke(_sessionCookie(req));
+    req.response.cookies.add(Cookie('municipal_session', '')
+      ..httpOnly = true
+      ..path = '/'
+      ..maxAge = 0);
+    return _json(req, {'authenticated': false});
   }
   // --- API ---
   if (m == 'GET' && p == '/api/health') {
@@ -635,14 +756,19 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'note': 'Politique expérimentale provisoire, NON validée métier.',
     });
   }
-  if (m == 'GET' && p == '/api/meta') return _json(req, s.meta.toJson());
+  if (m == 'GET' && p == '/api/meta') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    return _json(req, s.meta.toJson());
+  }
   if (m == 'GET' && p == '/api/meta/calls') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'calls': s.metaCalls.map((c) => c.toJson()).toList(),
       'note': 'Appels réels ou refus explicites. Aucun résultat simulé.',
     });
   }
   if (m == 'GET' && p == '/api/db') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final mongo = s.mongo;
     return _json(req, {
       'backend': s.mongoPrimary ? 'mongodb (principal) + json (sauvegarde)' : 'json (repli, MongoDB injoignable)',
@@ -657,6 +783,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'GET' && p == '/api/state') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'scenario': s.scenario?.id,
       'scenarioKind': s.scenarioKind,
@@ -673,9 +800,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'GET' && p == '/api/plans') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {'plans': s.planHistory});
   }
   if (m == 'POST' && p == '/api/meta/verify') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final connector = MetaConnector.fromEnvironment(Platform.environment);
     final (verified, record) = await connector.verify();
     s.meta = verified;
@@ -685,6 +814,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {'meta': s.meta.toJson(), 'call': record.toJson()});
   }
   if (m == 'POST' && p == '/api/meta/extract') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final rid = (b['reportId'] ?? '') as String;
     Report? rep;
@@ -707,6 +837,10 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   }
   // --- Photos (P1) : octets sur disque, jamais dans l'état ni en base ---
   if (m == 'POST' && p == '/api/photos') {
+    if (!await _rateLimit(req, s, 'photo-upload',
+        max: 10, window: const Duration(minutes: 10))) {
+      return;
+    }
     final ct = req.headers.contentType?.mimeType ?? '';
     if (!ct.startsWith('image/')) {
       return _json(req, {
@@ -742,6 +876,10 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, meta);
   }
   if (m == 'GET' && p.startsWith('/api/photos/')) {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
     final id = p.substring('/api/photos/'.length);
     if (!isMediaId(id)) {
       return _json(req, {'error': 'identifiant média invalide'}, 400);
@@ -763,6 +901,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {'error': 'média introuvable'}, 404);
   }
   if (m == 'POST' && p == '/api/meta/analyze-image') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final rid = (b['reportId'] ?? '') as String;
     var mid = (b['mediaId'] ?? '') as String;
@@ -825,6 +964,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
   }
   if (m == 'GET' && p == '/api/scenarios') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'scenarios': [
         {'kind': 'jouet-1', 'label': 'Jouet fixe nº1 (6 sign., 3 inc.)'},
@@ -834,6 +974,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'POST' && p == '/api/scenario/load') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final kind = (b['kind'] ?? 'jouet-1') as String;
     final seed = (b['seed'] ?? 7) as int;
@@ -862,14 +1003,91 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {'scenario': sc.id, 'label': sc.label});
   }
   if (m == 'GET' && p == '/api/reports') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'reports': s.reports.map((r) => r.toJson()).toList(),
       'manual': s.manualReports.toList(),
       'truthKnown': s.truth.map((t) => t.toJson()).toList(),
     });
   }
+  // --- API publique : données filtrées uniquement, jamais la vérité ---
+  if (m == 'GET' && p == '/api/public/reports') {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 20)
+        .clamp(1, 50));
+    final sorted = List<Report>.from(s.reports)
+      ..sort((a, b) => (b.receivedAt ?? '').compareTo(a.receivedAt ?? ''));
+    return _json(req, {
+      'fictive': true,
+      'reports': sorted
+          .take(limit)
+          .map((r) => publicReportJson(r,
+              status: trackingStatus(r, s.groups, s.incidents, s.plan)))
+          .toList(),
+    });
+  }
+  if (m == 'GET' && p.startsWith('/api/public/reports/')) {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final rid = p.substring('/api/public/reports/'.length);
+    Report? rep;
+    for (final r in s.reports) {
+      if (r.id == rid) rep = r;
+    }
+    if (rep == null) {
+      return _json(req, {'error': 'signalement introuvable'}, 404);
+    }
+    final status = trackingStatus(rep, s.groups, s.incidents, s.plan);
+    Incident? inc;
+    for (final g in s.groups) {
+      if (!g.reportIds.contains(rep.id)) continue;
+      for (final ii in s.incidents) {
+        if (ii.reportIds.toSet().intersection(g.reportIds.toSet()).isNotEmpty) {
+          inc = ii;
+          break;
+        }
+      }
+    }
+    return _json(req, {
+      'fictive': true,
+      'report': publicReportJson(rep, status: status),
+      'incident': inc == null ? null : publicIncidentJson(inc),
+    });
+  }
+  if (m == 'GET' && p == '/api/public/incidents') {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    return _json(req, {
+      'fictive': true,
+      'grid': '5x5 km fictive (pas une carte réelle)',
+      'incidents': s.incidents.map(publicIncidentJson).toList(),
+    });
+  }
+  // Création publique : validée + limitée en fréquence. Ne regroupe PAS :
+  // un visiteur ne doit ni invalider le plan municipal ni déclencher un
+  // calcul (l'interface municipale regroupe explicitement). Le statut
+  // passe à « regroupé » au prochain regroupement municipal.
   if (m == 'POST' && p == '/api/reports') {
+    if (!await _rateLimit(req, s, 'report-create',
+        max: 20, window: const Duration(minutes: 10))) {
+      return;
+    }
+    if (s.reports.length >= maxReportsTotal) {
+      return _json(req, {
+        'error':
+            'capacité maximale de signalements atteinte ($maxReportsTotal)'
+      }, 429);
+    }
     final b = await _body(req);
+    final textErr = publicTextError(b['text'] as String?);
+    if (textErr != null) return _json(req, {'error': textErr}, 400);
     final sevH = b['severityHint'] as int?;
     final expH = b['exposureHint'] as int?;
     if (sevH != null && (sevH < 1 || sevH > 5)) {
@@ -877,6 +1095,10 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     if (expH != null && (expH < 0 || expH > 4)) {
       return _json(req, {'error': 'exposureHint hors 0..4 (ou null = inconnue)'}, 400);
+    }
+    final category = (b['category'] ?? 'autre') as String;
+    if (!isPublicCategory(category)) {
+      return _json(req, {'error': 'catégorie inconnue : $category'}, 400);
     }
     // Photo : soit un mediaId téléversé (vérifié), soit l'étiquette libre historique.
     String? photoRef = b['photo'] as String?;
@@ -891,25 +1113,35 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       photoRef = mediaId;
     }
     s.reportSeq++;
+    final receivedAt = DateTime.now().toUtc().toIso8601String();
     final r = Report(
       id: 'M${s.reportSeq}',
-      text: (b['text'] ?? '') as String,
-      category: (b['category'] ?? 'autre') as String,
+      text: (b['text'] as String).trim(),
+      category: category,
       x: ((b['x'] ?? 2.5) as num).toDouble().clamp(0.0, 5.0),
       y: ((b['y'] ?? 2.5) as num).toDouble().clamp(0.0, 5.0),
-      t: ((b['t'] ?? 500) as num).toInt(),
+      t: ((b['t'] ?? 500) as num).toInt().clamp(0, 20160),
       severityHint: sevH,
       exposureHint: expH,
       photo: photoRef,
       source: 'manuel',
+      receivedAt: receivedAt,
     );
     s.reports.add(r);
     s.manualReports.add(r.id);
-    regroup(s);
     await auditPersist(s, 'report.created', {'id': r.id, 'manual': true});
-    return _json(req, {'id': r.id});
+    return _json(req, {
+      'id': r.id,
+      'receivedAt': receivedAt,
+      'status': 'enregistre',
+      'statusLabel': trackingLabels['enregistre'],
+      'fictive': true,
+      'note':
+          'Signalement enregistré. Démonstration : les données peuvent être réinitialisées à tout moment.',
+    });
   }
   if (m == 'POST' && p == '/api/group') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     for (final k in ['distMaxM', 'deltaTMaxH', 'simMin']) {
       if (b[k] != null) s.groupParams[k] = (b[k] as num).toDouble();
@@ -1028,11 +1260,13 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'GET' && p == '/api/incidents') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'incidents': s.incidents.map((i) => i.toJson()).toList(),
     });
   }
   if (m == 'POST' && p == '/api/plan') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final teams = activeTeams(s);
     if (teams.isEmpty) {
       return _json(req, {
@@ -1065,6 +1299,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, s.plan!.toJson());
   }
   if (m == 'POST' && p == '/api/plan/validate') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     if (s.plan == null) {
       return _json(req, {'error': 'aucun plan à valider'}, 400);
     }
@@ -1082,6 +1317,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {'validation': d, 'planId': s.plan!.planId});
   }
   if (m == 'POST' && p == '/api/simulate') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     if (s.plan == null) return _json(req, {'error': 'aucun plan'}, 400);
     final knownIds = s.incidents.map((i) => i.id).toSet();
     if (s.plan!.tasks.any((t) => !knownIds.contains(t.incidentId))) {
@@ -1124,6 +1360,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'POST' && p == '/api/inject') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final type = (b['type'] ?? 'reports') as String;
     if (s.plan == null) return _json(req, {'error': 'aucun plan'}, 400);
@@ -1209,6 +1446,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'POST' && p == '/api/compare') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final configs = (b['configs'] as List? ?? []).take(5).toList();
     if (configs.isEmpty || s.truth.isEmpty) {
@@ -1250,6 +1488,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {'rows': rows, 'meta': s.meta.toJson()});
   }
   if (m == 'GET' && p == '/api/compare-methods') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     // Comparaison visible DEV : CLASSIQUE (référence) vs META (si disponible).
     final byId = {for (final r in s.reports) r.id: r};
     final classicGroups = groupReports(s.reports,
@@ -1360,6 +1599,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'GET' && p == '/api/journal') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {'entries': s.audit.toJson()});
   }
   req.response.statusCode = 404;

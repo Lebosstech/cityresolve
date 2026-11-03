@@ -14,6 +14,8 @@ class Report {
   final String? photo; // mediaId (24 hex, voir lib/media.dart) si photo
   // téléversée, sinon étiquette libre historique ; jamais d'octets ici
   final String source; // scenario | manuel | injection (provenance)
+  final String? receivedAt; // ISO-8601 UTC de réception serveur (suivi
+  // public) ; null pour les signalements de scénario et l'historique
 
   const Report({
     required this.id,
@@ -26,6 +28,7 @@ class Report {
     this.exposureHint,
     this.photo,
     this.source = 'scenario',
+    this.receivedAt,
   });
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +42,7 @@ class Report {
         'exposureHint': exposureHint,
         'photo': photo,
         'source': source,
+        'receivedAt': receivedAt,
       };
 
   static Report fromJson(Map<String, dynamic> j) => Report(
@@ -52,6 +56,7 @@ class Report {
         exposureHint: j['exposureHint'] as int?,
         photo: j['photo'] as String?,
         source: (j['source'] ?? 'scenario') as String,
+        receivedAt: j['receivedAt'] as String?,
       );
 }
 

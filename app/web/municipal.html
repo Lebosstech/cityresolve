@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Bac à sable DEV</title>
+<title>CityResolve — Espace municipal (DEV)</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -25,7 +25,46 @@
     <span class="tag hum">HUMAIN</span>
   </div>
   <div class="meta" id="metaBox"></div>
+  <a class="navlink" href="/">← Accueil public</a>
+  <button id="logoutBtn" data-login="1" hidden>Déconnexion</button>
 </nav>
+<div id="loginOverlay" class="login-overlay" hidden>
+  <div class="login-card">
+    <h2>Espace municipal</h2>
+    <p class="note">Accès protégé : les opérations de regroupement, planification,
+    simulation et les journaux sont réservés. Demandez le jeton municipal
+    à l'administrateur de la démonstration.</p>
+    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
+    <button id="loginGo">Se connecter</button>
+    <p id="loginErr" class="ko"></p>
+  </div>
+</div>
+<script>
+(async () => {
+  try {
+    const r = await fetch('/api/municipal/status');
+    const j = await r.json();
+    const out = document.getElementById('logoutBtn');
+    if (j.enforced && !j.authenticated) {
+      document.querySelector('.layout').style.display = 'none';
+      document.getElementById('loginOverlay').hidden = false;
+      document.getElementById('loginGo').onclick = async () => {
+        const r2 = await fetch('/api/municipal/login', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: document.getElementById('loginToken').value }) });
+        if (r2.ok) location.reload();
+        else document.getElementById('loginErr').textContent = 'Jeton invalide.';
+      };
+    } else if (j.enforced && j.authenticated && out) {
+      out.hidden = false;
+      out.onclick = async () => {
+        await fetch('/api/municipal/logout', { method: 'POST' });
+        location.reload();
+      };
+    }
+  } catch (e) { /* page publique du statut indisponible : laisse l'app tenter */ }
+})();
+</script>
 <main>
   <section id="view-dashboard" class="view active">
     <h1>Tableau de bord</h1>

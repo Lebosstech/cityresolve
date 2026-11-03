@@ -66,6 +66,30 @@ seuil, chaînage transitif, gravités contradictoires) et paires
 opérationnels ; ils sont exclus du F1 faute de vérité, et cette absence est
 affichée explicitement (jamais un score fabriqué).
 
+## Page publique + espaces (branche work/public-homepage)
+
+- `/` : page publique réelle (formulaire connecté, carte des incidents,
+  signalements récents, suivi par identifiant, à propos). Fidèle à la
+  maquette ; héros en illustration SVG (aucune photo de personne) ; vidéo
+  et message vocal affichés « Bientôt disponible », désactivés, aucun faux
+  téléversement ; GPS désactivé (choix sur la grille fictive uniquement) ;
+  carte étiquetée « Carte de démonstration — Données fictives ».
+- `/municipal` : interface DEV existante, inchangée fonctionnellement,
+  sous écran de connexion quand un jeton est configuré.
+- Sécurité exposition publique (§6) : `POST /api/reports` et
+  `POST /api/photos` limités en fréquence (429 + Retry-After), texte
+  1–500 caractères, catégories fermées, 500 signalements max ; tout le
+  reste (scénarios, regroupement, plan, simulation, injection, comparaisons,
+  journal, Meta, db/state/plans) exige le jeton municipal
+  (`CITYRESOLVE_MUNICIPAL_TOKEN`, cookie HttpOnly ou Bearer).
+  Sans jeton configuré : mode ouvert documenté (dev local uniquement).
+- Changement assumé : `POST /api/reports` ne regroupe plus (un visiteur
+  ne doit pas invalider le plan municipal) ; l'interface municipale
+  regroupe explicitement. `Report.receivedAt` (ISO-8601 serveur) ajouté.
+- Render : ajouter `CITYRESOLVE_MUNICIPAL_TOKEN` (sync: false) dans
+  `render.yaml` — fait. Ne jamais déployer sans ce jeton. La clé Meta
+  reste côté serveur, jamais exposée au navigateur.
+
 ## API (JSON, locale)
 
 Santé/politique : `GET /api/health`, `GET /api/policy`, `GET /api/state`, `GET /api/plans`.
@@ -73,7 +97,12 @@ Connecteur IA : `GET /api/meta`, `POST /api/meta/verify` (appel réel GET
 `api.llama.com/v1/models`), `POST /api/meta/extract` `{reportId}`,
 `GET /api/meta/calls` (modèle, entrées, sorties, erreurs, latence, usage).
 Scénarios visibles : `GET /api/scenarios`, `POST /api/scenario/load` `{kind: jouet-1|jouet-s5|dev, seed}`.
-Signalements : `GET /api/reports`, `POST /api/reports` (`severityHint`/`exposureHint` null = inconnus).
+Signalements : `GET /api/reports` (municipal), `POST /api/reports`
+(public, limité, texte 1–500, catégorie fermée, `receivedAt` serveur,
+sans regroupement).
+Public : `GET /api/public/reports`, `GET /api/public/reports/<id>` (suivi),
+`GET /api/public/incidents` (données filtrées, `fictive: true`).
+Municipal : `POST /api/municipal/login|logout`, `GET /api/municipal/status`.
 Regroupement : `POST /api/group` `{distMaxM, deltaTMaxH, simMin, method: classique|meta}` -> groupes + incidents + incertitudes + F1 (vérité DEV).
 Planification : `POST /api/plan` (optimiseur exact commun aux deux méthodes, plan versionné), `POST /api/plan/validate` `{decision: valide|rejete}`.
 Simulation : `POST /api/simulate` -> R simulés, violations, robustesse ×1,2/×1,5.
@@ -136,9 +165,10 @@ appliquée dans `lib/simulator.dart`. Formule Q inchangée.
 
 ## Tests
 
-- `dart test/test_all.dart` : 139 assertions (moteur, inconnues, incertitudes,
+- `dart test/test_all.dart` : 161 assertions (moteur, inconnues, incertitudes,
   persistance unitaire, connecteur Meta + régression fournisseur api.meta.ai,
-  médias T28, corps de requête image + contrat visuel T29, démo §8 T30).
+  médias T28, corps de requête image + contrat visuel T29, démo §8 T30,
+  oracle T31, sécurité publique T32–T35).
 - `dart test/test_exploratoire.dart` : 9 OK, 1 limite confirmée publiée
   (falaise Q politique).
 - `python test/e2e_redemarrage.py` : 14 vérifications réelles de redémarrage.
