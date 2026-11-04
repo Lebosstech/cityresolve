@@ -26,6 +26,23 @@ function showLogin() {
     if (r.ok) location.reload();
     else $('loginErr').textContent = 'Jeton invalide.';
   };
+  // Démo : connexion en un clic, sans jeton (serveur : CITYRESOLVE_DEMO_LOGIN=true).
+  // Le jeton réel n'est jamais envoyé au frontend.
+  fetch('/api/municipal/status').then((r) => r.json()).then((j) => {
+    if (j && j.demoLogin && !$('loginDemo')) {
+      const b = document.createElement('button');
+      b.className = 'btn primary'; b.id = 'loginDemo';
+      b.textContent = 'Se connecter (démo)';
+      b.onclick = async () => {
+        const r3 = await fetch('/api/municipal/login', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}) });
+        if (r3.ok) location.reload();
+        else $('loginErr').textContent = 'Connexion démo impossible.';
+      };
+      $('loginGo').after(b);
+    }
+  }).catch(() => {});
 }
 function needAuth(fn) { return async (...a) => { try { await fn(...a); } catch (e) { if (!String(e && e.message).includes('auth')) throw e; } }; }
 
@@ -208,17 +225,7 @@ async function load() {
   try {
     const r = await fetch('/api/municipal/status');
     const s = await r.json();
-    if (s.enforced && !s.authenticated) {
-      const ov = $('loginOverlay'); ov.hidden = false;
-      $('loginGo').onclick = async () => {
-        const r2 = await fetch('/api/municipal/login', { method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: $('loginToken').value }) });
-        if (r2.ok) location.reload();
-        else $('loginErr').textContent = 'Jeton invalide.';
-      };
-      return;
-    }
+    if (s.enforced && !s.authenticated) { showLogin(); return; }
   } catch (e) { /* la fiche affichera l'erreur */ }
   try { await load(); } catch (e) {
     if (!String(e && e.message).includes('auth')) $('ficheBody').innerHTML = `<div class="card"><p class="perr">${esc(e.message || e)}</p><p><a class="link" href="/municipal/dashboard">← Retour au tableau de bord</a></p></div>`;

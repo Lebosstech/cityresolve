@@ -28,6 +28,23 @@ function showLogin() {
     if (r.ok) location.reload();
     else $('loginErr').textContent = 'Jeton invalide.';
   };
+  // Démo : connexion en un clic, sans jeton (serveur : CITYRESOLVE_DEMO_LOGIN=true).
+  // Le jeton réel n'est jamais envoyé au frontend.
+  fetch('/api/municipal/status').then((r) => r.json()).then((j) => {
+    if (j && j.demoLogin && !$('loginDemo')) {
+      const b = document.createElement('button');
+      b.className = 'btn primary'; b.id = 'loginDemo';
+      b.textContent = 'Se connecter (démo)';
+      b.onclick = async () => {
+        const r3 = await fetch('/api/municipal/login', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}) });
+        if (r3.ok) location.reload();
+        else $('loginErr').textContent = 'Connexion démo impossible.';
+      };
+      $('loginGo').after(b);
+    }
+  }).catch(() => {});
 }
 
 function periodQuery() {
