@@ -1538,6 +1538,57 @@ Future<void> main() async {
         'T36h sans GPS : hasGps faux');
   }
 
+  // T37 : scalabilité publique — tri, pagination curseur, bbox, stats.
+  {
+    Report pr(String id, String? at) => Report(
+        id: id,
+        text: 't',
+        category: 'autre',
+        x: 1.0,
+        y: 1.0,
+        t: 100,
+        receivedAt: at);
+    final sorted = sortPublicReports(
+        [pr('S1', null), pr('M3', '2026-01-03T00:00:00Z'), pr('M1', '2026-01-01T00:00:00Z'), pr('M2', '2026-01-02T00:00:00Z'), pr('S2', null)]);
+    check(sorted.map((r) => r.id).join(',') == 'M3,M2,M1,S2,S1',
+        'T37a tri reçus d\'abord, scénarios en dernier',
+        sorted.map((r) => r.id).join(','));
+    final p1 = paginatePublicReports(sorted, 2, null);
+    check(p1.items.map((r) => r.id).join(',') == 'M3,M2' && p1.nextCursor == 'M2',
+        'T37b page 1 + curseur');
+    final p2 = paginatePublicReports(sorted, 2, p1.nextCursor);
+    check(p2.items.map((r) => r.id).join(',') == 'M1,S2' && p2.nextCursor == 'S2',
+        'T37c page 2 chaînée');
+    final p3 = paginatePublicReports(sorted, 2, p2.nextCursor);
+    check(p3.items.map((r) => r.id).join(',') == 'S1' && p3.nextCursor == null,
+        'T37d dernière page sans curseur suivant');
+    check(paginatePublicReports(sorted, 2, 'INCONNU').items.isEmpty,
+        'T37e curseur inconnu → vide (pas de saut)');
+    Incident ii(String id, double x, double y) => Incident(
+        id: id,
+        reportIds: [id],
+        severity: 2,
+        exposure: 1,
+        domain: 'voirie',
+        x: x,
+        y: y,
+        firstSeen: 1,
+        confidence: 1.0);
+    final box = filterIncidentsBbox(
+        [ii('A', 1.0, 1.0), ii('B', 4.5, 4.5), ii('C', 2.0, 2.0)],
+        0.0, 0.0, 3.0, 3.0, 100);
+    check(box.map((i) => i.id).join(',') == 'A,C', 'T37f bbox filtre');
+    check(filterIncidentsBbox([ii('A', 1.0, 1.0), ii('B', 1.5, 1.5)], 0, 0, 5, 5, 1).length == 1,
+        'T37g limite stricte');
+    final g = Group(
+        id: 'G1', reportIds: ['M1', 'M2'], confidence: 1, singleton: false, method: 'classique');
+    final st = publicStatsSummary(
+        [pr('M1', '2026-01-01T00:00:00Z'), pr('M2', null)], [g], [ii('I1', 1, 1)]);
+    check(st['reports'] == 2 && st['incidents'] == 1 && st['groupedReports'] == 2 &&
+        st['lastReceivedAt'] == '2026-01-01T00:00:00Z' && st['fictive'] == true,
+        'T37h agrégats compteurs uniquement', '$st');
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

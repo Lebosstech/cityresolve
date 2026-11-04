@@ -31,7 +31,7 @@ document.querySelectorAll('[data-nav]').forEach((a) => {
   };
 });
 $('mapBig').onclick = (e) => { e.preventDefault(); $('mapCard').classList.toggle('large'); document.getElementById('mapCard').scrollIntoView({ behavior: 'smooth' }); };
-$('recentAll').onclick = (e) => { e.preventDefault(); loadRecent(10); };
+$('recentAll').onclick = (e) => { e.preventDefault(); loadRecent(10, true); };
 
 // --- Formulaire ---
 $('pText').oninput = () => { $('pCount').textContent = $('pText').value.length; };
@@ -176,7 +176,8 @@ function osmLayer() {
   });
 }
 async function drawMap() {
-  const j = await api('/api/public/incidents');
+  // Borné : bbox grille complète + limite stricte, jamais toute la base.
+  const j = await api('/api/public/incidents/map?minx=0&miny=0&maxx=5&maxy=5&limit=200');
   if (typeof L === 'undefined') {
     $('pMap').innerHTML = '<p class="map-offline">Fond de carte indisponible (connexion requise pour OpenStreetMap). Les données restent consultables en liste.</p>';
     return;
@@ -216,11 +217,22 @@ function thumb(r) {
   return '<span class="noimg">📝</span>';
 }
 function shortText(t) { const s = String(t || ''); return s.length > 60 ? s.slice(0, 57) + '…' : s; }
-async function loadRecent(n) {
-  const j = await api('/api/public/reports?limit=' + n);
-  $('pRecent').innerHTML = j.reports.map((r) =>
-    `<li>${thumb(r)}<div><b>${esc(shortText(r.text) || r.id)}</b><small>${esc(r.category)} · ${fmtDate(r.receivedAt) || 'scénario fictif (sans heure de réception)'} · <i>donnée fictive</i></small></div><span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></li>`
-  ).join('') || '<li class="muted">Aucun signalement pour le moment.</li>';
+let recentCursor = null, recentLoading = false;
+async function loadRecent(n, append) {
+  if (recentLoading) return;
+  recentLoading = true;
+  try {
+    let url = '/api/public/reports/recent?limit=' + n;
+    if (append && recentCursor) url += '&cursor=' + encodeURIComponent(recentCursor);
+    else if (!append) recentCursor = null;
+    const j = await api(url);
+    recentCursor = j.nextCursor;
+    const html = j.reports.map((r) =>
+      `<li>${thumb(r)}<div><b>${esc(shortText(r.text) || r.id)}</b><small>${esc(r.category)} · ${fmtDate(r.receivedAt) || 'scénario fictif (sans heure de réception)'} · <i>donnée fictive</i></small></div><span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></li>`
+    ).join('');
+    $('pRecent').innerHTML = append ? ($('pRecent').innerHTML + html) : (html || '<li class="muted">Aucun signalement pour le moment.</li>');
+    $('recentAll').style.display = recentCursor ? '' : 'none';
+  } finally { recentLoading = false; }
 }
 
 // --- Suivi ---
@@ -229,7 +241,7 @@ $('tGo').onclick = async () => {
   const id = $('tId').value.trim();
   if (!id) { $('tErr').textContent = 'Saisissez un identifiant.'; $('tErr').hidden = false; return; }
   try {
-    const j = await api('/api/public/reports/' + encodeURIComponent(id));
+    const j = await api('/api/public/report/' + encodeURIComponent(id));
     const r = j.report;
     let h = `<div class="track"><p><b>${esc(r.id)}</b> <span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></p>`;
     h += `<p>${esc(r.text)}</p><p class="muted">${esc(r.category)} · position fictive (${r.x.toFixed(1)}, ${r.y.toFixed(1)}) km${r.receivedAt ? ' · ' + esc(fmtDate(r.receivedAt)) : ''}</p>`;

@@ -93,11 +93,21 @@ body { margin: 0; font-family: "Segoe UI", system-ui, Arial, sans-serif; backgro
 footer { text-align: center; color: var(--mut); font-size: 13px; padding: 18px; }
 footer a { color: var(--blue); }
 @media (max-width: 1024px) {
-  .columns { grid-template-columns: 1fr; }
-  .hero-inner { flex-direction: column; }
-  .hero h1 { font-size: 32px; }
+  /* Mobile-first réel : héros court, formulaire, récents, puis carte. */
+  .columns { display: flex; flex-direction: column; }
+  .col-main, .col-side { display: contents; }
+  #formCard { order: 1; }
+  #tilesCard { order: 2; }
+  #recentCard { order: 3; }
+  #mapCard { order: 4; }
+  .hero-inner { flex-direction: column; padding: 26px 16px; }
+  .hero h1 { font-size: 30px; }
+  .hero-visual { max-width: 320px; }
+  .hero-badges { gap: 12px; }
   .tiles { grid-template-columns: repeat(3, 1fr); }
   .uploads { grid-template-columns: repeat(2, 1fr); }
   .field-row { grid-template-columns: 1fr; }
   .brand-tag { display: none; }
+  .nav-links { font-size: 13px; }
+  #pMap { height: 300px; }
 }

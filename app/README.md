@@ -112,7 +112,30 @@ Signalements : `GET /api/reports` (municipal), `POST /api/reports`
 sans regroupement).
 Public : `GET /api/public/reports`, `GET /api/public/reports/<id>` (suivi),
 `GET /api/public/incidents` (données filtrées, `fictive: true`).
+Public scalable (jamais de chargement complet) :
+`POST /api/public/report` (alias canonique de création),
+`GET /api/public/reports/recent?limit&cursor` (pagination curseur),
+`GET /api/public/incidents/map?bbox&limit` (bbox grille + limite stricte),
+`GET /api/public/report/<id>` (suivi canonique),
+`GET /api/public/stats/summary` (compteurs uniquement).
 Municipal : `POST /api/municipal/login|logout`, `GET /api/municipal/status`.
+
+## Scalabilité homepage (raisonnée, pas de million en base applicative)
+
+- La page publique ne lit JAMAIS MongoDB directement : elle sert l'état
+  de travail en mémoire (borné : 500 signalements max + scénario), trié et
+  paginé côté serveur (`sortPublicReports`, curseur = dernier id vu,
+  curseur inconnu → page vide, pas de saut). Aucun `SELECT *`, aucune
+  jointure : incidents pré-calculés par le regroupement municipal,
+  compteurs seuls pour les stats, photos en vignettes à la demande.
+- Index Mongo (miroirs + accès directs éventuels) : `reports(receivedAt
+  -1, category, x/y, t, source)`, `journals(seq unique, event)`,
+  `incidents(id)`, `plans(version)`, `simulations(planId)`,
+  `meta_calls(kind)`. La collection `simulation_video` (1M, hors
+  application) n'est jamais touchée par la homepage.
+- Limites : tri/pagination en mémoire valent jusqu'à la borne 500 ; au-delà
+  (changement de borne), il faudra requêter Mongo avec ces index
+  (requêtes déjà indexées, pas de refactor des routes).
 Regroupement : `POST /api/group` `{distMaxM, deltaTMaxH, simMin, method: classique|meta}` -> groupes + incidents + incertitudes + F1 (vérité DEV).
 Planification : `POST /api/plan` (optimiseur exact commun aux deux méthodes, plan versionné), `POST /api/plan/validate` `{decision: valide|rejete}`.
 Simulation : `POST /api/simulate` -> R simulés, violations, robustesse ×1,2/×1,5.
