@@ -26,13 +26,14 @@
     </div>
     <nav class="side-nav">
       <a href="/municipal/dashboard" class="active"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="/municipal#reports"><span class="ico">💬</span> Signalements</a>
-      <a href="/municipal#incidents"><span class="ico">⚠</span> Incidents</a>
-      <a href="/municipal#dashboard"><span class="ico">🗺</span> Carte</a>
-      <a href="/municipal#planning"><span class="ico">📅</span> Planification</a>
-      <a href="/municipal#simulation"><span class="ico">✓</span> Révision</a>
-      <a href="/municipal#compare"><span class="ico">📊</span> Comparaison</a>
-      <a href="/municipal#journal"><span class="ico">📓</span> Journal</a>
+      <a href="/municipal/dashboard" data-anchor="top"><span class="ico">⌂</span> Tableau de bord</a>
+      <a href="#panelReports" data-anchor="panelReports"><span class="ico">💬</span> Signalements</a>
+      <a href="#panelIncidents" data-anchor="panelIncidents"><span class="ico">⚠</span> Incidents</a>
+      <a href="#panelMap" data-anchor="panelMap"><span class="ico">🗺</span> Carte</a>
+      <a href="#panelPlan" data-anchor="panelPlan"><span class="ico">📅</span> Planification</a>
+      <a href="#panelRevision" data-anchor="panelRevision"><span class="ico">✓</span> Révision</a>
+      <a href="#panelCompare" data-anchor="panelCompare"><span class="ico">📊</span> Comparaison</a>
+      <a href="#panelJournal" data-anchor="panelJournal"><span class="ico">📓</span> Journal</a>
     </nav>
     <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
   </aside>
@@ -104,6 +105,67 @@
         <div id="planUnassigned"></div>
       </div>
     </section>
+    <section class="row2" id="panelReports">
+      <div class="card">
+        <div class="card-head"><div><h2>💬 Signalements</h2>
+        <p class="muted">Regrouper recalcule les incidents et invalide le plan courant (comportement voulu, journalisé).</p></div></div>
+        <div class="btn-row">
+          <select id="scKind" title="Scénario DEV"><option value="jouet-1">Jouet fixe nº1</option><option value="jouet-s5">Jouet S5</option><option value="dev">DEV généré</option></select>
+          <input id="scSeed" type="number" value="7" min="1" max="9999" title="graine" style="width:80px">
+          <button class="btn ghost" id="scLoad">Charger le scénario</button>
+        </div>
+        <div class="btn-row">
+          <label>Méthode <select id="gMethod"><option value="classique">CLASSIQUE</option><option value="split">DÉCOUPÉ (multi-problème)</option><option value="meta">META</option></select></label>
+          <button class="btn primary" id="gRun">Regrouper</button>
+          <span class="muted">F1 calculé uniquement sur vérité DEV ; manuels exclus, absence signalée.</span>
+        </div>
+        <div id="groupMeta" class="muted"></div>
+        <div class="table-wrap"><table id="repTable"><thead><tr><th>ID</th><th>Description</th><th>Catégorie</th><th>Position</th><th>S / E</th></tr></thead>
+        <tbody><tr><td colspan="5"><div class="skel"></div></td></tr></tbody></table></div>
+      </div>
+      <div class="card" id="panelIncidents">
+        <h2>⚠ Incidents <span class="muted" id="incCount"></span></h2>
+        <div class="table-wrap"><table id="incTable"><thead><tr><th>ID</th><th>Signalements</th><th>S</th><th>E</th><th>Domaine</th><th>Poids</th><th>Échéance</th><th>Confiance</th></tr></thead>
+        <tbody><tr><td colspan="8"><div class="skel"></div></td></tr></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="row2">
+      <div class="card" id="panelSimulate">
+        <div class="card-head"><div><h2>🧪 Simulation (interventions SIMULÉES)</h2>
+        <p class="muted">Rejoue le plan avec les valeurs vraies DEV. Pas des interventions réelles.</p></div>
+        <button class="btn primary" id="simRun">Simuler le plan</button></div>
+        <div id="simBox"><p class="muted">Aucune simulation.</p></div>
+      </div>
+      <div class="card" id="panelRevision">
+        <div class="card-head"><div><h2>📥 Information nouvelle / révision</h2>
+        <p class="muted">L'oracle juge la nécessité (estimations uniquement). U = stabilité, pas d'échec.</p></div></div>
+        <div class="form-grid">
+          <input id="iText" placeholder="description" size="30">
+          <select id="iCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select>
+          <input id="iX" type="number" step="0.1" value="2.5" title="x km" style="width:70px"> <input id="iY" type="number" step="0.1" value="2.5" title="y km" style="width:70px">
+          <input id="iT" type="number" value="1500" title="minutes" style="width:90px">
+        </div>
+        <div class="btn-row"><button class="btn ghost" id="iAdd">Injecter + réévaluer</button><button class="btn ghost" id="iTeam">Simuler panne équipe-1</button></div>
+        <div id="injBox"></div>
+      </div>
+    </section>
+
+    <section class="row2">
+      <div class="card" id="panelCompare">
+        <div class="card-head"><div><h2>📊 Comparaison CLASSIQUE vs META</h2>
+        <p class="muted">DEV uniquement. Un meilleur F1 n'est pas une meilleure allocation.</p></div>
+        <button class="btn ghost" id="c2Run">Comparer les méthodes</button></div>
+        <div id="c2Box"><p class="muted">Pas encore comparé.</p></div>
+      </div>
+      <div class="card" id="panelJournal">
+        <div class="card-head"><h2>📓 Journal des décisions</h2><span class="muted" id="jCount"></span></div>
+        <table id="jTable"><thead><tr><th>#</th><th>Heure</th><th>Événement</th><th>Détails</th></tr></thead>
+        <tbody><tr><td colspan="4"><div class="skel"></div></td></tr></tbody></table>
+        <div class="btn-row"><button class="btn ghost" id="jMore">Événements plus anciens</button></div>
+      </div>
+    </section>
+
     <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé, politiques Q provisoires. <a href="/">Accueil public</a></footer>
   </div>
 </div>

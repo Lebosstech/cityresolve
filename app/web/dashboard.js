@@ -6,8 +6,13 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 let ctrl = null;
 function newCtrl() { if (ctrl) ctrl.abort(); ctrl = new AbortController(); return ctrl.signal; }
 
-async function api(path) {
-  const r = await fetch(path, { signal: ctrl ? ctrl.signal : undefined });
+async function api(path, method = 'GET', body = null) {
+  const r = await fetch(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : null,
+    signal: ctrl ? ctrl.signal : undefined,
+  });
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); throw new Error('auth'); }
   if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
@@ -69,7 +74,7 @@ async function loadLatest() {
     <div class="latest">${img}<div><h3>${esc(r.id)} — ${esc(r.category)}</h3>
     <p>${esc(r.text)}</p><p>${fams}</p>
     <p class="muted">${esc(when)} · statut : <b>${esc(r.statusLabel)}</b> · <i>donnée fictive</i></p>
-    <a class="link" href="/municipal#reports">Voir le signalement →</a></div></div>`;
+    <a class="link" href="#panelReports">Voir le signalement →</a></div></div>`;
 }
 
 const donutColors = { 'planifie': '#14b8a6', 'en-attente': '#f97316', 'en-cours': '#5eead4', 'resolus': '#94a3b8', 'escalade-s5': '#b3261e', 'non-affecte': '#f97316', 'a-analyser': '#eab308' };
@@ -220,6 +225,111 @@ $('bellBtn').onclick = async () => {
 $('helpBtn').onclick = () => { $('helpModal').hidden = false; };
 $('helpClose').onclick = () => { $('helpModal').hidden = true; };
 $('burger').onclick = () => { $('sidebar').classList.toggle('open'); };
+document.querySelectorAll('.side-nav a[data-anchor]').forEach((a) => {
+  a.onclick = (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.side-nav a').forEach((x) => x.classList.remove('active'));
+    a.classList.add('active');
+    const t = document.getElementById(a.dataset.anchor);
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('sidebar').classList.remove('open');
+  };
+});
+
+function fmtT(m) { const d = Math.floor(m / 1440), h = String(Math.floor(m % 1440 / 60)).padStart(2, '0'), mm = String(m % 60).padStart(2, '0'); return `J${d} ${h}:${mm}`; }
+function sevCellDash(i) {
+  if (i.severity === null || i.severity === undefined) return `<span class="pill p-a-verifier">INCONNUE</span>`;
+  return `${i.severity}${i.severity >= 5 ? ' <span class="pill p-critique">S5</span>' : ''}`;
+}
+async function loadReportsPanel() {
+  const j = await api('/api/reports');
+  const rows = j.reports.slice(0, 50);
+  $('groupMeta').textContent = `${j.reports.length} signalement(s) au total (scénarios DEV + manuels).`;
+  const tb = $('repTable').querySelector('tbody');
+  tb.innerHTML = rows.map((r) =>
+    `<tr><td>${esc(r.id)}${j.manual.includes(r.id) ? ' <span class="tag hum">MANUEL</span>' : ''}</td><td>${esc(r.text.slice(0, 80))}</td><td>${esc(r.category)}</td><td>(${r.x.toFixed(1)}, ${r.y.toFixed(1)})</td><td>${r.severityHint ?? '?'} / ${r.exposureHint === null || r.exposureHint === undefined ? '?' : r.exposureHint}</td></tr>`
+  ).join('') || '<tr><td colspan="5" class="empty">Aucun signalement.</td></tr>';
+}
+async function loadIncidentsPanel() {
+  // Table détaillée = endpoint municipal complet (borné par maxReportsTotal).
+  // La carte utilise /map (bbox + limite) pour ne jamais tout charger.
+  const j = await api('/api/incidents');
+  $('incCount').textContent = `(${j.incidents.length})`;
+  $('incTable').querySelector('tbody').innerHTML = j.incidents.map((i) =>
+    `<tr><td>${esc(i.id)}</td><td>${esc(i.reportIds ? i.reportIds.join(', ') : i.reportCount + ' signalement(s)')}</td><td>${sevCellDash(i)}</td><td>${i.exposure === null || i.exposure === undefined ? '?' : esc(String(i.exposure))}</td><td>${esc(i.domain)}</td><td>${i.weight !== undefined ? i.weight.toFixed(3) : '—'}</td><td>${i.deadline === -2 ? 'vérification' : i.deadline < 0 ? 'escalade' : fmtT(i.deadline)}</td><td>${i.confidence !== undefined ? i.confidence.toFixed(2) : '—'}</td></tr>`
+  ).join('') || '<tr><td colspan="8" class="empty">Aucun incident.</td></tr>';
+}
+async function runGroupDash() {
+  const j = await api('/api/group', 'POST', { method: $('gMethod').value });
+  $('groupMeta').textContent = `Regroupement ${j.method} : ${j.groups.length} groupes, ${j.incidents.length} incidents. F1=${j.metrics.available ? j.metrics.pairwise.f1.toFixed(3) + ' (vérité DEV)' : 'non calculé'}. Plan précédent invalidé (replanifier).`;
+  await reloadAll();
+}
+async function runSimDash() {
+  const box = $('simBox');
+  try {
+    const j = await api('/api/simulate', 'POST', {});
+    const r = j.result;
+    let h = `<p>Q simulé : <b>${r.q === null ? 'indéfini' : r.q.toFixed(1)}</b> — faisable : ${r.feasible ? 'oui' : '<b>non</b>'} — coût vrai ${r.totalCost.toFixed(1)}</p>`;
+    if (r.violations.length) h += `<p class="perr">Violations : ${r.violations.map(esc).join(' ; ')}</p>`;
+    h += '<ul>' + r.outcomes.map((o) => `<li>${esc(o.incidentId)} → ${esc(o.truthId || '?')} : R=${o.result} — ${esc(o.reason)}</li>`).join('') + '</ul>';
+    box.innerHTML = h;
+  } catch (e) { box.innerHTML = `<p class="perr">${esc(e.message || e)}</p>`; }
+}
+async function injectDash(kind) {
+  const box = $('injBox');
+  try {
+    const j = kind === 'team'
+      ? await api('/api/inject', 'POST', { type: 'team_down', teamId: 'equipe-1' })
+      : await api('/api/inject', 'POST', { type: 'reports', reports: [{ text: $('iText').value || 'signalement injecté (dashboard)', category: $('iCat').value, x: +$('iX').value, y: +$('iY').value, t: +$('iT').value }] });
+    const n = j.necessity;
+    let h = `<p>Nécessité <b>${esc(n.code)}</b> — ${n.necessary ? 'révision requise' : 'stabilité (pas de modification injustifiée)'} — ${esc(n.detail)}</p>`;
+    if (j.diff) h += `<p>Changement : ${j.diff.material ? '<b>matériel</b>' : 'cosmétique'} — ${esc(j.diff.detail)}</p>`;
+    if (j.plan) h += `<p>Nouveau plan : Q=${j.plan.q.toFixed(1)}, coût=${j.plan.totalCost.toFixed(1)}.</p>`;
+    box.innerHTML = h;
+    await reloadAll();
+  } catch (e) { box.innerHTML = `<p class="perr">${esc(e.message || e)}</p>`; }
+}
+async function runCompareDash() {
+  const box = $('c2Box');
+  try {
+    const j = await api('/api/compare-methods');
+    let h = `<p>CLASSIQUE : ${j.classique.groups.length} groupes, F1=${j.classique.f1 ? j.classique.f1.f1.toFixed(3) : '—'}, Q=${j.classique.planQ === null ? '—' : j.classique.planQ.toFixed(1)}/${j.classique.simQ === null ? '—' : j.classique.simQ.toFixed(1)}</p>`;
+    h += j.metaAvailable
+      ? `<p>META : ${j.meta.groups.length} groupes, F1=${j.meta.f1 ? j.meta.f1.f1.toFixed(3) : '—'}, Q=${j.meta.planQ === null ? '—' : j.meta.planQ.toFixed(1)}/${j.meta.simQ === null ? '—' : j.meta.simQ.toFixed(1)}</p>`
+      : `<p>META : indisponible (${esc(j.metaState)} — aucun résultat simulé).</p>`;
+    h += `<p>Désaccords de paires : <b>${j.disagreements.length}</b>. ${esc(j.note)}</p>`;
+    box.innerHTML = h;
+  } catch (e) { box.innerHTML = `<p class="perr">${esc(e.message || e)}</p>`; }
+}
+let jCursor = null;
+async function loadJournalPanel(reset) {
+  const tb = $('jTable').querySelector('tbody');
+  if (reset) { tb.innerHTML = ''; jCursor = null; }
+  let url = '/api/journal?limit=15';
+  if (!reset && jCursor !== null && jCursor !== undefined) url += '&cursor=' + jCursor;
+  try {
+    const j = await api(url);
+    tb.innerHTML += j.entries.map((e) =>
+      `<tr><td>${e.seq}</td><td>${esc(String(e.at).slice(0, 16).replace('T', ' '))}</td><td>${esc(e.event)}</td><td><pre class="dump">${esc(JSON.stringify(e.details || {}, null, 0)).slice(0, 160)}</pre></td></tr>`
+    ).join('');
+    $('jCount').textContent = `(${j.entries.length} affichées)`;
+    jCursor = j.nextCursor === undefined ? null : j.nextCursor;
+    $('jMore').hidden = jCursor === null || jCursor === undefined;
+  } catch (e) { tb.innerHTML = `<tr><td colspan="4" class="perr">${esc(e.message || e)}</td></tr>`; }
+}
+$('gRun').onclick = () => { loadReportsPanel(); loadIncidentsPanel(); runGroupDash().catch((e) => { $('groupMeta').innerHTML = `<span class="perr">${esc(e.message || e)}</span>`; }); };
+$('scLoad').onclick = async () => {
+  if (!confirm('Charger un scénario DEV remplace tout l\u2019état courant. Continuer ?')) return;
+  await api('/api/scenario/load', 'POST', { kind: $('scKind').value, seed: +$('scSeed').value });
+  await reloadAll(); loadReportsPanel(); loadIncidentsPanel(); loadJournalPanel(true);
+};
+$('simRun').onclick = () => runSimDash();
+$('iAdd').onclick = () => injectDash('reports');
+$('iTeam').onclick = () => injectDash('team');
+$('c2Run').onclick = () => runCompareDash();
+$('jMore').onclick = () => loadJournalPanel(false);
+const oldReload = reloadAll;
+reloadAll = async () => { await oldReload(); loadReportsPanel().catch((e) => panelError('panelReports', e)); loadIncidentsPanel().catch((e) => panelError('panelIncidents', e)); loadJournalPanel(true).catch(() => {}); };
 
 (async () => {
   try {

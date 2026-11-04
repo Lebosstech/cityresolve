@@ -120,12 +120,18 @@ Public scalable (jamais de chargement complet) :
 `GET /api/public/report/<id>` (suivi canonique),
 `GET /api/public/stats/summary` (compteurs uniquement).
 Municipal : `POST /api/municipal/login|logout`, `GET /api/municipal/status`.
-Tableau de bord municipal (`/municipal/dashboard`, protégé) : `GET
+Tableau de bord municipal (`/municipal/dashboard`, protégé, CHEMIN
+MUNICIPAL UNIQUE — l'ancien espace DEV `index.html`/`app.js`/`styles.css`
+est supprimé, `/municipal` et `/index.html` redirigent ici) : `GET
 /api/municipal/dashboard/{summary,latest-report,incident-status,map,
-activity,priority-plan,search}` — agrégats bornés et paginés par curseur,
-jamais de lecture complète (voir `docs/PERSISTANCE_EVOLUTION.md` pour la
-trajectoire grand volume ; charge mesurée à 1M synthétiques via
-`dart run test/load_dashboard.dart --n=1000000`).
+activity,priority-plan,search}` — agrégés bornés et paginés par curseur,
+jamais de lecture complète. Panneaux : KPIs, dernier signalement, statuts
+exclusifs, carte OSM fictive étiquetée, activité journalisée, plan priorisé
++ bouton « Optimiser », simulation, révision (inject), comparaison
+CLASSIQUE/META, journal paginé, recherche serveur — toutes les actions
+appellent les endpoints existants (aucune logique dupliquée). Charge
+mesurée à 1M via `dart run test/load_dashboard.dart --n=1000000` ;
+voir `docs/PERSISTANCE_EVOLUTION.md` pour la trajectoire grand volume.
 
 ## Scalabilité homepage (raisonnée, pas de million en base applicative)
 

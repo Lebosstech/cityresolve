@@ -691,23 +691,14 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _static(req, '$base/web/public.css',
         ContentType('text', 'css', charset: 'utf-8'));
   }
-  // Coquille municipale publique (aucune donnée dedans) : l'écran de
-  // connexion qu'elle contient ne peut s'afficher que si la page charge
-  // sans auth. Toutes les données et actions restent protégées par API.
+  // Espace municipal UNIQUE : le tableau de bord. L'ancienne interface
+  // DEV (municipal.html/app.js/styles.css) est supprimée : /municipal et
+  // /index.html redirigent vers /municipal/dashboard (chemin unique).
   if (m == 'GET' && (p == '/municipal' || p == '/index.html')) {
-    return _static(req, '$base/web/municipal.html', ContentType.html);
-  }
-  // Actifs statiques municipaux PUBLICS (aucune donnée dedans : pur code
-  // d'interface, déjà lisible dans le dépôt) : l'écran de connexion doit
-  // pouvoir se charger et se styler AVANT authentification. Toutes les
-  // données et actions restent protégées côté API, sans exception.
-  if (m == 'GET' && p == '/app.js') {
-    return _static(req, '$base/web/app.js',
-        ContentType('application', 'javascript', charset: 'utf-8'));
-  }
-  if (m == 'GET' && p == '/styles.css') {
-    return _static(req, '$base/web/styles.css',
-        ContentType('text', 'css', charset: 'utf-8'));
+    req.response.statusCode = 302;
+    req.response.headers.set('Location', '/municipal/dashboard');
+    await req.response.close();
+    return;
   }
   // --- Authentification municipale ---
   if (m == 'GET' && p == '/api/municipal/status') {
@@ -1708,7 +1699,20 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   }
   if (m == 'GET' && p == '/api/journal') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
-    return _json(req, {'entries': s.audit.toJson()});
+    // limit optionnelle bornée (défaut : tout — l'interface utilise le
+    // curseur de /api/municipal/dashboard/activity pour les gros volumes).
+    final lim = int.tryParse(req.uri.queryParameters['limit'] ?? '');
+    final entries = s.audit.toJson();
+    if (lim != null) {
+      final n = lim.clamp(1, 500);
+      return _json(req, {
+        'entries': entries.length <= n
+            ? entries
+            : entries.sublist(entries.length - n),
+        'truncated': entries.length > n,
+      });
+    }
+    return _json(req, {'entries': entries});
   }
   // --- Tableau de bord municipal : endpoints agrégés dédiés ---
   // Tous protégés (espace municipal), limités et paginés. Calculés sur
