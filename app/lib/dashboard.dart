@@ -9,6 +9,8 @@
 //   signalements, `at` du journal) ; les données de scénario sans date
 //   sont exclues des fenêtres bornées (documenté, jamais estimé).
 import 'grouping.dart';
+import 'optimizer.dart';
+import 'security.dart';
 import 'types.dart';
 
 /// Fenêtre demandée. 'all' = tout l'historique. 'custom' exige from/to.
@@ -269,6 +271,33 @@ Map<String, dynamic> activityItem(Map<String, dynamic> e) {
   };
 }
 
+/// Péremption d'un plan : vrai si un regroupement (group.done) est survenu
+/// après la création du plan. Les identifiants d'incidents (I1..) sont
+/// positionnels : un regroupement peut les renumérotationner, et les
+/// tâches du plan ne désignent plus alors les bons incidents. Plutôt que
+/// de présenter une jointure fausse, le backend signale le plan comme
+/// périmé (à replanifier) et l'interface l'affiche explicitement.
+bool planIsStale(
+    Plan? plan, List<Map<String, dynamic>> planHistory,
+    List<Map<String, dynamic>> journalEntries) {
+  if (plan == null || plan.planId.isEmpty) return false;
+  String? createdAt;
+  for (final h in planHistory) {
+    if (h['planId'] == plan.planId) {
+      createdAt = h['at'] as String?;
+      break;
+    }
+  }
+  if (createdAt == null) return true;
+  for (final e in journalEntries) {
+    if (e['event'] == 'group.done') {
+      final at = e['at'] as String?;
+      if (at != null && at.compareTo(createdAt) > 0) return true;
+    }
+  }
+  return false;
+}
+
 /// Recherche municipale (état borné) : identifiant, texte, catégorie,
 /// famille (lexique split), statut de suivi. Tri déterministe par id.
 List<Map<String, dynamic>> searchAll(String query, List<Report> reports,
@@ -302,3 +331,362 @@ List<Map<String, dynamic>> searchAll(String query, List<Report> reports,
   out.sort((a, b) => (a['id'] as String).compareTo(b['id'] as String));
   return out;
 }
+
+/// --- Pages municipales dédiées (découpage / planification / révision / fiche) ---
+///
+/// Toutes les fonctions ci-dessous sont pures et bornées (état de travail
+/// en mémoire uniquement). Aucun pourcentage ni score inventé.
+
+/// Vue d'ensemble du découpage : méthode réellement utilisée, comptes
+/// d'unités atomiques, problèmes secondaires conservés, incertitudes et
+/// justifications portées par les groupes. Aucune confiance chiffrée
+/// calculée : les confiances affichées sont celles déjà stockées.
+Map<String, dynamic> splitOverviewData(
+    List<Report> reports, List<Group> groups, List<Incident> incidents,
+    String groupMethod,
+    {Plan? plan}) {
+  final plannedIds =
+      plan == null ? <String>{} : plan.tasks.map((t) => t.incidentId).toSet();
+  final byId = {for (final r in reports) r.id: r};
+  final units = expandToSubunits(reports);
+  final multiOrigins = reports.where(hasMultiProblem).map((r) => r.id).toList()
+    ..sort();
+  final reasons = <String>[];
+  final justifs = <String>[];
+  for (final g in groups) {
+    reasons.addAll(g.uncertaintyReasons);
+    if (g.justification != null && g.justification!.isNotEmpty) {
+      justifs.add('${g.id} : ${g.justification}');
+    }
+  }
+  final perIncident = <Map<String, dynamic>>[];
+  for (final i in incidents) {
+    final origins = <String>{};
+    for (final rid in i.reportIds) {
+      final o = originIdOfSubunit(rid);
+      if (byId.containsKey(o)) origins.add(o);
+    }
+    perIncident.add({
+      'incidentId': i.id,
+      'units': i.reportIds.length,
+      'origins': origins.toList()..sort(),
+      'domain': i.domain,
+      'severity': i.severity,
+      'severityStatus': i.severityStatus,
+      'x': i.x,
+      'y': i.y,
+      'status': incidentPlanningBucket(i, plannedIds, hasPlan: plan != null),
+    });
+  }
+  perIncident.sort((a, b) =>
+      (a['incidentId'] as String).compareTo(b['incidentId'] as String));
+  return {
+    'method': groupMethod,
+    'groups': groups.length,
+    'units': units.length,
+    'incidents': incidents.length,
+    'multiProblemReports': multiOrigins,
+    'uncertainGroups':
+        groups.where((g) => g.uncertain).map((g) => g.id).toList(),
+    'uncertaintyReasons': reasons.toSet().toList()..sort(),
+    'justifications': justifs,
+    'perIncident': perIncident,
+    'note':
+        'Aucune confiance chiffrée calculée ici : seules les confiances déjà stockées sur les groupes sont affichées.',
+  };
+}
+
+/// Détail d'un signalement pour la page découpage : sous-signalements
+/// (unités ORIGINE:FAMILLE), familles détectées, incidents liés (via
+/// origine), incertitudes des groupes concernés.
+Map<String, dynamic>? splitReportDetail(List<Report> reports,
+    List<Group> groups, List<Incident> incidents, String reportId) {
+  Report? rep;
+  for (final r in reports) {
+    if (r.id == reportId) rep = r;
+  }
+  if (rep == null) return null;
+  final units = expandToSubunits([rep]);
+  final linkedGroups = groups
+      .where((g) => g.reportIds.any((id) => originIdOfSubunit(id) == reportId))
+      .toList();
+  final linkedIncidents = incidents
+      .where((i) => i.reportIds.any((id) => originIdOfSubunit(id) == reportId))
+      .toList();
+  final reasons = <String>{};
+  for (final g in linkedGroups) {
+    reasons.addAll(g.uncertaintyReasons);
+  }
+  return {
+    'reportId': rep.id,
+    'text': rep.text,
+    'category': rep.category,
+    'photo': rep.photo,
+    'source': rep.source,
+    'receivedAt': rep.receivedAt,
+    'hasPhoto': rep.photo != null && rep.photo!.isNotEmpty,
+    'families': reportProblemFamilies(rep).toList(),
+    'multiProblem': hasMultiProblem(rep),
+    'subunits': [
+      for (final u in units)
+        {'id': u.id, 'family': u.family, 'originId': u.originId}
+    ],
+    'linkedGroups': [for (final g in linkedGroups) g.toJson()],
+    'linkedIncidents': [
+      for (final i in linkedIncidents)
+        {'id': i.id, 'domain': i.domain, 'severity': i.severity}
+    ],
+    'uncertaintyReasons': reasons.toList()..sort(),
+  };
+}
+
+/// Incident planifiable : gravité connue 1..4 (S5 = escalade, jamais
+/// dispatché ; inconnue/contradictoire = vérification requise).
+String incidentPlanningBucket(Incident i, Set<String> plannedIds,
+    {bool hasPlan = true}) {
+  if (i.severity != null && i.severity! >= 5) return 'escalade-s5';
+  if (i.severity == null) return 'a-verifier';
+  if (plannedIds.contains(i.id)) return 'planifie';
+  if (!hasPlan) return 'planifiable';
+  return 'non-affecte';
+}
+
+/// Ligne d'incident pour la page planification (données réelles : équipe
+/// et motif issus du plan courant, durée/échéance estimées, inconnues
+/// conservées).
+Map<String, dynamic> planningIncidentRow(
+    Incident i, Map<String, Report> byId, String bucket, String? motif) {
+  return {
+    'incidentId': i.id,
+    'label': shortLabel(i, byId),
+    'lieu': '(${i.x.toStringAsFixed(1)}, ${i.y.toStringAsFixed(1)}) km — grille fictive',
+    'severity': i.severity,
+    'severityStatus': i.severityStatus,
+    'severityValues': i.severityValues,
+    'priority': priorityOf(i),
+    'priorityLabel': priorityLabels[priorityOf(i)],
+    'dureeEstimeeMin': i.severity == null ? null : estDurationMin(i.severity),
+    'echeanceMin': i.deadline,
+    'domain': i.domain,
+    'reportCount': i.reportIds.length,
+    'status': bucket,
+    'motif': motif,
+  };
+}
+
+/// Vue d'ensemble planification : équipes réelles (défaut moins down),
+/// incidents classés, plan courant + validation + simulation si présente,
+/// budget et contraintes. Aucun calcul d'optimisation ici (l'action
+/// Optimiser appelle POST /api/plan).
+Map<String, dynamic> planOverviewData({
+  required List<Report> reports,
+  required List<Incident> incidents,
+  required Plan? plan,
+  required String? planValidation,
+  required List<Team> allTeams,
+  required Set<String> teamsDown,
+  required double? simQ,
+  required bool? simFeasible,
+}) {
+  final byId = {for (final r in reports) r.id: r};
+  final plannedIds =
+      plan == null ? <String>{} : plan.tasks.map((t) => t.incidentId).toSet();
+  final tasksByTeam = <String, List<Task>>{};
+  if (plan != null) {
+    for (final t in plan.tasks) {
+      tasksByTeam.putIfAbsent(t.teamId, () => []).add(t);
+    }
+  }
+  final teams = [
+    for (final tm in allTeams)
+      {
+        'id': tm.id,
+        'domains': tm.domains.toList()..sort(),
+        'available': !teamsDown.contains(tm.id),
+        'taskCount': (tasksByTeam[tm.id] ?? []).length,
+        'estimatedMin': (tasksByTeam[tm.id] ?? [])
+            .fold<int>(0, (a, t) => a + (t.endMin - t.startMin)),
+      }
+  ];
+  final rows = <Map<String, dynamic>>[];
+  final counts = {
+    'planifiable': 0,
+    'planifie': 0,
+    'non-affecte': 0,
+    'a-verifier': 0,
+    'escalade-s5': 0
+  };
+  for (final i in incidents) {
+    final admissible =
+        i.severity != null && i.severity! >= 1 && i.severity! <= 4;
+    if (admissible) {
+      counts['planifiable'] = counts['planifiable']! + 1;
+    }
+    final bucket =
+        incidentPlanningBucket(i, plannedIds, hasPlan: plan != null);
+    if (bucket == 'escalade-s5') {
+      counts['escalade-s5'] = counts['escalade-s5']! + 1;
+    } else if (bucket == 'a-verifier') {
+      counts['a-verifier'] = counts['a-verifier']! + 1;
+    } else if (bucket == 'planifie') {
+      counts['planifie'] = counts['planifie']! + 1;
+    } else if (bucket == 'non-affecte') {
+      counts['non-affecte'] = counts['non-affecte']! + 1;
+    }
+    rows.add(planningIncidentRow(i, byId, bucket,
+        plan == null ? null : plan.unassigned[i.id]));
+  }
+  rows.sort((a, b) =>
+      (a['incidentId'] as String).compareTo(b['incidentId'] as String));
+  return {
+    'teams': teams,
+    'incidents': rows,
+    'counts': counts,
+    'plan': plan == null
+        ? null
+        : {
+            ...plan.toJson(),
+            'validation': planValidation,
+          },
+    'unassigned': plan == null
+        ? []
+        : [
+            for (final e in plan.unassigned.entries)
+              {'incidentId': e.key, 'motif': e.value}
+          ],
+    'escalations': plan?.escalations ?? [],
+    'sim': simQ == null
+        ? null
+        : {'q': simQ, 'feasible': simFeasible},
+    'budget': {'total': 120.0, 'unit': 'unités fictives (ni euros, ni FCFA, ni dollars)'},
+  };
+}
+
+/// Historique de révision : versions de plans (plus récent d'abord) +
+/// événements de journal pertinents (plus récents d'abord, curseur = seq).
+Map<String, dynamic> revisionHistoryData(
+    List<Map<String, dynamic>> planHistory,
+    List<Map<String, dynamic>> auditEntries,
+    int limit) {
+  const relevant = {
+    'inject.received',
+    'plan.proposed',
+    'plan.validated',
+    'simulate.done',
+  };
+  // Scoper a la generation d'etat courante : un chargement de scenario
+  // recommence les identifiants (reports, plans) ; les injects d'une
+  // generation anterieure ne concernent plus le plan courant.
+  String? generationStart;
+  for (final e in auditEntries) {
+    if (e['event'] == 'scenario.loaded') {
+      generationStart = e['at'] as String?;
+    }
+  }
+  final plans = planHistory.reversed
+      .map((h) => {
+            'planId': h['planId'],
+            'version': h['version'],
+            'at': h['at'],
+            'method': h['method'],
+            'validation': h['validation'],
+            'q': (h['plan'] as Map?)?['q'],
+            'totalCost': (h['plan'] as Map?)?['totalCost'],
+            'tasks': ((h['plan'] as Map?)?['tasks'] as List?)?.length,
+            'detail': h['plan'],
+          })
+      .toList();
+  final events = auditEntries.reversed
+      .where((e) => relevant.contains(e['event']))
+      .where((e) =>
+          generationStart == null ||
+          (e['at'] as String? ?? '').compareTo(generationStart) > 0)
+      .take(limit.clamp(1, 100))
+      .map(activityItem)
+      .toList();
+  return {'plans': plans, 'events': events};
+}
+
+/// Fiche signalement complète (données réelles uniquement) : déclaration,
+/// média (référence + métadonnées si téléversé), sous-signalements,
+/// incidents liés, gravité/exposition conservées, vérification municipale,
+/// analyses IA si présentes (étiquetées comme telles), historique.
+Map<String, dynamic> ficheData({
+  required Report report,
+  required List<Group> groups,
+  required List<Incident> incidents,
+  Map<String, dynamic>? photoMeta,
+  Map<String, dynamic>? visualAnalysis,
+  Map<String, dynamic>? extraction,
+  required List<Map<String, dynamic>> auditEntries,
+}) {
+  final units = expandToSubunits([report]);
+  final linkedGroups = groups
+      .where((g) => g.reportIds.any((id) => originIdOfSubunit(id) == report.id))
+      .toList();
+  final linkedIncidents = incidents
+      .where((i) => i.reportIds.any((id) => originIdOfSubunit(id) == report.id))
+      .toList();
+  final history = auditEntries
+      .where((e) {
+        final d = e['details'];
+        if (d is! Map) return false;
+        if (d['id'] == report.id || d['reportId'] == report.id) return true;
+        if (d['mediaId'] != null && d['mediaId'] == report.photo) return true;
+        return false;
+      })
+      .map(activityItem)
+      .toList();
+  return {
+    'report': {
+      ...report.toJson(),
+      'families': reportProblemFamilies(report).toList(),
+      'multiProblem': hasMultiProblem(report),
+    },
+    'photoMeta': photoMeta,
+    'subunits': [
+      for (final u in units) {'id': u.id, 'family': u.family}
+    ],
+    'linkedGroups': [for (final g in linkedGroups) g.toJson()],
+    'linkedIncidents': [for (final i in linkedIncidents) i.toJson()],
+    'visualAnalysis': visualAnalysis,
+    'extraction': extraction,
+    'history': history,
+    'fictive': true,
+  };
+}
+
+/// Validation d'une modification municipale limitée : texte, catégorie,
+/// indices de gravité/exposition, note de vérification. Retourne le
+/// message d'erreur, ou null si valide. Ne regroupe jamais.
+String? validateReportPatch(Map<String, dynamic> b) {
+  if (b.containsKey('text')) {
+    final err = publicTextError(b['text'] as String?);
+    if (err != null) return err;
+  }
+  if (b.containsKey('category')) {
+    final c = (b['category'] ?? '') as String;
+    if (!isPublicCategory(c)) return 'catégorie inconnue : $c';
+  }
+  if (b.containsKey('severityHint')) {
+    final s = b['severityHint'] as int?;
+    if (s != null && (s < 1 || s > 5)) {
+      return 'severityHint hors 1..5 (ou null = inconnue)';
+    }
+  }
+  if (b.containsKey('exposureHint')) {
+    final e = b['exposureHint'] as int?;
+    if (e != null && (e < 0 || e > 4)) {
+      return 'exposureHint hors 0..4 (ou null = inconnue)';
+    }
+  }
+  if (b.containsKey('verificationNote')) {
+    final n = b['verificationNote'];
+    if (n != null && (n as String).length > 500) {
+      return 'note de vérification trop longue (500 max)';
+    }
+  }
+  return null;
+}
+
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Révision du plan</title>
+<link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<div id="loginOverlay" class="login-overlay" hidden>
+  <div class="login-card">
+    <h2>Espace municipal</h2>
+    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
+    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
+    <button id="loginGo" class="btn primary">Se connecter</button>
+    <p id="loginErr" class="err"></p>
+  </div>
+</div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#14b8a6"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#0b2545"/></svg>
+      <span>CityResolve</span>
+    </div>
+    <nav class="side-nav">
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
+      <a href="/municipal/dashboard#panelReports"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
+      <a href="/municipal/planification"><span class="ico">📅</span> Planification</a>
+      <a href="/municipal/revision" class="active"><span class="ico">✓</span> Révision</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+    </nav>
+    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="burger" aria-label="Menu">☰</button>
+      <div class="title-block">
+        <div class="crumb">CityResolve</div>
+        <h1>Révision du plan</h1>
+        <p class="muted">Évaluer l'impact des nouvelles informations et décider d'ajuster le plan d'intervention.</p>
+      </div>
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <div class="search-results" id="qResults" hidden></div>
+        </div>
+        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
+        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+      </div>
+    </header>
+    <div class="alerts" id="alerts" hidden></div>
+
+    <section class="row2">
+      <div class="card" id="newsCard"><h2>Nouvelle information</h2><div class="skel tall"></div></div>
+      <div class="card" id="decisionCard"><h2>Décision de révision</h2><div class="skel tall"></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Injecter une information nouvelle (cas reproductibles DEV)</h2>
+      <div class="btn-row">
+        <button class="btn ghost" id="injU">Signalement ordinaire (stabilité U attendue)</button>
+        <button class="btn ghost" id="injR1">Simuler panne équipe-1 (révision R1 attendue)</button>
+        <button class="btn ghost" id="injS5">Signaler un S5 (escalade, jamais dispatché)</button>
+      </div>
+      <p class="muted">L'oracle juge avec les estimations uniquement (jamais la vérité cachée). U = plan conservé, pas un échec. N2 (gain de Q) n'a aucun cas reproductible : il n'est pas proposé.</p>
+      <div id="injOut"></div>
+    </section>
+
+    <section class="row2">
+      <div class="card" id="oldPlanCard"><h2>Ancien plan</h2><div class="skel tall"></div></div>
+      <div class="card" id="newPlanCard"><h2>Plan révisé</h2><div class="skel tall"></div></div>
+    </section>
+
+    <section class="row2">
+      <div class="card" id="diffCard"><h2>Principales modifications</h2><div class="skel"></div></div>
+      <div class="card" id="globCard"><h2>Comparaison globale</h2><div class="skel"></div></div>
+    </section>
+
+    <section class="card" id="histCard">
+      <div class="card-head"><div><h2>Journal des événements</h2>
+      <p class="muted">Chronologie des révisions : information reçue, analyse, décision, validation, plan.</p></div>
+      <a class="link" href="/municipal/dashboard#panelJournal">Tout voir →</a></div>
+      <ul class="timeline" id="histList"><li><div class="skel"></div></li></ul>
+    </section>
+    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+  </div>
+</div>
+
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card">
+    <h3>Révision du plan</h3>
+    <p>Une information nouvelle (panne d'équipe, signalement, S5) est jugée par l'oracle avec les seules estimations : U = stabilité (plan conservé), N1 = réaffectation requise, N3-S5 = escalade humaine sans réaffectation. Le seuil de révision (+5 points Q) est une hypothèse non gelée. Un plan calculé n'est jamais « publié » : seule une validation humaine le rend opposable.</p>
+    <button class="btn primary" id="helpClose">Fermer</button>
+  </div>
+</div>
+<script src="/revision.js"></script>
+</body>
+</html>
