@@ -121,6 +121,22 @@ String? publicTextError(String? text) {
 
 bool isPublicCategory(String c) => publicCategories.contains(c);
 
+/// Erreur de validation GPS, null si valide ou absent (saisie manuelle).
+/// Les trois champs doivent être présents ensemble et dans leurs bornes.
+String? publicGpsError(double? lat, double? lon, double? accuracy) {
+  if (lat == null && lon == null && accuracy == null) return null;
+  if (lat == null || lon == null) {
+    return 'position GPS incomplète (latitude et longitude requises)';
+  }
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return 'coordonnées GPS hors bornes';
+  }
+  if (accuracy != null && (accuracy.isNaN || accuracy < 0)) {
+    return 'précision GPS invalide';
+  }
+  return null;
+}
+
 /// Statut de suivi honnête, dérivé de l'état réel uniquement :
 /// enregistré (reçu, pas encore regroupé), regroupé (groupe de 2+),
 /// planifié (incident dans le plan courant), escalade-s5.
@@ -159,8 +175,91 @@ const Map<String, String> trackingLabels = {
   'escalade-s5': 'Escalade humaine (S5)',
 };
 
+/// Tri public stable : reçus d'abord (plus récent), identifiant
+/// décroissant en départage. Scénarios (sans receivedAt) en dernier.
+/// La page publique ne trie JAMAIS qu'en mémoire sur l'état de travail
+/// (borné par maxReportsTotal), jamais par scan Mongo.
+List<Report> sortPublicReports(List<Report> reports) {
+  final out = List<Report>.from(reports);
+  out.sort((a, b) {
+    final ra = a.receivedAt ?? '', rb = b.receivedAt ?? '';
+    if (ra.isEmpty && rb.isEmpty) return b.id.compareTo(a.id);
+    if (ra.isEmpty) return 1;
+    if (rb.isEmpty) return -1;
+    final c = rb.compareTo(ra);
+    return c != 0 ? c : b.id.compareTo(a.id);
+  });
+  return out;
+}
+
+class ReportPage {
+  final List<Report> items;
+  final String? nextCursor; // identifiant du dernier élément, null si fin
+  const ReportPage(this.items, this.nextCursor);
+}
+
+/// Pagination par curseur : la page commence APRÈS le curseur (dernier
+/// identifiant vu). Curseur inconnu -> page vide (pas de doublon, pas de
+/// saut silencieux). Limite strictement bornée par l'appelant.
+ReportPage paginatePublicReports(
+    List<Report> sorted, int limit, String? cursor) {
+  var start = 0;
+  if (cursor != null && cursor.isNotEmpty) {
+    final i = sorted.indexWhere((r) => r.id == cursor);
+    if (i < 0) return const ReportPage([], null);
+    start = i + 1;
+  }
+  if (start >= sorted.length) return const ReportPage([], null);
+  final end = (start + limit).clamp(0, sorted.length);
+  final items = sorted.sublist(start, end);
+  return ReportPage(items, end < sorted.length ? items.last.id : null);
+}
+
+/// Filtre bbox sur coordonnées grille + limite stricte (jamais de
+/// chargement complet pour la carte).
+List<Incident> filterIncidentsBbox(List<Incident> incs, double minx,
+    double miny, double maxx, double maxy, int limit) {
+  return incs
+      .where((i) =>
+          i.x >= minx && i.x <= maxx && i.y >= miny && i.y <= maxy)
+      .take(limit)
+      .toList();
+}
+
+/// Agrégats publics calculés sur l'état en mémoire (borné) : compteurs
+/// uniquement, aucune donnée individuelle, aucun scan Mongo.
+Map<String, dynamic> publicStatsSummary(
+    List<Report> reports, List<Group> groups, List<Incident> incidents) {
+  final grouped = <String>{};
+  for (final g in groups) {
+    grouped.addAll(g.reportIds);
+  }
+  var withPhoto = 0;
+  String? lastReceived;
+  for (final r in reports) {
+    if (r.photo != null && r.photo!.isNotEmpty) withPhoto++;
+    if (r.receivedAt != null &&
+        (lastReceived == null ||
+            r.receivedAt!.compareTo(lastReceived) > 0)) {
+      lastReceived = r.receivedAt;
+    }
+  }
+  return {
+    'reports': reports.length,
+    'incidents': incidents.length,
+    'groupedReports': grouped.length,
+    'withPhoto': withPhoto,
+    'lastReceivedAt': lastReceived,
+    'fictive': true,
+  };
+}
+
 /// Vue publique d'un signalement : aucun indice, aucune vérité terrain.
-Map<String, dynamic> publicReportJson(Report r, {required String status}) => {
+/// Les coordonnées GPS brutes (donnée personnelle fournie par l'usager)
+/// ne sortent que sur la fiche de suivi ([includeGps]), jamais en liste.
+Map<String, dynamic> publicReportJson(Report r,
+        {required String status, bool includeGps = false}) =>
+    {
       'id': r.id,
       'text': r.text,
       'category': r.category,
@@ -171,6 +270,13 @@ Map<String, dynamic> publicReportJson(Report r, {required String status}) => {
       'photo': r.photo,
       'status': status,
       'statusLabel': trackingLabels[status] ?? status,
+      'hasGps': r.gpsLat != null && r.gpsLon != null,
+      if (includeGps && r.gpsLat != null && r.gpsLon != null)
+        'gps': {
+          'lat': r.gpsLat,
+          'lon': r.gpsLon,
+          'accuracy': r.gpsAccuracy,
+        },
       'fictive': true,
     };
 
