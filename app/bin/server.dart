@@ -158,7 +158,10 @@ Future<void> _initMongo(AppState s) async {
       uri: Platform.environment['CITYRESOLVE_MONGO_URI'] ??
           'mongodb://127.0.0.1:27017/cityresolve_dev');
   s.mongo = mongo;
-  final ok = await mongo.connect();
+  // Atlas distant (TLS + SRV) dépasse souvent 5 s au premier contact ;
+  // laisser 25 s avant de basculer sur le repli JSON (mesuré : poignée
+  // de main ~6-10 s sur cette machine, connexion directe OK en ~8 s).
+  final ok = await mongo.connect(timeout: const Duration(seconds: 25));
   if (!ok) {
     s.mongoPrimary = false;
     s.mongoError = mongo.error;
@@ -636,6 +639,15 @@ String? _bearer(HttpRequest req) {
   return null;
 }
 
+/// Hôte MongoDB effectif (sans identifiants) : variable d'environnement
+/// si présente, sinon boucle locale. Utilisé uniquement pour affichage.
+String _mongoHost() {
+  final uri = Platform.environment['CITYRESOLVE_MONGO_URI'] ?? '';
+  final m = RegExp(r'@([^/?#]+)').firstMatch(uri);
+  if (m != null) return '${m.group(1)} (distant, voir tableau de bord Atlas)';
+  return '127.0.0.1:27017 (local uniquement)';
+}
+
 bool _municipalOk(HttpRequest req, AppState s) => s.municipal.isAuthorized(
     sessionId: _sessionCookie(req), bearerToken: _bearer(req));
 
@@ -778,6 +790,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'mongoConnected': mongo?.connected ?? false,
       'mongoServerVersion': mongo?.serverVersion,
       'database': 'cityresolve_dev',
+      // Hôte seul, JAMAIS d'identifiants dans la réponse.
+      'host': _mongoHost(),
       'uri': 'mongodb://127.0.0.1:27017 (local uniquement)',
       'counts': mongo != null && mongo.connected ? await mongo.counts() : {},
       'lastError': s.mongoError,

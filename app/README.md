@@ -34,7 +34,8 @@ dart run test/mongo_check.dart
 
 Chaque mutation HTTP attend l'écriture Mongo avant de répondre. Aucune
 transaction multi-documents (pas de replica set) : document d'état + miroirs
-collection par collection. Sauvegarde JSON conservée, lue en repli explicite
+collection par collection. Connexion Atlas : délai porté à 25 s (poignée de
+main TLS/SRV lente au premier contact ; 5 s insuffisant, repli JSON à tort). Sauvegarde JSON conservée, lue en repli explicite
 si MongoDB est injoignable (`GET /api/db` affiche le backend effectif).
 Sauvegarde pré-migration : `app/data/backup-pre-mongo-20261102/`.
 
