@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Tableau de bord municipal</title>
+<link rel="stylesheet" href="/dashboard.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<div id="loginOverlay" class="login-overlay" hidden>
+  <div class="login-card">
+    <h2>Espace municipal</h2>
+    <p class="muted">Tableau de bord protégé : connectez-vous avec le jeton municipal.</p>
+    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
+    <button id="loginGo" class="btn primary">Se connecter</button>
+    <p id="loginErr" class="err"></p>
+  </div>
+</div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#14b8a6"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#0b2545"/></svg>
+      <span>CityResolve</span>
+    </div>
+    <nav class="side-nav">
+      <a href="/municipal/dashboard" class="active"><span class="ico">⌂</span> Tableau de bord</a>
+      <a href="/municipal#reports"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal#incidents"><span class="ico">⚠</span> Incidents</a>
+      <a href="/municipal#dashboard"><span class="ico">🗺</span> Carte</a>
+      <a href="/municipal#planning"><span class="ico">📅</span> Planification</a>
+      <a href="/municipal#simulation"><span class="ico">✓</span> Révision</a>
+      <a href="/municipal#compare"><span class="ico">📊</span> Comparaison</a>
+      <a href="/municipal#journal"><span class="ico">📓</span> Journal</a>
+    </nav>
+    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="burger" aria-label="Menu">☰</button>
+      <div class="title-block">
+        <div class="crumb">CityResolve</div>
+        <h1>Tableau de bord</h1>
+        <p class="muted">Transformer les signalements urbains en décisions d'intervention efficaces.</p>
+      </div>
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <div class="search-results" id="qResults" hidden></div>
+        </div>
+        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
+        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+        <select id="period" title="Période">
+          <option value="today">Aujourd'hui</option>
+          <option value="7d" selected>7 derniers jours</option>
+          <option value="30d">30 derniers jours</option>
+          <option value="all">Tout l'historique</option>
+          <option value="custom">Personnalisée…</option>
+        </select>
+        <span id="customRange" hidden>
+          <input type="date" id="fromDate" aria-label="Début"> <input type="date" id="toDate" aria-label="Fin">
+          <button class="btn small" id="customGo">OK</button>
+        </span>
+      </div>
+    </header>
+    <div class="alerts" id="alerts" hidden></div>
+
+    <section class="kpis">
+      <div class="card kpi" id="kpiReports"><div class="skel"></div></div>
+      <div class="card kpi" id="kpiIncidents"><div class="skel"></div></div>
+      <div class="card kpi" id="kpiTeams"><div class="skel"></div></div>
+      <div class="card kpi" id="kpiBudget"><div class="skel"></div></div>
+    </section>
+
+    <section class="row3">
+      <div class="card" id="panelLatest"><h2>⚡ Dernier signalement reçu</h2><div class="skel tall"></div></div>
+      <div class="card" id="panelStatus"><h2>📊 Statut des incidents</h2><div class="skel tall"></div></div>
+      <div class="card" id="panelMap">
+        <h2>🗺 Répartition des incidents</h2>
+        <p class="fictive-tag">Carte de démonstration — positions fictives projetées, fond © contributeurs OpenStreetMap.</p>
+        <div id="dashMap"></div>
+      </div>
+    </section>
+
+    <section class="row2">
+      <div class="card" id="panelActivity">
+        <div class="card-head"><h2>🕐 Activité récente</h2><button class="link" id="actMore">Tout voir →</button></div>
+        <ul class="timeline" id="timeline"><li><div class="skel"></div></li></ul>
+        <button class="btn ghost" id="actNext" hidden>Événements plus anciens</button>
+      </div>
+      <div class="card" id="panelPlan">
+        <div class="card-head">
+          <div><h2>📋 Plan d'intervention (priorisé)</h2>
+          <p class="muted">Proposition calculée (optimiseur exact, périmètre borné) — pas une intervention effectuée.</p></div>
+          <button class="btn primary" id="optBtn">⚙ Optimiser le plan</button>
+        </div>
+        <div class="table-wrap"><table id="planTable">
+          <thead><tr><th>#</th><th>Incident</th><th>Lieu</th><th>Priorité</th><th>Intervention recommandée</th><th>Ressources</th><th>Statut</th></tr></thead>
+          <tbody><tr><td colspan="7"><div class="skel"></div></td></tr></tbody>
+        </table></div>
+        <div id="planMeta" class="muted"></div>
+        <div id="planUnassigned"></div>
+      </div>
+    </section>
+    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé, politiques Q provisoires. <a href="/">Accueil public</a></footer>
+  </div>
+</div>
+
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card">
+    <h3>À propos de ce tableau de bord</h3>
+    <p>Démonstration municipale sur données fictives. Les chiffres sont calculés en direct depuis l'état courant :</p>
+    <ul>
+      <li>Signalements : reçus horodatés sur la période (scénarios sans date exclus des fenêtres).</li>
+      <li>Incidents : reconstruction actuelle (un multi-problème peut compter plusieurs fois).</li>
+      <li>Équipes : équipes simulées disponibles / total.</li>
+      <li>Budget : 120 unités fictives (ni francs, ni euros, ni dollars).</li>
+      <li>Statuts : exclusifs et définis (escalade S5, planifié, non affecté, à analyser).</li>
+    </ul>
+    <p>Protocole scientifique non gelé — aucune preuve d'impact.</p>
+    <button class="btn primary" id="helpClose">Fermer</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/dashboard.js"></script>
+</body>
+</html>

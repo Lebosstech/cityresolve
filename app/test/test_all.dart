@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../lib/audit.dart';
+import '../lib/dashboard.dart';
 import '../lib/grouping.dart';
 import '../lib/incidents.dart';
 import '../lib/media.dart';
@@ -1587,6 +1588,88 @@ Future<void> main() async {
     check(st['reports'] == 2 && st['incidents'] == 1 && st['groupedReports'] == 2 &&
         st['lastReceivedAt'] == '2026-01-01T00:00:00Z' && st['fictive'] == true,
         'T37h agrégats compteurs uniquement', '$st');
+  }
+
+  // T38 : tableau de bord — périodes, statuts exclusifs, activité, recherche.
+  {
+    final now = DateTime.utc(2026, 11, 4, 12);
+    final b7 = periodBounds(const Period('7d'), now);
+    check(b7.end!.difference(b7.start!).inDays == 7 &&
+        b7.prevEnd == b7.start &&
+        b7.prevStart!.difference(b7.prevEnd!).inDays == -7,
+        'T38a fenêtre 7j + précédente adjacente');
+    final ball = periodBounds(const Period('all'), now);
+    check(ball.start == null && ball.end == null,
+        'T38b all sans bornes');
+    var badPeriod = 0;
+    try {
+      parsePeriod('nope', null, null);
+    } on FormatException {
+      badPeriod++;
+    }
+    try {
+      parsePeriod('custom', '2026-01-02T00:00:00Z', '2026-01-01T00:00:00Z');
+    } on FormatException {
+      badPeriod++;
+    }
+    check(badPeriod == 2, 'T38c périodes invalides rejetées');
+    Report rr(String id, String? at) => Report(
+        id: id, text: 't', category: 'autre', x: 1, y: 1, t: 1, receivedAt: at);
+    final reps = [
+      rr('N1', '2026-11-03T12:00:00Z'),
+      rr('N2', '2026-11-04T11:00:00Z'),
+      rr('O1', '2026-10-20T00:00:00Z'),
+      rr('S1', null),
+    ];
+    final kpi = reportsKpi(reps, b7.start, b7.end, b7.prevStart, b7.prevEnd);
+    check(kpi['count'] == 2 && kpi['previousCount'] == 0 && kpi['deltaPct'] == null,
+        'T38d fenêtre 7j : 2 reçus, référence vide → pas de pourcentage', '$kpi');
+    final kAll = reportsKpi(reps, null, null, null, null);
+    check(kAll['count'] == 4 && kAll['previousCount'] == null,
+        'T38e all inclut les non horodatés');
+    Incident ii(String id, int? sev) => Incident(
+        id: id, reportIds: [id], severity: sev, exposure: 1,
+        domain: 'voirie', x: 1, y: 1, firstSeen: 1, confidence: 1.0);
+    final plan = Plan(
+        tasks: [
+          Task(incidentId: 'I1', teamId: 'equipe-1', order: 1,
+              startMin: 1, endMin: 2, travelKm: 1.0, cost: 1.0)
+        ],
+        unassigned: {'I2': 'motif'},
+        escalations: ['I9'],
+        totalCost: 1.0, q: 10.0, feasible: true,
+        violations: [], justifications: {});
+    final bk = incidentStatusBuckets(
+        [ii('I1', 2), ii('I2', 3), ii('I9', 5)], plan);
+    final bc = {for (final r in (bk['buckets'] as List)) r['status']: r['count']};
+    check(bk['total'] == 3 && bc['planifie'] == 1 && bc['non-affecte'] == 1 &&
+        bc['escalade-s5'] == 1 && bc['a-analyser'] == 0,
+        'T38f statuts exclusifs, somme = total', '$bk');
+    final bk0 = incidentStatusBuckets([ii('I1', 2)], null);
+    final bc0 = {for (final r in (bk0['buckets'] as List)) r['status']: r['count']};
+    check(bc0['a-analyser'] == 1, 'T38g sans plan → à analyser');
+    check(priorityOf(ii('X', 5)) == 'critique' &&
+        priorityOf(ii('X', 4)) == 'haute' &&
+        priorityOf(ii('X', 3)) == 'moyenne' &&
+        priorityOf(ii('X', 1)) == 'faible' &&
+        priorityOf(ii('X', null)) == 'a-verifier',
+        'T38h priorités dérivées de la gravité déclarée');
+    final act = activityItem({'seq': 7, 'at': 't', 'event': 'plan.proposed',
+        'details': {'planId': 'PLAN-2', 'tasks': 4, 'q': 61.0}});
+    check(act['type'] == 'plan' && act['ref'] == 'PLAN-2',
+        'T38i activité plan mappée', '$act');
+    final unk = activityItem({'seq': 8, 'at': 't', 'event': 'futur.inconnu'});
+    check(unk['label'] == 'futur.inconnu', 'T38j événement inconnu conservé');
+    final hits = searchAll('lilas',
+        [rr('R1', null), rr('R2', null)],
+        [], [ii('I9', 5)], null);
+    check(hits.isEmpty, 'T38k recherche vide honnête');
+    final hits2 = searchAll('r1',
+        [Report(id: 'R1', text: 'nid rue des Lilas', category: 'nid-de-poule',
+            x: 1, y: 1, t: 1)],
+        [], [], null);
+    check(hits2.length == 1 && hits2.single['kind'] == 'report',
+        'T38l recherche par identifiant/texte');
   }
 
   print('== $_pass PASS, $_fail FAIL ==');

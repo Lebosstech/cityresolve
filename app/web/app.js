@@ -24,6 +24,13 @@ document.querySelectorAll('nav button[data-view]').forEach((b) => {
     if (b.dataset.view === 'dashboard') loadDashboard().catch(showError);
   };
 });
+// Routage par ancre (liens sidebar du tableau de bord) : /municipal#reports, etc.
+(function routeHash() {
+  const v = (location.hash || '').replace('#', '');
+  if (!v) return;
+  const b = document.querySelector(`nav button[data-view="${v}"]`);
+  if (b) b.onclick();
+})();
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function fmtT(m) { const d = Math.floor(m/1440), h = String(Math.floor(m%1440/60)).padStart(2,'0'), mm = String(m%60).padStart(2,'0'); return `J${d} ${h}:${mm}`; }
 

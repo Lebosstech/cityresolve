@@ -57,6 +57,9 @@ class MongoStore {
     // Accès publics : reçus récents, catégories, positions GPS brutes.
     await idx('reports', {'receivedAt': -1}, name: 'reports_receivedAt');
     await idx('reports', {'category': 1}, name: 'reports_category');
+    // Recherche plein-texte future à grand volume (requêtes dashboard).
+    // Un seul index texte par collection ; création sans effet si présent.
+    await idx('reports', {'text': 'text'}, name: 'reports_text');
     await idx('incidents', {'id': 1}, name: 'incidents_id');
     await idx('plans', {'version': 1}, name: 'plans_version');
     await idx('journals', {'seq': 1}, unique: true, name: 'journals_seq');

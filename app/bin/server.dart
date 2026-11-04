@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../lib/audit.dart';
+import '../lib/dashboard.dart';
 import '../lib/grouping.dart';
 import '../lib/incidents.dart';
 import '../lib/media.dart';
@@ -684,13 +685,15 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   if (m == 'GET' && (p == '/municipal' || p == '/index.html')) {
     return _static(req, '$base/web/municipal.html', ContentType.html);
   }
+  // Actifs statiques municipaux PUBLICS (aucune donnée dedans : pur code
+  // d'interface, déjà lisible dans le dépôt) : l'écran de connexion doit
+  // pouvoir se charger et se styler AVANT authentification. Toutes les
+  // données et actions restent protégées côté API, sans exception.
   if (m == 'GET' && p == '/app.js') {
-    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _static(req, '$base/web/app.js',
         ContentType('application', 'javascript', charset: 'utf-8'));
   }
   if (m == 'GET' && p == '/styles.css') {
-    if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _static(req, '$base/web/styles.css',
         ContentType('text', 'css', charset: 'utf-8'));
   }
@@ -1692,6 +1695,237 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   if (m == 'GET' && p == '/api/journal') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {'entries': s.audit.toJson()});
+  }
+  // --- Tableau de bord municipal : endpoints agrégés dédiés ---
+  // Tous protégés (espace municipal), limités et paginés. Calculés sur
+  // l'état de travail borné ; voir docs/PERSISTANCE_EVOLUTION.md pour
+  // la trajectoire vers des lectures MongoDB indexées à grand volume.
+  if (m == 'GET' && p == '/municipal/dashboard') {
+    return _static(req, '$base/web/dashboard.html', ContentType.html);
+  }
+  if (m == 'GET' && (p == '/dashboard.js' || p == '/dashboard.css')) {
+    return _static(
+        req,
+        '$base/web${p == '/dashboard.js' ? '/dashboard.js' : '/dashboard.css'}',
+        p == '/dashboard.js'
+            ? ContentType('application', 'javascript', charset: 'utf-8')
+            : ContentType('text', 'css', charset: 'utf-8'));
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/summary') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    Period period;
+    try {
+      period = parsePeriod(req.uri.queryParameters['period'],
+          req.uri.queryParameters['from'], req.uri.queryParameters['to']);
+    } on FormatException catch (e) {
+      return _json(req, {'error': e.message}, 400);
+    }
+    final now = DateTime.now().toUtc();
+    final b = periodBounds(period, now);
+    final rep = reportsKpi(s.reports, b.start, b.end, b.prevStart, b.prevEnd);
+    final teams = defaultTeams();
+    final down = s.teamsDown.intersection(teams.map((t) => t.id).toSet());
+    final committed = s.plan?.totalCost ?? 0.0;
+    return _json(req, {
+      'fictive': true,
+      'period': period.kind,
+      'reports': rep,
+      'reportsNote': period.kind == 'all'
+          ? 'tous les signalements de l\u2019état courant'
+          : 'signalements reçus horodatés uniquement (scénarios DEV sans date exclus)',
+      'incidents': {
+        'count': s.incidents.length,
+        'note':
+            'reconstruction actuelle (un incident = un groupe ; un signalement multi-problème peut contribuer à plusieurs incidents)',
+      },
+      'teams': {
+        'available': teams.length - down.length,
+        'total': teams.length,
+        'down': down.toList(),
+        'fictive': true,
+        'note': 'équipes simulées du bac à sable',
+      },
+      'budget': {
+        'total': budgetUnits,
+        'committed': committed,
+        'remaining': budgetUnits - committed,
+        'pctUsed': budgetUnits == 0 ? 0.0 : 100.0 * committed / budgetUnits,
+        'unit': 'unités fictives (ni FCFA, ni euros, ni dollars)',
+        'source': s.plan == null ? 'aucun plan' : 'plan ${s.plan!.planId}',
+      },
+      'generatedAt': now.toIso8601String(),
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/latest-report') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    Report? latest;
+    for (final r in s.reports) {
+      if (r.receivedAt == null) continue;
+      if (latest == null || r.receivedAt!.compareTo(latest.receivedAt!) > 0) {
+        latest = r;
+      }
+    }
+    latest ??= s.reports.isEmpty ? null : s.reports.last;
+    if (latest == null) return _json(req, {'fictive': true, 'report': null});
+    return _json(req, {
+      'fictive': true,
+      'report': {
+        ...publicReportJson(latest,
+            status: trackingStatus(latest, s.groups, s.incidents, s.plan)),
+        'families': reportProblemFamilies(latest).toList(),
+      },
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/incident-status') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    return _json(req, {
+      'fictive': true,
+      ...incidentStatusBuckets(s.incidents, s.plan),
+      'note':
+          'statuts exclusifs dérivés de l\u2019état réel (définitions : voir lib/dashboard.dart)',
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/map') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    double num(String k, double d) =>
+        double.tryParse(req.uri.queryParameters[k] ?? '') ?? d;
+    final minx = num('minx', 0.0), miny = num('miny', 0.0);
+    final maxx = num('maxx', 5.0), maxy = num('maxy', 5.0);
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 200)
+        .clamp(1, 500));
+    if (minx > maxx || miny > maxy) {
+      return _json(req, {'error': 'bbox invalide'}, 400);
+    }
+    return _json(req, {
+      'fictive': true,
+      'grid': '5x5 km fictive projetée (pas des relevés GPS)',
+      'incidents': filterIncidentsBbox(s.incidents, minx, miny, maxx, maxy, limit)
+          .map(publicIncidentJson)
+          .toList(),
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/activity') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 10)
+        .clamp(1, 50));
+    final cursor = int.tryParse(req.uri.queryParameters['cursor'] ?? '');
+    final desc = List<Map<String, dynamic>>.from(s.audit.entries.reversed);
+    final items = <Map<String, dynamic>>[];
+    for (final e in desc) {
+      final seq = (e['seq'] as num?)?.toInt() ?? 0;
+      if (cursor != null && seq >= cursor) continue;
+      items.add(activityItem(e));
+      if (items.length >= limit) break;
+    }
+    return _json(req, {
+      'fictive': true,
+      'items': items,
+      'nextCursor': items.length < limit
+          ? null
+          : (items.last['seq'] as num?)?.toInt(),
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/priority-plan') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    if (s.plan == null) {
+      return _json(req, {
+        'fictive': true,
+        'plan': null,
+        'note': 'aucun plan généré (lancer Optimiser le plan)',
+      });
+    }
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 50)
+        .clamp(1, 100)
+        .toInt());
+    final cursor = int.tryParse(req.uri.queryParameters['cursor'] ?? '');
+    final byId = {for (final r in s.reports) r.id: r};
+    final incById = {for (final i in s.incidents) i.id: i};
+    final tasks = s.plan!.tasks.toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final rows = <Map<String, dynamic>>[];
+    for (var idx = 0; idx < tasks.length; idx++) {
+      if (cursor != null && idx <= cursor) continue;
+      final t = tasks[idx];
+      final inc = incById[t.incidentId];
+      if (inc == null) continue;
+      rows.add({
+        'rank': idx + 1,
+        ...planRow(t, inc, byId, s.planValidation),
+        'cursor': idx,
+      });
+      if (rows.length >= limit) break;
+    }
+    final lastCursor =
+        rows.isEmpty ? null : rows.last['cursor'] as int?;
+    final hasMore = lastCursor != null && lastCursor < tasks.length - 1;
+    return _json(req, {
+      'fictive': true,
+      'plan': {
+        'planId': s.plan!.planId,
+        'version': s.plan!.version,
+        'q': s.plan!.q,
+        'totalCost': s.plan!.totalCost,
+        'feasible': s.plan!.feasible,
+        'violations': s.plan!.violations,
+        'validation': s.planValidation,
+        'escalations': s.plan!.escalations,
+      },
+      'rows': rows,
+      'nextCursor': hasMore ? lastCursor : null,
+      'unassigned': [
+        for (final e in s.plan!.unassigned.entries)
+          {'incidentId': e.key, 'motif': e.value},
+      ],
+      'note':
+          'proposition calculée (optimiseur exact, périmètre borné), pas une intervention effectuée ; S5 jamais dispatchés (voir escalades)',
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/dashboard/search') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final q = (req.uri.queryParameters['q'] ?? '').trim();
+    if (q.isEmpty) return _json(req, {'fictive': true, 'results': []});
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 20)
+        .clamp(1, 50));
+    final cursor = int.tryParse(req.uri.queryParameters['cursor'] ?? '');
+    final all = searchAll(q, s.reports, s.groups, s.incidents, s.plan);
+    final start = (cursor ?? -1) + 1;
+    final page = all.skip(start).take(limit).toList();
+    return _json(req, {
+      'fictive': true,
+      'results': page,
+      'nextCursor':
+          start + page.length < all.length ? start + page.length - 1 : null,
+      'note':
+          'recherche plein-état borné ; à grand volume : index texte MongoDB (voir docs/PERSISTANCE_EVOLUTION.md)',
+    });
   }
   req.response.statusCode = 404;
   req.response.headers.contentType = ContentType.json;
