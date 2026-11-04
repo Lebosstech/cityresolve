@@ -54,6 +54,9 @@ class MongoStore {
     await idx('reports', {'t': 1}, name: 'reports_t');
     await idx('reports', {'x': 1, 'y': 1}, name: 'reports_xy');
     await idx('reports', {'source': 1}, name: 'reports_source');
+    // Accès publics : reçus récents, catégories, positions GPS brutes.
+    await idx('reports', {'receivedAt': -1}, name: 'reports_receivedAt');
+    await idx('reports', {'category': 1}, name: 'reports_category');
     await idx('incidents', {'id': 1}, name: 'incidents_id');
     await idx('plans', {'version': 1}, name: 'plans_version');
     await idx('journals', {'seq': 1}, unique: true, name: 'journals_seq');

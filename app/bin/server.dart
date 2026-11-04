@@ -1029,7 +1029,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
           .toList(),
     });
   }
-  if (m == 'GET' && p.startsWith('/api/public/reports/')) {
+  // Note : '/api/public/reports/recent' (pagination curseur, définie
+  // plus bas) est exclue ici pour ne pas être lue comme un identifiant.
+  if (m == 'GET' &&
+      p.startsWith('/api/public/reports/') &&
+      p != '/api/public/reports/recent') {
     if (!await _rateLimit(req, s, 'public-read',
         max: 600, window: const Duration(minutes: 10))) {
       return;
@@ -1055,7 +1059,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     return _json(req, {
       'fictive': true,
-      'report': publicReportJson(rep, status: status),
+      'report': publicReportJson(rep, status: status, includeGps: true),
       'incident': inc == null ? null : publicIncidentJson(inc),
     });
   }
@@ -1074,7 +1078,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   // un visiteur ne doit ni invalider le plan municipal ni déclencher un
   // calcul (l'interface municipale regroupe explicitement). Le statut
   // passe à « regroupé » au prochain regroupement municipal.
-  if (m == 'POST' && p == '/api/reports') {
+  // Création partagée (fonction locale) : l'alias canonique public
+  // POST /api/public/report et le chemin historique POST /api/reports
+  // appliquent exactement les mêmes validation, limites et persistance.
+  Future<void> _createPublicReport(
+      HttpRequest req, AppState s, String base) async {
     if (!await _rateLimit(req, s, 'report-create',
         max: 20, window: const Duration(minutes: 10))) {
       return;
@@ -1112,6 +1120,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       }
       photoRef = mediaId;
     }
+    final gpsLat = (b['gpsLat'] as num?)?.toDouble();
+    final gpsLon = (b['gpsLon'] as num?)?.toDouble();
+    final gpsAcc = (b['gpsAccuracy'] as num?)?.toDouble();
+    final gpsErr = publicGpsError(gpsLat, gpsLon, gpsAcc);
+    if (gpsErr != null) return _json(req, {'error': gpsErr}, 400);
     s.reportSeq++;
     final receivedAt = DateTime.now().toUtc().toIso8601String();
     final r = Report(
@@ -1126,6 +1139,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       photo: photoRef,
       source: 'manuel',
       receivedAt: receivedAt,
+      gpsLat: gpsLat,
+      gpsLon: gpsLon,
+      gpsAccuracy: gpsAcc,
     );
     s.reports.add(r);
     s.manualReports.add(r.id);
@@ -1139,6 +1155,81 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'note':
           'Signalement enregistré. Démonstration : les données peuvent être réinitialisées à tout moment.',
     });
+  }
+
+  if (m == 'POST' && p == '/api/reports') {
+    return _createPublicReport(req, s, base);
+  }
+  if (m == 'POST' && p == '/api/public/report') {
+    return _createPublicReport(req, s, base);
+  }
+  if (m == 'GET' && p == '/api/public/reports/recent') {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 5)
+        .clamp(1, 50));
+    final page = paginatePublicReports(sortPublicReports(s.reports), limit,
+        req.uri.queryParameters['cursor']);
+    return _json(req, {
+      'fictive': true,
+      'reports': page.items
+          .map((r) => publicReportJson(r,
+              status: trackingStatus(r, s.groups, s.incidents, s.plan)))
+          .toList(),
+      'nextCursor': page.nextCursor,
+    });
+  }
+  if (m == 'GET' && p == '/api/public/incidents/map') {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    double num(String k, double d) =>
+        double.tryParse(req.uri.queryParameters[k] ?? '') ?? d;
+    final minx = num('minx', 0.0), miny = num('miny', 0.0);
+    final maxx = num('maxx', 5.0), maxy = num('maxy', 5.0);
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 100)
+        .clamp(1, 200));
+    if (minx > maxx || miny > maxy) {
+      return _json(req, {'error': 'bbox invalide'}, 400);
+    }
+    return _json(req, {
+      'fictive': true,
+      'grid': '5x5 km fictive (pas une carte réelle)',
+      'incidents': filterIncidentsBbox(
+              s.incidents, minx, miny, maxx, maxy, limit)
+          .map(publicIncidentJson)
+          .toList(),
+    });
+  }
+  if (m == 'GET' && p.startsWith('/api/public/report/')) {
+    // Suivi canonique par identifiant (jamais de liste massive).
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final rid = p.substring('/api/public/report/'.length);
+    Report? rep;
+    for (final r in s.reports) {
+      if (r.id == rid) rep = r;
+    }
+    if (rep == null) {
+      return _json(req, {'error': 'signalement introuvable'}, 404);
+    }
+    final status = trackingStatus(rep, s.groups, s.incidents, s.plan);
+    return _json(req, {
+      'fictive': true,
+      'report': publicReportJson(rep, status: status, includeGps: true),
+    });
+  }
+  if (m == 'GET' && p == '/api/public/stats/summary') {
+    if (!await _rateLimit(req, s, 'public-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    return _json(req, publicStatsSummary(s.reports, s.groups, s.incidents));
   }
   if (m == 'POST' && p == '/api/group') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
