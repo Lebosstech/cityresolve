@@ -729,7 +729,6 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {
       'enforced': s.municipal.enforced,
       'authenticated': _municipalOk(req, s),
-      'demoLogin': s.municipal.enforced && s.municipal.allowDemoLogin,
     });
   }
   if (m == 'POST' && p == '/api/municipal/login') {
@@ -742,7 +741,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     final b = await _body(req);
     final token = (b['token'] ?? '') as String;
-    if (!s.municipal.acceptsToken(token)) {
+    if (!s.municipal.checkToken(token)) {
       return _json(req, {'error': 'jeton invalide'}, 401);
     }
     final sid = s.municipal.createSession();
@@ -751,10 +750,6 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       ..sameSite = SameSite.lax
       ..path = '/'
       ..maxAge = 12 * 3600);
-    if (token.isEmpty) {
-      await auditPersist(
-          s, 'municipal.demo_login', {'by': 'demo-button'});
-    }
     return _json(req, {'authenticated': true});
   }
   if (m == 'POST' && p == '/api/municipal/logout') {

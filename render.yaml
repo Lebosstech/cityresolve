@@ -23,11 +23,3 @@ services:
       # Générer une valeur longue et aléatoire dans le tableau de bord Render.
       - key: CITYRESOLVE_MUNICIPAL_TOKEN
         sync: false
-      # Connexion démo en un clic (projet de démonstration uniquement) :
-      # à renseigner à 'true' dans le tableau de bord Render, JAMAIS ici.
-      # Effet : un bouton « Se connecter (démo) » apparaît sur l'écran
-      # de verrouillage et ouvre une session sans jeton (journalisé
-      # comme municipal.demo_login). Le vrai jeton n'est jamais exposé
-      # au frontend. Ne pas activer hors démo.
-      # - key: CITYRESOLVE_DEMO_LOGIN
-      #   value: 'true'

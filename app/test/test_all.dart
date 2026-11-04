@@ -1396,31 +1396,6 @@ Future<void> main() async {
     check(!closed.checkSession(sid), 'T33g révocation effective');
   }
 
-  // T43 : login démo — un clic sans jeton, flag explicite uniquement.
-  // Le vrai jeton n'est jamais transmis au frontend.
-  {
-    final noDemo =
-        MunicipalAuth.fromEnvironment({'CITYRESOLVE_MUNICIPAL_TOKEN': 'tok'});
-    check(!noDemo.allowDemoLogin && !noDemo.acceptsToken(''),
-        'T43a sans flag : jeton vide toujours rejeté');
-    for (final v in ['true', '1', 'on', 'TRUE']) {
-      final d = MunicipalAuth.fromEnvironment({
-        'CITYRESOLVE_MUNICIPAL_TOKEN': 'tok',
-        'CITYRESOLVE_DEMO_LOGIN': v
-      });
-      check(d.enforced && d.allowDemoLogin && d.acceptsToken('') &&
-          d.acceptsToken('tok') && !d.acceptsToken('faux') &&
-          !d.isAuthorized(),
-          'T43b flag $v : vide accepté au login, faux rejeté, accès direct toujours fermé');
-    }
-    final off = MunicipalAuth.fromEnvironment({
-      'CITYRESOLVE_MUNICIPAL_TOKEN': 'tok',
-      'CITYRESOLVE_DEMO_LOGIN': 'false'
-    });
-    check(!off.allowDemoLogin && !off.acceptsToken(''),
-        'T43c flag false : jeton vide rejeté');
-  }
-
   // T34 : validation des entrées publiques.
   {
     check(publicTextError(null) == 'description requise' &&

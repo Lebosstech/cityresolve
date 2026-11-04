@@ -67,15 +67,12 @@ bool constantTimeEquals(String a, String b) {
 class MunicipalAuth {
   final String? expectedToken;
   final Set<String> _sessions = {};
-  final bool allowDemoLogin;
-  MunicipalAuth({this.expectedToken, this.allowDemoLogin = false});
+  MunicipalAuth({this.expectedToken});
 
   factory MunicipalAuth.fromEnvironment(Map<String, String> env) {
     final t = env['CITYRESOLVE_MUNICIPAL_TOKEN'];
-    final demo = (env['CITYRESOLVE_DEMO_LOGIN'] ?? '').toLowerCase();
     return MunicipalAuth(
-        expectedToken: (t == null || t.isEmpty) ? null : t,
-        allowDemoLogin: demo == 'true' || demo == '1' || demo == 'on');
+        expectedToken: (t == null || t.isEmpty) ? null : t);
   }
 
   /// Protection active seulement si un jeton est configuré.
@@ -83,13 +80,6 @@ class MunicipalAuth {
 
   bool checkToken(String candidate) =>
       expectedToken != null && constantTimeEquals(candidate, expectedToken!);
-
-  /// Jeton accepté au login : le jeton configuré, ou (mode démo explicite
-  /// uniquement, projet de démonstration) un jeton vide envoyé par le
-  /// bouton « démo » de l'interface. Le vrai jeton n'est jamais transmis
-  /// au frontend. Hors mode démo, un jeton vide est toujours rejeté.
-  bool acceptsToken(String candidate) =>
-      checkToken(candidate) || (allowDemoLogin && candidate.isEmpty);
 
   String createSession() {
     final rng = Random.secure();

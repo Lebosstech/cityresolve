@@ -24,23 +24,6 @@ function showLogin() {
     if (r.ok) location.reload();
     else $('loginErr').textContent = 'Jeton invalide.';
   };
-  // Démo : connexion en un clic, sans jeton (serveur : CITYRESOLVE_DEMO_LOGIN=true).
-  // Le jeton réel n'est jamais envoyé au frontend.
-  fetch('/api/municipal/status').then((r) => r.json()).then((j) => {
-    if (j && j.demoLogin && !$('loginDemo')) {
-      const b = document.createElement('button');
-      b.className = 'btn primary'; b.id = 'loginDemo';
-      b.textContent = 'Se connecter (démo)';
-      b.onclick = async () => {
-        const r3 = await fetch('/api/municipal/login', { method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}) });
-        if (r3.ok) location.reload();
-        else $('loginErr').textContent = 'Connexion démo impossible.';
-      };
-      $('loginGo').after(b);
-    }
-  }).catch(() => {});
 }
 function panelError(id, e) {
   if (String(e && e.message).includes('auth') || (e && e.name === 'AbortError')) return;
@@ -188,7 +171,17 @@ $('burger').onclick = () => { $('sidebar').classList.toggle('open'); };
   try {
     const r = await fetch('/api/municipal/status');
     const j = await r.json();
-    if (j.enforced && !j.authenticated) { showLogin(); return; }
+    if (j.enforced && !j.authenticated) {
+      const ov = $('loginOverlay'); ov.hidden = false;
+      $('loginGo').onclick = async () => {
+        const r2 = await fetch('/api/municipal/login', { method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: $('loginToken').value }) });
+        if (r2.ok) location.reload();
+        else $('loginErr').textContent = 'Jeton invalide.';
+      };
+      return;
+    }
   } catch (e) { /* les panneaux afficheront leurs erreurs */ }
   try { await loadAll(); } catch (e) {
     if (!String(e && e.message).includes('auth')) $('planMeta').innerHTML = `<span class="perr">Échec de chargement : ${esc(e.message || e)}</span>`;
