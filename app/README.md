@@ -81,6 +81,11 @@ affichée explicitement (jamais un score fabriqué).
   données fictives explicitement étiquetées « projetées » autour d'un
   ancrage de démonstration (Abidjan-Plateau) — jamais présentées comme
   des relevés GPS. Le sélecteur convertit le clic en coordonnées grille.
+- GPS navigateur : bouton « Ma position » actif, consentement navigateur,
+  refus explicite hors zone démo (3,54 km), refus/absence/délai gérés.
+  Relevé stocké (`gpsLat/gpsLon/gpsAccuracy`, validé) et visible
+  uniquement sur la fiche de suivi (jamais en liste). Grille x/y inchangée
+  pour l'optimiseur.
 - Sécurité exposition publique (§6) : `POST /api/reports` et
   `POST /api/photos` limités en fréquence (429 + Retry-After), texte
   1–500 caractères, catégories fermées, 500 signalements max ; tout le

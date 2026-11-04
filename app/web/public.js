@@ -2,7 +2,13 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const isMediaId = (s) => /^[0-9a-f]{24}$/.test(String(s || ''));
-const state = { x: null, y: null, mediaId: null };
+const state = { x: null, y: null, mediaId: null, gps: null };
+const DEMO_RADIUS_KM = 3.54; // demi-diagonale de la grille 5×5 : hors de ce rayon, refus honnête
+function distKm(lat1, lon1, lat2, lon2) {
+  const r = Math.PI / 180, dLa = (lat2 - lat1) * r;
+  const dLo = (lon2 - lon1) * r * Math.cos((lat1 + lat2) / 2 * r);
+  return Math.sqrt(dLa * dLa + dLo * dLo) * 111.32;
+}
 
 async function api(path, method = 'GET', body = null) {
   const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : null });
@@ -53,11 +59,48 @@ $('pFile').onchange = async () => {
   } catch (e) { showErr(e.message); $('pFile').value = ''; }
 };
 $('pRemove').onclick = () => { state.mediaId = null; $('pFile').value = ''; $('pPreview').hidden = true; $('pMedia').textContent = ''; };
+$('pGps').onclick = () => {
+  clearErr();
+  if (!navigator.geolocation) {
+    showErr('Géolocalisation indisponible dans ce navigateur (contexte non sécurisé ?). Utilisez « Choisir sur la carte ».');
+    return;
+  }
+  $('pCoords').textContent = 'Localisation en cours… (autorisez la position dans votre navigateur)';
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      const d = distKm(latitude, longitude, ANCHOR.lat, ANCHOR.lon);
+      if (d > DEMO_RADIUS_KM) {
+        state.x = null; state.y = null; state.gps = null;
+        $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
+        showErr(`Position hors zone de démonstration (${d.toFixed(1)} km de l'ancrage, démo limitée à ${DEMO_RADIUS_KM} km). Utilisez « Choisir sur la carte ».`);
+        return;
+      }
+      const [gx, gy] = latLngToGrid(latitude, longitude);
+      state.x = gx; state.y = gy;
+      state.gps = { lat: latitude, lon: longitude, accuracy: accuracy ?? null };
+      $('pCoords').textContent = `Position GPS : (${gx.toFixed(1)}, ${gy.toFixed(1)}) km — grille fictive (±${Math.round(accuracy ?? -1)} m annoncés)`;
+      drawMap();
+    },
+    (err) => {
+      state.x = null; state.y = null; state.gps = null;
+      const msg = err.code === err.PERMISSION_DENIED
+        ? 'Géolocalisation refusée : aucune position collectée. Utilisez « Choisir sur la carte ».'
+        : err.code === err.POSITION_UNAVAILABLE
+          ? 'Position indisponible (GPS coupé ?). Utilisez « Choisir sur la carte ».'
+          : 'Délai de localisation dépassé. Réessayez ou utilisez « Choisir sur la carte ».';
+      $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
+      showErr(msg);
+    },
+    { timeout: 10000, maximumAge: 60000 },
+  );
+};
 $('pPick').onclick = () => { $('pickModal').hidden = false; drawPicker(); };
 $('pickCancel').onclick = () => { $('pickModal').hidden = true; };
 $('pickOk').onclick = () => {
   if (state.x === null) { showErr('Cliquez sur la grille pour choisir une position.'); return; }
-  $('pCoords').textContent = `Position : (${state.x.toFixed(1)}, ${state.y.toFixed(1)}) km — grille fictive`;
+  state.gps = null; // saisie manuelle : pas de relevé GPS associé
+  $('pCoords').textContent = `Position : (${state.x.toFixed(1)}, ${state.y.toFixed(1)}) km — grille fictive (saisie manuelle)`;
   $('pickModal').hidden = true;
   drawMap();
 };
@@ -87,12 +130,16 @@ $('pSend').onclick = async () => {
   const text = $('pText').value.trim();
   if (!text) return showErr('Décrivez le problème observé.');
   if (text.length > 500) return showErr('Description trop longue (' + text.length + '/500).');
-  if (state.x === null) return showErr('Choisissez une position via « Choisir sur la carte » (GPS non disponible dans cette démo).');
+  if (state.x === null) return showErr('Choisissez une position via « Ma position (GPS) » ou « Choisir sur la carte ».');
   try {
-    const j = await api('/api/reports', 'POST', { text, category: $('pCat').value, x: state.x, y: state.y, photoMediaId: state.mediaId });
+    const body = { text, category: $('pCat').value, x: state.x, y: state.y, photoMediaId: state.mediaId };
+    if (state.gps) { body.gpsLat = state.gps.lat; body.gpsLon = state.gps.lon; body.gpsAccuracy = state.gps.accuracy; }
+    const j = await api('/api/reports', 'POST', body);
     $('pTrackId').textContent = j.id;
     $('pConfirm').hidden = false;
     $('pText').value = ''; $('pCount').textContent = '0';
+    state.x = null; state.y = null; state.gps = null;
+    $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
     $('pRemove').onclick();
     loadRecent(3); drawMap();
   } catch (e) { showErr(e.message); }
@@ -150,9 +197,10 @@ async function drawMap() {
       .addTo(layerMain);
   });
   if (state.x !== null) {
-    const [lat, lon] = gridToLatLng(state.x, state.y);
-    L.circleMarker([lat, lon], { radius: 8, color: '#0b5fff', fillColor: '#0b5fff', fillOpacity: 1, weight: 3 })
-      .bindPopup('Votre point choisi (grille fictive)')
+    const ll = state.gps ? [state.gps.lat, state.gps.lon] : gridToLatLng(state.x, state.y);
+    const label = state.gps ? 'Votre position GPS (relevé navigateur)' : 'Votre point choisi (grille fictive)';
+    L.circleMarker(ll, { radius: 8, color: '#0b5fff', fillColor: '#0b5fff', fillOpacity: 1, weight: 3 })
+      .bindPopup(label)
       .addTo(layerMain);
   }
 }
@@ -185,6 +233,7 @@ $('tGo').onclick = async () => {
     const r = j.report;
     let h = `<div class="track"><p><b>${esc(r.id)}</b> <span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></p>`;
     h += `<p>${esc(r.text)}</p><p class="muted">${esc(r.category)} · position fictive (${r.x.toFixed(1)}, ${r.y.toFixed(1)}) km${r.receivedAt ? ' · ' + esc(fmtDate(r.receivedAt)) : ''}</p>`;
+    if (r.gps) h += `<p class="muted">Relevé GPS navigateur : ${r.gps.lat.toFixed(5)}, ${r.gps.lon.toFixed(5)}${r.gps.accuracy !== null && r.gps.accuracy !== undefined ? ` (±${Math.round(r.gps.accuracy)} m)` : ''} — fourni par vous, visible uniquement sur cette fiche.</p>`;
     if (isMediaId(r.photo)) h += `<p><a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img class="upload preview" style="max-width:220px" src="/api/photos/${esc(r.photo)}" alt="photo du signalement"></a></p>`;
     if (j.incident) h += `<p>Incident associé : <b>${esc(j.incident.id)}</b> (${esc(j.incident.domain)}, ${j.incident.reportCount} signalement(s)).</p>`;
     else h += `<p class="muted">Pas encore rattaché à un incident (regroupement municipal en attente).</p>`;

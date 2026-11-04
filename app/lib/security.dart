@@ -121,6 +121,22 @@ String? publicTextError(String? text) {
 
 bool isPublicCategory(String c) => publicCategories.contains(c);
 
+/// Erreur de validation GPS, null si valide ou absent (saisie manuelle).
+/// Les trois champs doivent être présents ensemble et dans leurs bornes.
+String? publicGpsError(double? lat, double? lon, double? accuracy) {
+  if (lat == null && lon == null && accuracy == null) return null;
+  if (lat == null || lon == null) {
+    return 'position GPS incomplète (latitude et longitude requises)';
+  }
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    return 'coordonnées GPS hors bornes';
+  }
+  if (accuracy != null && (accuracy.isNaN || accuracy < 0)) {
+    return 'précision GPS invalide';
+  }
+  return null;
+}
+
 /// Statut de suivi honnête, dérivé de l'état réel uniquement :
 /// enregistré (reçu, pas encore regroupé), regroupé (groupe de 2+),
 /// planifié (incident dans le plan courant), escalade-s5.
@@ -160,7 +176,11 @@ const Map<String, String> trackingLabels = {
 };
 
 /// Vue publique d'un signalement : aucun indice, aucune vérité terrain.
-Map<String, dynamic> publicReportJson(Report r, {required String status}) => {
+/// Les coordonnées GPS brutes (donnée personnelle fournie par l'usager)
+/// ne sortent que sur la fiche de suivi ([includeGps]), jamais en liste.
+Map<String, dynamic> publicReportJson(Report r,
+        {required String status, bool includeGps = false}) =>
+    {
       'id': r.id,
       'text': r.text,
       'category': r.category,
@@ -171,6 +191,13 @@ Map<String, dynamic> publicReportJson(Report r, {required String status}) => {
       'photo': r.photo,
       'status': status,
       'statusLabel': trackingLabels[status] ?? status,
+      'hasGps': r.gpsLat != null && r.gpsLon != null,
+      if (includeGps && r.gpsLat != null && r.gpsLon != null)
+        'gps': {
+          'lat': r.gpsLat,
+          'lon': r.gpsLon,
+          'accuracy': r.gpsAccuracy,
+        },
       'fictive': true,
     };
 

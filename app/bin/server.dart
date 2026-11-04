@@ -1055,7 +1055,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     return _json(req, {
       'fictive': true,
-      'report': publicReportJson(rep, status: status),
+      'report': publicReportJson(rep, status: status, includeGps: true),
       'incident': inc == null ? null : publicIncidentJson(inc),
     });
   }
@@ -1112,6 +1112,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       }
       photoRef = mediaId;
     }
+    final gpsLat = (b['gpsLat'] as num?)?.toDouble();
+    final gpsLon = (b['gpsLon'] as num?)?.toDouble();
+    final gpsAcc = (b['gpsAccuracy'] as num?)?.toDouble();
+    final gpsErr = publicGpsError(gpsLat, gpsLon, gpsAcc);
+    if (gpsErr != null) return _json(req, {'error': gpsErr}, 400);
     s.reportSeq++;
     final receivedAt = DateTime.now().toUtc().toIso8601String();
     final r = Report(
@@ -1126,6 +1131,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       photo: photoRef,
       source: 'manuel',
       receivedAt: receivedAt,
+      gpsLat: gpsLat,
+      gpsLon: gpsLon,
+      gpsAccuracy: gpsAcc,
     );
     s.reports.add(r);
     s.manualReports.add(r.id);

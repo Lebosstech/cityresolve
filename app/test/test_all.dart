@@ -1496,6 +1496,48 @@ Future<void> main() async {
         'T35f incident public filtré');
   }
 
+  // T36 : GPS navigateur — validation bornée, exposition limitée au suivi.
+  {
+    check(publicGpsError(null, null, null) == null,
+        'T36a GPS absent accepté (saisie manuelle)');
+    check(publicGpsError(5.32, -4.02, 12.0) == null,
+        'T36b GPS valide accepté');
+    check(publicGpsError(5.32, null, null) != null,
+        'T36c GPS incomplet refusé');
+    check(publicGpsError(91.0, 0.0, null) != null &&
+        publicGpsError(0.0, 200.0, null) != null,
+        'T36d hors bornes refusé');
+    check(publicGpsError(5.32, -4.02, -3.0) != null,
+        'T36e précision négative refusée');
+    final r = Report(
+        id: 'M9',
+        text: 'x',
+        category: 'autre',
+        x: 2.5,
+        y: 2.5,
+        t: 500,
+        gpsLat: 5.32,
+        gpsLon: -4.02,
+        gpsAccuracy: 12.0);
+    final list = publicReportJson(r, status: 'enregistre');
+    check(list['hasGps'] == true && !list.containsKey('gps'),
+        'T36f liste : présence signalée, coordonnées masquées');
+    final track =
+        publicReportJson(r, status: 'enregistre', includeGps: true);
+    final gps = track['gps'] as Map<String, dynamic>;
+    check(gps['lat'] == 5.32 && gps['lon'] == -4.02 && gps['accuracy'] == 12.0,
+        'T36g suivi : GPS visible par le déclarant');
+    final plain = Report(
+        id: 'M8',
+        text: 'x',
+        category: 'autre',
+        x: 1.0,
+        y: 1.0,
+        t: 100);
+    check(publicReportJson(plain, status: 'enregistre')['hasGps'] == false,
+        'T36h sans GPS : hasGps faux');
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

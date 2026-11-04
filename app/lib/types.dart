@@ -16,6 +16,9 @@ class Report {
   final String source; // scenario | manuel | injection (provenance)
   final String? receivedAt; // ISO-8601 UTC de réception serveur (suivi
   // public) ; null pour les signalements de scénario et l'historique
+  final double? gpsLat; // relevé GPS navigateur (degrés), null si saisie
+  final double? gpsLon; // manuelle sur la grille ; x/y restent la référence
+  final double? gpsAccuracy; // précision annoncée (mètres), si fournie
 
   const Report({
     required this.id,
@@ -29,6 +32,9 @@ class Report {
     this.photo,
     this.source = 'scenario',
     this.receivedAt,
+    this.gpsLat,
+    this.gpsLon,
+    this.gpsAccuracy,
   });
 
   Map<String, dynamic> toJson() => {
@@ -43,6 +49,9 @@ class Report {
         'photo': photo,
         'source': source,
         'receivedAt': receivedAt,
+        'gpsLat': gpsLat,
+        'gpsLon': gpsLon,
+        'gpsAccuracy': gpsAccuracy,
       };
 
   static Report fromJson(Map<String, dynamic> j) => Report(
@@ -57,6 +66,9 @@ class Report {
         photo: j['photo'] as String?,
         source: (j['source'] ?? 'scenario') as String,
         receivedAt: j['receivedAt'] as String?,
+        gpsLat: (j['gpsLat'] as num?)?.toDouble(),
+        gpsLon: (j['gpsLon'] as num?)?.toDouble(),
+        gpsAccuracy: (j['gpsAccuracy'] as num?)?.toDouble(),
       );
 }
 
