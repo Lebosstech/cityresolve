@@ -76,6 +76,11 @@ affichée explicitement (jamais un score fabriqué).
   carte étiquetée « Carte de démonstration — Données fictives ».
 - `/municipal` : interface DEV existante, inchangée fonctionnellement,
   sous écran de connexion quand un jeton est configuré.
+- Carte publique : fond OpenStreetMap gratuit (Leaflet 1.9, tuiles OSM
+  avec attribution, repli propre hors-ligne). Les positions restent des
+  données fictives explicitement étiquetées « projetées » autour d'un
+  ancrage de démonstration (Abidjan-Plateau) — jamais présentées comme
+  des relevés GPS. Le sélecteur convertit le clic en coordonnées grille.
 - Sécurité exposition publique (§6) : `POST /api/reports` et
   `POST /api/photos` limités en fréquence (429 + Retry-After), texte
   1–500 caractères, catégories fermées, 500 signalements max ; tout le

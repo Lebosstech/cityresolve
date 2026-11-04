@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CityResolve — Signalez un problème urbain</title>
 <link rel="stylesheet" href="/public.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
 <header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
@@ -145,8 +146,8 @@
     <div class="col-side">
       <section class="card" id="mapCard">
         <div class="card-head"><h2>📍 Incidents récents près de vous</h2><a href="#" id="mapBig">Voir la carte complète →</a></div>
-        <p class="fictive-tag">Carte de démonstration — Données fictives (grille 5×5 km, pas une vraie ville)</p>
-        <div class="map-wrap"><svg id="pMap" viewBox="0 0 560 540" role="img" aria-label="Carte fictive des incidents"></svg>
+        <p class="fictive-tag">Carte de démonstration — positions fictives projetées (grille 5×5 km), fond © contributeurs OpenStreetMap. Aucune position GPS réelle.</p>
+        <div class="map-wrap"><div id="pMap" role="img" aria-label="Carte des incidents (positions fictives projetées)"></div>
           <ul class="legend">
             <li><span class="dot" style="background:#0b5fff"></span>Votre point choisi</li>
             <li><span class="dot" style="background:#b3261e"></span>Urgent (S5)</li>
@@ -194,14 +195,15 @@
 
 <div class="modal" id="pickModal" hidden>
   <div class="modal-card">
-    <h3>Choisir une position sur la grille fictive</h3>
-    <p class="muted">Cliquez sur la grille (coordonnées fictives 0–5 km, pas une position GPS).</p>
-    <svg id="pickMap" viewBox="0 0 440 440"></svg>
+    <h3>Choisir une position (grille fictive)</h3>
+    <p class="muted">Cliquez sur la carte : le point est converti en coordonnées fictives 0–5 km (pas une position GPS). Fond © contributeurs OpenStreetMap.</p>
+    <div id="pickMap"></div>
     <div class="btn-row"><button class="btn primary" id="pickOk">Valider cette position</button><button class="btn ghost" id="pickCancel">Annuler</button></div>
   </div>
 </div>
 
-<footer><p>CityResolve — démonstration civic-tech. Données fictives, protocole non gelé. <a href="/municipal">Espace municipal</a></p></footer>
+<footer><p>CityResolve — démonstration civic-tech. Données fictives, protocole non gelé. Fond cartographique © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a> (ODbL). <a href="/municipal">Espace municipal</a></p></footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/public.js"></script>
 </body>
 </html>

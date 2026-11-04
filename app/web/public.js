@@ -61,24 +61,25 @@ $('pickOk').onclick = () => {
   $('pickModal').hidden = true;
   drawMap();
 };
+let mapPick = null, pickDot = null;
 function drawPicker() {
-  const svg = $('pickMap');
-  let h = '';
-  for (let i = 0; i <= 5; i++) {
-    h += `<line x1="${20 + i * 80}" y1="20" x2="${20 + i * 80}" y2="420" stroke="#e2e8f0"/>`;
-    h += `<line x1="20" y1="${20 + i * 80}" x2="420" y2="${20 + i * 80}" stroke="#e2e8f0"/>`;
+  if (typeof L === 'undefined') {
+    $('pickMap').innerHTML = '<p class="map-offline">Fond de carte indisponible (connexion requise). Saisie au clavier : utilisez la console municipale.</p>';
+    return;
   }
-  svg.innerHTML = h + '<circle id="pickDot" r="9" fill="#0b5fff" hidden/>';
-  svg.onclick = (e) => {
-    const r = svg.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width * 440, py = (e.clientY - r.top) / r.height * 440;
-    state.x = Math.min(5, Math.max(0, (px - 20) / 80));
-    state.y = Math.min(5, Math.max(0, 5 - (py - 20) / 80));
-    state.x = Math.round(state.x * 10) / 10; state.y = Math.round(state.y * 10) / 10;
-    const d = svg.querySelector('#pickDot');
-    d.setAttribute('cx', 20 + state.x * 80); d.setAttribute('cy', 20 + (5 - state.y) * 80);
-    d.hidden = false;
-  };
+  if (!mapPick) {
+    mapPick = L.map('pickMap').setView([ANCHOR.lat, ANCHOR.lon], 13);
+    osmLayer().addTo(mapPick);
+    setTimeout(() => mapPick.invalidateSize(), 100);
+    mapPick.on('click', (e) => {
+      const [gx, gy] = latLngToGrid(e.latlng.lat, e.latlng.lng);
+      state.x = gx; state.y = gy;
+      if (!pickDot) pickDot = L.circleMarker(e.latlng, { radius: 9, color: '#0b5fff', fillColor: '#0b5fff', fillOpacity: 1 }).addTo(mapPick);
+      else pickDot.setLatLng(e.latlng);
+    });
+  } else {
+    setTimeout(() => mapPick.invalidateSize(), 100);
+  }
 }
 $('pSend').onclick = async () => {
   clearErr();
@@ -102,29 +103,58 @@ $('pTrackGo').onclick = () => {
   $('tGo').click();
 };
 
-// --- Carte publique (données réelles, grille fictive) ---
+// --- Carte publique : fond OpenStreetMap (gratuit, ODbL) + positions
+// FICTIVES projetées. La grille 0–5 km n'est PAS une mesure GPS : elle est
+// projetée autour d'un point d'ancrage de démonstration, explicitement
+// étiqueté comme tel. Ne jamais présenter ces points comme des relevés.
+const ANCHOR = { lat: 5.32, lon: -4.02, label: 'Abidjan-Plateau (ancrage fictif de démonstration)' };
+const KM_PER_DEG = 111.32;
+function gridToLatLng(x, y) {
+  return [
+    ANCHOR.lat + (y - 2.5) / KM_PER_DEG,
+    ANCHOR.lon + (x - 2.5) / (KM_PER_DEG * Math.cos(ANCHOR.lat * Math.PI / 180)),
+  ];
+}
+function latLngToGrid(lat, lon) {
+  const x = (lon - ANCHOR.lon) * (KM_PER_DEG * Math.cos(ANCHOR.lat * Math.PI / 180)) + 2.5;
+  const y = (lat - ANCHOR.lat) * KM_PER_DEG + 2.5;
+  return [Math.min(5, Math.max(0, Math.round(x * 10) / 10)), Math.min(5, Math.max(0, Math.round(y * 10) / 10))];
+}
 const sevColor = (s) => s === 5 ? '#b3261e' : s === 4 ? '#f97316' : s === 3 ? '#eab308' : (s === 1 || s === 2) ? '#22c55e' : '#94a3b8';
+let mapMain = null, layerMain = null;
+function osmLayer() {
+  return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  });
+}
 async function drawMap() {
   const j = await api('/api/public/incidents');
-  const svg = $('pMap');
-  const OX = 40, OY = 10, S = 100;
-  const X = (x) => OX + x * S, Y = (y) => OY + (5 - y) * S;
-  let h = '';
-  for (let i = 0; i <= 5; i++) {
-    h += `<line x1="${X(i)}" y1="${OY}" x2="${X(i)}" y2="${OY + 500}" stroke="#e2e8f0"/>`;
-    h += `<line x1="${OX}" y1="${Y(i)}" x2="${OX + 500}" y2="${Y(i)}" stroke="#e2e8f0"/>`;
-    h += `<text x="${X(i) - 4}" y="${OY + 518}" font-size="11" fill="#64748b">${i}</text>`;
-    h += `<text x="${OX - 24}" y="${Y(i) + 4}" font-size="11" fill="#64748b">${i}</text>`;
+  if (typeof L === 'undefined') {
+    $('pMap').innerHTML = '<p class="map-offline">Fond de carte indisponible (connexion requise pour OpenStreetMap). Les données restent consultables en liste.</p>';
+    return;
   }
+  if (!mapMain) {
+    mapMain = L.map('pMap').setView([ANCHOR.lat, ANCHOR.lon], 13);
+    osmLayer().addTo(mapMain);
+    layerMain = L.layerGroup().addTo(mapMain);
+  }
+  layerMain.clearLayers();
   j.incidents.forEach((inc) => {
-    const c = sevColor(inc.severity);
-    h += `<circle cx="${X(inc.x)}" cy="${Y(inc.y)}" r="10" fill="${c}"><title>${esc(inc.id)} — ${esc(inc.domain)} — ${inc.reportCount} signalement(s)${inc.severity === null ? ' — gravité à vérifier' : ' — S' + inc.severity}</title></circle>`;
-    h += `<text x="${X(inc.x) + 13}" y="${Y(inc.y) + 4}" font-size="12" font-weight="bold" fill="${c}">${esc(inc.id)}</text>`;
+    const [lat, lon] = gridToLatLng(inc.x, inc.y);
+    const label = `${inc.id} — ${inc.domain} — ${inc.reportCount} signalement(s)` +
+      (inc.severity === null ? ' — gravité à vérifier' : ' — S' + inc.severity);
+    L.circleMarker([lat, lon], { radius: 10, color: sevColor(inc.severity), fillColor: sevColor(inc.severity), fillOpacity: 0.85, weight: 2 })
+      .bindPopup(`<b>${esc(inc.id)}</b> (position fictive projetée)<br>${esc(label)}`)
+      .bindTooltip(inc.id, { permanent: true, direction: 'right', offset: [8, 0] })
+      .addTo(layerMain);
   });
   if (state.x !== null) {
-    h += `<circle cx="${X(state.x)}" cy="${Y(state.y)}" r="8" fill="#0b5fff" stroke="#fff" stroke-width="3"><title>Votre point choisi (grille fictive)</title></circle>`;
+    const [lat, lon] = gridToLatLng(state.x, state.y);
+    L.circleMarker([lat, lon], { radius: 8, color: '#0b5fff', fillColor: '#0b5fff', fillOpacity: 1, weight: 3 })
+      .bindPopup('Votre point choisi (grille fictive)')
+      .addTo(layerMain);
   }
-  svg.innerHTML = h;
 }
 
 // --- Signalements récents (données réelles) ---
