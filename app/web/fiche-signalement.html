@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Fiche signalement</title>
+<link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<div id="loginOverlay" class="login-overlay" hidden>
+  <div class="login-card">
+    <h2>Espace municipal</h2>
+    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
+    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
+    <button id="loginGo" class="btn primary">Se connecter</button>
+    <p id="loginErr" class="err"></p>
+  </div>
+</div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#14b8a6"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#0b2545"/></svg>
+      <span>CityResolve</span>
+    </div>
+    <nav class="side-nav">
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
+      <a href="/municipal/dashboard#panelReports" class="active"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
+      <a href="/municipal/planification"><span class="ico">📅</span> Planification</a>
+      <a href="/municipal/revision"><span class="ico">✓</span> Révision</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+    </nav>
+    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="burger" aria-label="Menu">☰</button>
+      <div class="title-block">
+        <div class="crumb" id="crumb">Signalements › …</div>
+        <h1>Fiche signalement</h1>
+        <p class="muted">Détail d'un signalement citoyen, incluant les problèmes associés, la localisation et le statut de vérification.</p>
+      </div>
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <div class="search-results" id="qResults" hidden></div>
+        </div>
+        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
+        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+      </div>
+    </header>
+    <div class="alerts" id="alerts" hidden></div>
+    <section id="ficheBody"><div class="card"><div class="skel tall"></div></div></section>
+    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+  </div>
+</div>
+
+<div class="modal" id="editModal" hidden>
+  <div class="modal-card">
+    <h3>Modifier le signalement <span id="editId"></span></h3>
+    <p class="muted">Seuls les champs déclarés sont modifiables. Le regroupement n'est pas relancé automatiquement : re-regrouper ensuite depuis la page Découpage.</p>
+    <label>Description<br><textarea id="eText" rows="4" style="width:100%" maxlength="500"></textarea></label><br>
+    <label>Catégorie<br><select id="eCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select></label><br>
+    <label>Gravité déclarée (1–5, vide = inconnue)<br><select id="eSev"><option value="">inconnue</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><br>
+    <label>Exposition déclarée (0–4, vide = inconnue)<br><select id="eExp"><option value="">inconnue</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+    <p class="err" id="editErr"></p>
+    <div class="btn-row"><button class="btn primary" id="editSave">Enregistrer</button><button class="btn ghost" id="editCancel">Annuler</button></div>
+  </div>
+</div>
+
+<div class="modal" id="verifyModal" hidden>
+  <div class="modal-card">
+    <h3>Vérification humaine</h3>
+    <p class="muted">Le statut affiché reste calculé automatiquement (regroupement, plan). La note ci-dessous documente uniquement votre vérification terrain — elle ne modifie ni gravité ni exposition.</p>
+    <label>Note de vérification (max 500, vide = retirer la vérification)<br><textarea id="vNote" rows="3" style="width:100%" maxlength="500"></textarea></label>
+    <p class="err" id="verifyErr"></p>
+    <div class="btn-row"><button class="btn primary" id="verifySave">Enregistrer</button><button class="btn ghost" id="verifyCancel">Annuler</button></div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card">
+    <h3>Fiche signalement</h3>
+    <p>Affiche le texte original exact, la photo réelle si téléversée, les problèmes détectés (lexique DEV, origine conservée), les inconnues conservées, et l'historique des événements liés. La modification est journalisée ; le statut reste dérivé automatiquement.</p>
+    <button class="btn primary" id="helpClose">Fermer</button>
+  </div>
+</div>
+<script src="/fiche-signalement.js"></script>
+</body>
+</html>

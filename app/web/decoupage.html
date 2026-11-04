@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CityResolve — Découpage multi-problème</title>
+<link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
+<div id="loginOverlay" class="login-overlay" hidden>
+  <div class="login-card">
+    <h2>Espace municipal</h2>
+    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
+    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
+    <button id="loginGo" class="btn primary">Se connecter</button>
+    <p id="loginErr" class="err"></p>
+  </div>
+</div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand">
+      <svg width="30" height="30" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#14b8a6"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#0b2545"/></svg>
+      <span>CityResolve</span>
+    </div>
+    <nav class="side-nav">
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
+      <a href="/municipal/dashboard#panelReports" class="active"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
+      <a href="/municipal/planification"><span class="ico">📅</span> Planification</a>
+      <a href="/municipal/revision"><span class="ico">✓</span> Révision</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+    </nav>
+    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="burger" aria-label="Menu">☰</button>
+      <div class="title-block">
+        <div class="crumb">CityResolve</div>
+        <h1>Découpage multi-problème</h1>
+        <p class="muted">Décomposer un signalement en plusieurs sous-signalements, puis regrouper les sous-signalements similaires en incidents.</p>
+      </div>
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <div class="search-results" id="qResults" hidden></div>
+        </div>
+        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
+        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+      </div>
+    </header>
+    <div class="alerts" id="alerts" hidden></div>
+
+    <section class="card">
+      <div class="card-head">
+        <div><h2>Exemple de découpage et de regroupement</h2>
+        <p class="muted">Un signalement multi-problème réel de l'état courant, découpé par le lexique DEV documenté. Les sous-signalements ne sont jamais des incidents confirmés.</p></div>
+      </div>
+      <div class="btn-row">
+        <label>Signalement <select id="repSel" title="Signalements multi-problèmes de l'état courant"></select></label>
+        <label>Méthode <select id="gMethod"><option value="classique">CLASSIQUE</option><option value="split">DÉCOUPÉ (multi-problème)</option><option value="meta">META</option></select></label>
+        <button class="btn primary" id="gRun">Regrouper</button>
+        <span class="muted" id="methodNote"></span>
+      </div>
+      <div class="split3">
+        <div class="card inner" id="originCard"><h3>Signalement d'origine</h3><div class="skel"></div></div>
+        <div id="subCol"></div>
+        <div id="incCol"></div>
+      </div>
+    </section>
+
+    <section class="row2">
+      <div class="card">
+        <div class="card-head"><div><h2>Incidents reconstruits</h2>
+        <p class="muted" id="incCountLine"></p></div>
+        <a class="link" href="/municipal/dashboard#panelMap">Voir la carte →</a></div>
+        <div class="table-wrap"><table id="incTable">
+          <thead><tr><th>#</th><th>Incident</th><th>Catégorie</th><th>Sous-signalements</th><th>Principale localisation</th><th>Statut</th><th></th></tr></thead>
+          <tbody><tr><td colspan="7"><div class="skel"></div></td></tr></tbody>
+        </table></div>
+      </div>
+      <div>
+        <div class="card" id="methodCard"><h2>Méthode de regroupement</h2><div class="skel"></div></div>
+        <div class="card" id="briefCard">
+          <h2>En bref</h2>
+          <ul>
+            <li><b>✓</b> 1 signalement peut contenir plusieurs problèmes.</li>
+            <li><b>✓</b> Les sous-signalements similaires sont regroupés en incidents pour faciliter la planification des interventions.</li>
+          </ul>
+          <p class="muted">Aucun pourcentage de confiance n'est affiché : seules les confiances déjà stockées sur les groupes le sont, avec leurs justifications et incertitudes.</p>
+        </div>
+      </div>
+    </section>
+    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+  </div>
+</div>
+
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card">
+    <h3>Découpage multi-problème</h3>
+    <p>Un signalement peut lister plusieurs problèmes (lexique DEV documenté). Le découpage crée des unités <i>ORIGINE:FAMILLE</i> traçables ; le regroupement les rassemble par famille, jamais entre familles. Les problèmes secondaires sont conservés.</p>
+    <button class="btn primary" id="helpClose">Fermer</button>
+  </div>
+</div>
+<script src="/decoupage.js"></script>
+</body>
+</html>

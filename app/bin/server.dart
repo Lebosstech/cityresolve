@@ -377,6 +377,30 @@ void regroupSplit(AppState s, {bool keepPlan = false}) {
   }
 }
 
+/// Regroupement Meta reel (jamais simule) : rapprochement par le modele,
+/// avec post-filtre de decoupage optionnel, puis agregation mixte
+/// (jamais aggregate() classique sur des identifiants decoupes).
+/// Ne touche pas au plan : l'appelant gere l'invalidation
+/// (/api/group invalide ; /api/inject conserve pour juger la revision).
+/// Leve MetaException en cas d'echec (appel reel refuse ou en erreur).
+Future<({List<Group> groups, int splitGroups})> regroupMeta(AppState s,
+    {bool split = false}) async {
+  var groups = await proposeMatchingWithMeta(s.meta, s.reports,
+      onRecord: (r) => s.metaCalls.add(r));
+  var splitGroups = 0;
+  if (split) {
+    final sp = splitGroupsByFamily(s.reports, groups);
+    groups = sp.groups;
+    splitGroups = sp.splitGroups;
+  }
+  s.metaGroups = groups;
+  s.groups = groups;
+  s.groupMethod = 'meta';
+  s.incidents =
+      aggregateForGroups(groups, {for (final r in s.reports) r.id: r});
+  return (groups: groups, splitGroups: splitGroups);
+}
+
 void _restore(AppState s, Map<String, dynamic> doc) {
   final kind = (doc['scenarioKind'] ?? 'jouet-1') as String;
   final seed = (doc['scenarioSeed'] ?? 7) as int;
@@ -1278,25 +1302,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         }, 400);
       }
       try {
-        var groups = await proposeMatchingWithMeta(s.meta, s.reports,
-            onRecord: (r) => s.metaCalls.add(r));
-        var splitGroups = 0;
-        if (split) {
-          // Post-filtre découpage sur le regroupement Meta : un groupe
-          // contenant un signalement multi-problème est découpé par
-          // famille, puis agrégé par aggregateMixedGroups, jamais par
-          // aggregate() classique. Le nombre de groupes découpés est
-          // journalisé, et les groupes découpés restent dans metaGroups
-          // (persistés tels quels, identifiants ORIGINE:FAMILLE inclus).
-          final sp = splitGroupsByFamily(s.reports, groups);
-          groups = sp.groups;
-          splitGroups = sp.splitGroups;
-        }
-        s.metaGroups = groups;
-        s.groups = groups;
-        s.groupMethod = 'meta';
-        s.incidents =
-            aggregateForGroups(groups, {for (final r in s.reports) r.id: r});
+        final res = await regroupMeta(s, split: split);
+        final splitGroups = res.splitGroups;
         s.plan = null;
         s.planValidation = null;
         s.sim = null;
@@ -1402,6 +1409,12 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (s.plan == null) {
       return _json(req, {'error': 'aucun plan à valider'}, 400);
     }
+    if (planIsStale(s.plan, s.planHistory, s.audit.entries)) {
+      return _json(req, {
+        'error':
+            'plan périmé (regroupement postérieur) : replanifier avant de valider'
+      }, 400);
+    }
     final b = await _body(req);
     final d = (b['decision'] ?? '') as String;
     if (d != 'valide' && d != 'rejete') {
@@ -1486,7 +1499,33 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         s.reports.add(r);
         s.manualReports.add(r.id);
       }
-      regroup(s, keepPlan: true);
+      // Regrouper avec la méthode active : un regroupement classique sur
+      // un état découpé changerait les identifiants (ORIGINE:FAMILLE ->
+      // pleins) et fabriquerait de fausses escalades S5 (faux N3-S5).
+      if (s.groupMethod == 'split') {
+        regroupSplit(s, keepPlan: true);
+      } else if (s.groupMethod == 'meta') {
+        try {
+          await regroupMeta(s);
+        } on MetaException catch (e) {
+          await auditPersist(s, 'inject.meta.error',
+              {'error': e.message, 'note': 'signalements ajoutés mais regroupement non rejoué'});
+          return _json(req, {
+            'error': e.message,
+            'call': e.record.toJson(),
+            'note':
+                'signalements ajoutés, regroupement META non rejoué : relancer un regroupement explicite',
+          }, 502);
+        }
+      } else {
+        regroup(s, keepPlan: true);
+      }
+      await auditPersist(s, 'group.done', {
+        'method': s.groupMethod,
+        'cause': 'inject',
+        'groups': s.groups.length,
+        'incidents': s.incidents.length,
+      });
     }
     final newS5 = s.incidents
         .where((i) => i.severity != null && i.severity! >= 5)
@@ -1729,6 +1768,33 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
             ? ContentType('application', 'javascript', charset: 'utf-8')
             : ContentType('text', 'css', charset: 'utf-8'));
   }
+  // Pages municipales dédiées (même espace protégé, même design system).
+  // Le HTML est public par construction (aucune donnée dedans) ; toutes
+  // les données et actions restent protégées côté API, sans exception.
+  const municipalPages = {
+    '/municipal/decoupage': 'decoupage.html',
+    '/municipal/planification': 'planification.html',
+    '/municipal/revision': 'revision.html',
+  };
+  if (m == 'GET' && municipalPages.containsKey(p)) {
+    return _static(
+        req, '$base/web/${municipalPages[p]}', ContentType.html);
+  }
+  if (m == 'GET' && p.startsWith('/municipal/signalements/')) {
+    return _static(req, '$base/web/fiche-signalement.html', ContentType.html);
+  }
+  const municipalScripts = {
+    '/decoupage.js': 'decoupage.js',
+    '/planification.js': 'planification.js',
+    '/revision.js': 'revision.js',
+    '/fiche-signalement.js': 'fiche-signalement.js',
+  };
+  if (m == 'GET' && municipalScripts.containsKey(p)) {
+    return _static(
+        req,
+        '$base/web/${municipalScripts[p]}',
+        ContentType('application', 'javascript', charset: 'utf-8'));
+  }
   if (m == 'GET' && p == '/api/municipal/dashboard/summary') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     if (!await _rateLimit(req, s, 'dash-read',
@@ -1873,6 +1939,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       return _json(req, {
         'fictive': true,
         'plan': null,
+        'stalePlan': false,
+        'staleNote': null,
         'note': 'aucun plan généré (lancer Optimiser le plan)',
       });
     }
@@ -1900,8 +1968,18 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final lastCursor =
         rows.isEmpty ? null : rows.last['cursor'] as int?;
     final hasMore = lastCursor != null && lastCursor < tasks.length - 1;
+    final stale = planIsStale(s.plan, s.planHistory, s.audit.entries);
+    if (stale) {
+      s.audit.append('plan.stale', {'planId': s.plan!.planId});
+      persist(s);
+      await s.mongoQueue;
+    }
     return _json(req, {
       'fictive': true,
+      'stalePlan': stale,
+      'staleNote': stale
+          ? 'regroupement postérieur au plan : identifiants incidents possiblement renumérotés, replanifier avant toute validation'
+          : null,
       'plan': {
         'planId': s.plan!.planId,
         'version': s.plan!.version,
@@ -1920,6 +1998,226 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       ],
       'note':
           'proposition calculée (optimiseur exact, périmètre borné), pas une intervention effectuée ; S5 jamais dispatchés (voir escalades)',
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/split/overview') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    return _json(req, {
+      'fictive': true,
+      ...splitOverviewData(s.reports, s.groups, s.incidents, s.groupMethod,
+          plan: s.plan),
+      'groupParams': s.groupParams,
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/split/report') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final rid = (req.uri.queryParameters['reportId'] ?? '').trim();
+    if (rid.isEmpty) {
+      return _json(req, {'error': 'reportId requis'}, 400);
+    }
+    final det = splitReportDetail(s.reports, s.groups, s.incidents, rid);
+    if (det == null) {
+      return _json(req, {'error': 'signalement introuvable'}, 404);
+    }
+    return _json(req, {'fictive': true, ...det});
+  }
+  if (m == 'GET' && p == '/api/municipal/plan/overview') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final stale = planIsStale(s.plan, s.planHistory, s.audit.entries);
+    return _json(req, {
+      'fictive': true,
+      'stalePlan': stale,
+      'staleNote': stale
+          ? 'regroupement postérieur au plan : identifiants incidents possiblement renumérotés, replanifier avant toute validation'
+          : null,
+      ...planOverviewData(
+        reports: s.reports,
+        incidents: s.incidents,
+        plan: s.plan,
+        planValidation: s.planValidation,
+        allTeams: defaultTeams(),
+        teamsDown: s.teamsDown,
+        simQ: s.sim?.q,
+        simFeasible: s.sim?.feasible
+      ),
+      'simDetail': s.sim == null
+          ? null
+          : {
+              'q': s.sim!.q,
+              'feasible': s.sim!.feasible,
+              'violations': s.sim!.violations,
+              'totalCost': s.sim!.totalCost
+            }
+    });
+  }
+  if (m == 'GET' && p == '/api/municipal/revision/history') {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 20)
+        .clamp(1, 50));
+    return _json(req, {
+      'fictive': true,
+      ...revisionHistoryData(s.planHistory, s.audit.entries, limit)
+    });
+  }
+  if (m == 'GET' && p.startsWith('/api/municipal/report/')) {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'dash-read',
+        max: 600, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final rid = p.substring('/api/municipal/report/'.length).trim();
+    Report? rep;
+    for (final r in s.reports) {
+      if (r.id == rid) rep = r;
+    }
+    if (rep == null) {
+      return _json(req, {'error': 'signalement introuvable'}, 404);
+    }
+    Map<String, dynamic>? photoMeta;
+    if (rep.photo != null && isMediaId(rep.photo!)) {
+      final mf = mediaMetaFile(_uploadsDir(base), rep.photo!);
+      if (mf.existsSync()) {
+        try {
+          photoMeta = jsonDecode(await mf.readAsString())
+              as Map<String, dynamic>;
+        } catch (_) {
+          photoMeta = null;
+        }
+      }
+    }
+    final mid = (rep.photo != null && isMediaId(rep.photo!)) ? rep.photo : null;
+    return _json(req, {
+      'fictive': true,
+      ...ficheData(
+        report: rep,
+        groups: s.groups,
+        incidents: s.incidents,
+        photoMeta: photoMeta,
+        visualAnalysis: mid == null
+            ? null
+            : (s.visualAnalyses[mid] as Map<String, dynamic>?),
+        extraction: s.extractions[rep.id] as Map<String, dynamic>?,
+        auditEntries: s.audit.entries
+      )
+    });
+  }
+  if (m == 'PATCH' && p.startsWith('/api/municipal/report/')) {
+    if (!_municipalOk(req, s)) return _denyMunicipal(req);
+    if (!await _rateLimit(req, s, 'report-create',
+        max: 20, window: const Duration(minutes: 10))) {
+      return;
+    }
+    final rid = p.substring('/api/municipal/report/'.length).trim();
+    final idx = s.reports.indexWhere((r) => r.id == rid);
+    if (idx < 0) {
+      return _json(req, {'error': 'signalement introuvable'}, 404);
+    }
+    final b = await _body(req);
+    final err = validateReportPatch(b);
+    if (err != null) return _json(req, {'error': err}, 400);
+    final old = s.reports[idx];
+    final changed = <String, dynamic>{};
+    var updated = old;
+    Report copyWith({
+      String? text,
+      String? category,
+      int? Function()? severityHint,
+      int? Function()? exposureHint,
+      String? Function()? verificationNote,
+      String? Function()? verifiedAt
+    }) =>
+        Report(
+          id: updated.id,
+          text: text ?? updated.text,
+          category: category ?? updated.category,
+          x: updated.x,
+          y: updated.y,
+          t: updated.t,
+          severityHint:
+              severityHint == null ? updated.severityHint : severityHint(),
+          exposureHint:
+              exposureHint == null ? updated.exposureHint : exposureHint(),
+          photo: updated.photo,
+          source: updated.source,
+          receivedAt: updated.receivedAt,
+          gpsLat: updated.gpsLat,
+          gpsLon: updated.gpsLon,
+          gpsAccuracy: updated.gpsAccuracy,
+          verificationNote: verificationNote == null
+              ? updated.verificationNote
+              : verificationNote(),
+          verifiedAt: verifiedAt == null ? updated.verifiedAt : verifiedAt()
+        );
+    if (b.containsKey('text')) {
+      final v = (b['text'] as String).trim();
+      if (v != old.text) {
+        changed['text'] = {'from': old.text, 'to': v};
+        updated = copyWith(text: v);
+      }
+    }
+    if (b.containsKey('category')) {
+      final v = (b['category'] ?? 'autre') as String;
+      if (v != old.category) {
+        changed['category'] = {'from': old.category, 'to': v};
+        updated = copyWith(category: v);
+      }
+    }
+    if (b.containsKey('severityHint')) {
+      final v = b['severityHint'] as int?;
+      if (v != old.severityHint) {
+        changed['severityHint'] = {'from': old.severityHint, 'to': v};
+        updated = copyWith(severityHint: () => v);
+      }
+    }
+    if (b.containsKey('exposureHint')) {
+      final v = b['exposureHint'] as int?;
+      if (v != old.exposureHint) {
+        changed['exposureHint'] = {'from': old.exposureHint, 'to': v};
+        updated = copyWith(exposureHint: () => v);
+      }
+    }
+    if (b.containsKey('verificationNote')) {
+      final raw = b['verificationNote'];
+      final v = raw == null ? null : (raw as String);
+      if (v != old.verificationNote) {
+        changed['verificationNote'] = {'from': old.verificationNote, 'to': v};
+        updated = copyWith(
+            verificationNote: () => v,
+            verifiedAt: () => v == null
+                ? null
+                : DateTime.now().toUtc().toIso8601String());
+      }
+    }
+    if (changed.isEmpty) {
+      return _json(req, {'id': rid, 'changed': false, 'report': updated.toJson()});
+    }
+    s.reports[idx] = updated;
+    s.manualReports.add(rid);
+    await auditPersist(s, 'report.updated',
+        {'id': rid, 'changed': changed.keys.toList(), 'fields': changed});
+    return _json(req, {
+      'id': rid,
+      'changed': true,
+      'report': updated.toJson(),
+      'staleGrouping': true,
+      'note':
+          'Regroupement non relancé : relancer un regroupement municipal pour propager.'
     });
   }
   if (m == 'GET' && p == '/api/municipal/dashboard/search') {

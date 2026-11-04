@@ -1672,6 +1672,215 @@ Future<void> main() async {
         'T38l recherche par identifiant/texte');
   }
 
+  // T39 : pages municipales — découpage, plan, révision, fiche, patch.
+  {
+    Report rr2(String id, String text, {int? sev}) => Report(
+        id: id, text: text, category: 'autre', x: 1.0, y: 1.0, t: 100,
+        severityHint: sev);
+    final multi = rr2('E1',
+        'nid de poule rue basse, lampadaire eteint depuis jours',
+        sev: null);
+    final solo = rr2('E2', 'nid de poule rue basse chaussee', sev: 2);
+    final reps = [multi, solo];
+    final gs = groupSplitReports(reps, distMaxM: 250.0, deltaTMaxH: 6.0);
+    final byId = {for (final r in reps) r.id: r};
+    final incs = aggregateMixedGroups(gs, byId);
+    final over = splitOverviewData(reps, gs, incs, 'split');
+    check(over['units'] == 3 && over['incidents'] == incs.length,
+        'T39a overview : 3 unités, incidents réels', '$over');
+    check((over['multiProblemReports'] as List).contains('E1') &&
+        !(over['multiProblemReports'] as List).contains('E2'),
+        'T39b secondaire conservé (E1), simple non marqué');
+    check(over['method'] == 'split' && (over['justifications'] as List).isNotEmpty,
+        'T39c méthode réelle + justifications, pas de % inventé');
+    final det = splitReportDetail(reps, gs, incs, 'E1')!;
+    check(det['multiProblem'] == true &&
+        (det['subunits'] as List).length == 2 &&
+        (det['linkedIncidents'] as List).isNotEmpty,
+        'T39d E1 → 2 volets + incidents liés', '$det');
+    check(splitReportDetail(reps, gs, incs, 'ZZZ') == null,
+        'T39e report inconnu → null (pas de 500)');
+    Incident ii2(String id, int? sev) => Incident(
+        id: id, reportIds: [id], severity: sev, exposure: 1,
+        domain: 'voirie', x: 1, y: 1, firstSeen: 1, confidence: 1.0);
+    final po = planOverviewData(
+        reports: reps, incidents: [ii2('I1', 2), ii2('I9', 5), ii2('I8', null)],
+        plan: null, planValidation: null,
+        allTeams: defaultTeams(), teamsDown: {'equipe-1'},
+        simQ: null, simFeasible: null);
+    check((po['teams'] as List).length == 2 &&
+        (po['teams'] as List).every((t) => (t as Map).containsKey('available')),
+        'T39f équipes réelles (2, pas 5)');
+    final down = (po['teams'] as List).firstWhere((t) => t['id'] == 'equipe-1');
+    check(down['available'] == false, 'T39g panne reflétée');
+    final rows = po['incidents'] as List;
+    final byI = {for (final r in rows) r['incidentId']: r};
+    check(byI['I9']!['status'] == 'escalade-s5' &&
+        byI['I8']!['status'] == 'a-verifier' &&
+        byI['I1']!['status'] == 'planifiable',
+        'T39h statuts plan : S5 escalade, inconnu à vérifier, admissible planifiable sans plan');
+    check(byI['I8']!['dureeEstimeeMin'] == null,
+        'T39i pas de durée estimée sans gravité');
+    final hist = revisionHistoryData([], [
+      {'seq': 1, 'at': 't', 'event': 'plan.proposed', 'details': {'planId': 'PLAN-1'}},
+      {'seq': 2, 'at': 't', 'event': 'photo.uploaded', 'details': {}},
+      {'seq': 3, 'at': 't', 'event': 'inject.received', 'details': {'type': 'team_down'}},
+    ], 10);
+    check((hist['events'] as List).length == 2,
+        'T39j historique révision : seuls inject/plan/sim');
+    check(validateReportPatch({'text': ''}) != null &&
+        validateReportPatch({'category': 'mairie'}) != null &&
+        validateReportPatch({'severityHint': 9}) != null &&
+        validateReportPatch({'verificationNote': List.filled(501, 'x').join()}) != null,
+        'T39k patch invalide rejeté');
+    check(validateReportPatch({'text': 'ok', 'severityHint': null, 'verificationNote': null}) == null &&
+        validateReportPatch({}) == null,
+        'T39l patch valide / vide accepté');
+    final fd = ficheData(
+        report: multi, groups: gs, incidents: incs,
+        photoMeta: {'mime': 'image/png', 'size': 70},
+        visualAnalysis: null, extraction: {'probleme': 'x'},
+        auditEntries: [
+          {'seq': 5, 'at': 't', 'event': 'report.created', 'details': {'id': 'E1'}},
+          {'seq': 6, 'at': 't', 'event': 'group.done', 'details': {}},
+        ]);
+    check((fd['subunits'] as List).length == 2 &&
+        (fd['linkedIncidents'] as List).isNotEmpty &&
+        (fd['history'] as List).length == 1 &&
+        (fd['report'] as Map)['fictive'] != false,
+        'T39m fiche : volets + liés + historique id, fictif explicite');
+  }
+
+  // T40 : pages municipales — plan, révision, statuts sans inventer.
+  {
+    Incident ii2(String id, int? sev, [List<String>? rids]) => Incident(
+        id: id, reportIds: rids ?? [id], severity: sev, exposure: 1,
+        domain: 'voirie', x: 1, y: 1, firstSeen: 1, confidence: 1.0);
+    final po = planOverviewData(
+        reports: [], incidents: [ii2('I1', 2), ii2('I9', 5), ii2('I8', null)],
+        plan: null, planValidation: null,
+        allTeams: defaultTeams(), teamsDown: {},
+        simQ: null, simFeasible: null);
+    final rows = {for (final r in (po['incidents'] as List)) r['incidentId']: r};
+    check(rows['I1']!['status'] == 'planifiable' &&
+        rows['I9']!['status'] == 'escalade-s5' &&
+        rows['I8']!['status'] == 'a-verifier',
+        'T40a statuts plan sans inventer');
+    check((po['counts'] as Map)['planifiable'] == 1 &&
+        (po['counts'] as Map)['planifie'] == 0,
+        'T40a-bis admissibles comptés même sans plan');
+    check((po['counts'] as Map)['planifiable'] == 1 &&
+        po['plan'] == null && po['sim'] == null,
+        'T40b sans plan : compteurs seuls, sim absente');
+    check((po['teams'] as List).length == 2 &&
+        (po['teams'] as List).every((t) => t['available'] == true),
+        'T40c 2 équipes réelles, toutes disponibles');
+    final hist = revisionHistoryData([], [
+      {'seq': 1, 'at': 't', 'event': 'photo.uploaded', 'details': {}},
+      {'seq': 2, 'at': 't', 'event': 'plan.proposed',
+          'details': {'planId': 'PLAN-1', 'q': 60.0, 'tasks': 4, 'cost': 100.0}},
+    ], 10);
+    check((hist['plans'] as List).isEmpty &&
+        (hist['events'] as List).length == 1,
+        'T40d historique : seuls inject/plan/simulate/validé conservés');
+    final ph = [
+      {'planId': 'PLAN-1', 'version': 1, 'at': 't', 'method': 'classique',
+          'validation': null, 'plan': {'q': 60.0, 'totalCost': 100.0, 'tasks': []}},
+      {'planId': 'PLAN-2', 'version': 2, 'at': 't2', 'method': 'classique',
+          'validation': 'valide', 'plan': {'q': 55.0, 'totalCost': 90.0, 'tasks': []}},
+    ];
+    final hist2 = revisionHistoryData(ph, [], 10);
+    final plans = hist2['plans'] as List;
+    check(plans.length == 2 && plans.first['planId'] == 'PLAN-2' &&
+        plans.first['validation'] == 'valide',
+        'T40e versions les plus récentes d\u2019abord, validation conservée');
+  }
+
+  // T41 : l'injection doit regrouper avec la méthode active (régression
+  // faux N3-S5 : regrouper en classique un état découpé change les
+  // identifiants ORIGINE:FAMILLE -> pleins et fait passer un S5 connu
+  // pour nouveau).
+  {
+    Set<String> freshS5(List<Incident> oldIncs, List<Incident> newIncs) {
+      final oldKeys = oldIncs
+          .where((i) => i.severity != null && i.severity! >= 5)
+          .map((i) => i.reportIds.join(','))
+          .toSet();
+      return newIncs
+          .where((i) => i.severity != null && i.severity! >= 5)
+          .map((i) => i.id)
+          .where((id) => !oldKeys.contains(newIncs
+              .firstWhere((i) => i.id == id)
+              .reportIds
+              .join(',')))
+          .toSet();
+    }
+
+    final s1 = Report(
+        id: 'S1', text: 'immeuble effondrement urgence', category: 'autre',
+        x: 0.5, y: 4.5, t: 900, severityHint: 5);
+    final m = Report(
+        id: 'M1', text: 'nid de poule rue des lilas chaussee abimee',
+        category: 'nid-de-poule', x: 1.0, y: 1.0, t: 500, severityHint: 2);
+    final reps = [s1, m];
+    final byId = {for (final r in reps) r.id: r};
+    final gs = groupSplitReports(reps, distMaxM: 250.0, deltaTMaxH: 6.0);
+    final incs = aggregateMixedGroups(gs, byId);
+    check(freshS5(incs, incs).isEmpty,
+        'T41a état stable : aucun faux S5 frais');
+    final dup = Report(
+        id: 'M2', text: 'nid de poule rue des lilas chaussee trou',
+        category: 'nid-de-poule', x: 1.0, y: 1.0, t: 530, severityHint: 2);
+    final reps2 = [...reps, dup];
+    final byId2 = {for (final r in reps2) r.id: r};
+    final kept = aggregateMixedGroups(
+        groupSplitReports(reps2, distMaxM: 250.0, deltaTMaxH: 6.0), byId2);
+    check(freshS5(incs, kept).isEmpty,
+        'T41b doublon + méthode active (split) : toujours aucun S5 frais');
+    final classic = aggregate(
+        groupReports(reps2,
+            distMaxM: 250.0, deltaTMaxH: 6.0, simMin: 0.75),
+        byId2);
+    check(freshS5(incs, classic).isNotEmpty,
+        'T41c regroupement classique sur état découpé : faux S5 frais (le bug corrigé côté /api/inject)');
+  }
+
+  // T42 : plan perime si regroupement posterieur (ids I1.. positionnels).
+  {
+    const p = Plan(
+        tasks: [], unassigned: {}, escalations: [], totalCost: 0, q: 0,
+        feasible: true, violations: [], justifications: {},
+        planId: 'PLAN-9', version: 9);
+    final hist = [
+      {'planId': 'PLAN-9', 'at': '2026-11-04T10:00:00.000Z'}
+    ];
+    check(planIsStale(null, hist, []) == false,
+        'T42a sans plan : non perime');
+    check(planIsStale(p, [], []) == true,
+        'T42b plan sans entree historique : perime par prudence');
+    check(
+        planIsStale(p, hist, [
+          {'event': 'group.done', 'at': '2026-11-04T09:00:00.000Z'}
+        ]) == false,
+        'T42c regroupement anterieur : plan frais');
+    check(
+        planIsStale(p, hist, [
+          {'event': 'group.done', 'at': '2026-11-04T11:00:00.000Z'}
+        ]) == true,
+        'T42d regroupement posterieur : plan perime');
+    final scoped = revisionHistoryData([], [
+      {'seq': 1, 'at': '2026-11-04T08:00:00.000Z', 'event': 'inject.received',
+          'details': {'type': 'reports'}},
+      {'seq': 2, 'at': '2026-11-04T09:00:00.000Z', 'event': 'scenario.loaded',
+          'details': {}},
+      {'seq': 3, 'at': '2026-11-04T10:00:00.000Z', 'event': 'inject.received',
+          'details': {'type': 'reports'}},
+    ], 10);
+    check((scoped['events'] as List).length == 1 &&
+        (scoped['events'] as List).first['seq'] == 3,
+        'T42e historique scope a la generation courante (apres scenario.loaded)');
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

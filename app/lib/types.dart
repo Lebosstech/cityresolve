@@ -19,6 +19,9 @@ class Report {
   final double? gpsLat; // relevé GPS navigateur (degrés), null si saisie
   final double? gpsLon; // manuelle sur la grille ; x/y restent la référence
   final double? gpsAccuracy; // précision annoncée (mètres), si fournie
+  final String? verificationNote; // note de vérification municipale (humain),
+  // null = non vérifié ; ne change jamais le statut calculé, seulement documenté
+  final String? verifiedAt; // ISO-8601 UTC de la vérification, si faite
 
   const Report({
     required this.id,
@@ -35,6 +38,8 @@ class Report {
     this.gpsLat,
     this.gpsLon,
     this.gpsAccuracy,
+    this.verificationNote,
+    this.verifiedAt,
   });
 
   Map<String, dynamic> toJson() => {
@@ -52,6 +57,8 @@ class Report {
         'gpsLat': gpsLat,
         'gpsLon': gpsLon,
         'gpsAccuracy': gpsAccuracy,
+        'verificationNote': verificationNote,
+        'verifiedAt': verifiedAt,
       };
 
   static Report fromJson(Map<String, dynamic> j) => Report(
@@ -69,6 +76,8 @@ class Report {
         gpsLat: (j['gpsLat'] as num?)?.toDouble(),
         gpsLon: (j['gpsLon'] as num?)?.toDouble(),
         gpsAccuracy: (j['gpsAccuracy'] as num?)?.toDouble(),
+        verificationNote: j['verificationNote'] as String?,
+        verifiedAt: j['verifiedAt'] as String?,
       );
 }
 

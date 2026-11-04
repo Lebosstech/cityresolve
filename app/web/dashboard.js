@@ -247,7 +247,7 @@ async function loadReportsPanel() {
   $('groupMeta').textContent = `${j.reports.length} signalement(s) au total (scénarios DEV + manuels).`;
   const tb = $('repTable').querySelector('tbody');
   tb.innerHTML = rows.map((r) =>
-    `<tr><td>${esc(r.id)}${j.manual.includes(r.id) ? ' <span class="tag hum">MANUEL</span>' : ''}</td><td>${esc(r.text.slice(0, 80))}</td><td>${esc(r.category)}</td><td>(${r.x.toFixed(1)}, ${r.y.toFixed(1)})</td><td>${r.severityHint ?? '?'} / ${r.exposureHint === null || r.exposureHint === undefined ? '?' : r.exposureHint}</td></tr>`
+    `<tr><td><a class="link" href="/municipal/signalements/${esc(r.id)}">${esc(r.id)}</a>${j.manual.includes(r.id) ? ' <span class="tag hum">MANUEL</span>' : ''}</td><td>${esc(r.text.slice(0, 80))}</td><td>${esc(r.category)}</td><td>(${r.x.toFixed(1)}, ${r.y.toFixed(1)})</td><td>${r.severityHint ?? '?'} / ${r.exposureHint === null || r.exposureHint === undefined ? '?' : r.exposureHint}</td></tr>`
   ).join('') || '<tr><td colspan="5" class="empty">Aucun signalement.</td></tr>';
 }
 async function loadIncidentsPanel() {
@@ -261,7 +261,7 @@ async function loadIncidentsPanel() {
 }
 async function runGroupDash() {
   const j = await api('/api/group', 'POST', { method: $('gMethod').value });
-  $('groupMeta').textContent = `Regroupement ${j.method} : ${j.groups.length} groupes, ${j.incidents.length} incidents. F1=${j.metrics.available ? j.metrics.pairwise.f1.toFixed(3) + ' (vérité DEV)' : 'non calculé'}. Plan précédent invalidé (replanifier).`;
+  $('groupMeta').innerHTML = `Regroupement ${j.method} : ${j.groups.length} groupes, ${j.incidents.length} incidents. F1=${j.metrics.available ? j.metrics.pairwise.f1.toFixed(3) + ' (vérité DEV)' : 'non calculé'}. Plan précédent invalidé (replanifier). <a class="link" href="/municipal/decoupage">Ouvrir la page Découpage →</a>`;
   await reloadAll();
 }
 async function runSimDash() {
@@ -285,7 +285,7 @@ async function injectDash(kind) {
     let h = `<p>Nécessité <b>${esc(n.code)}</b> — ${n.necessary ? 'révision requise' : 'stabilité (pas de modification injustifiée)'} — ${esc(n.detail)}</p>`;
     if (j.diff) h += `<p>Changement : ${j.diff.material ? '<b>matériel</b>' : 'cosmétique'} — ${esc(j.diff.detail)}</p>`;
     if (j.plan) h += `<p>Nouveau plan : Q=${j.plan.q.toFixed(1)}, coût=${j.plan.totalCost.toFixed(1)}.</p>`;
-    box.innerHTML = h;
+    box.innerHTML = h + '<p><a class="link" href="/municipal/revision">Ouvrir la page Révision →</a></p>';
     await reloadAll();
   } catch (e) { box.innerHTML = `<p class="perr">${esc(e.message || e)}</p>`; }
 }
@@ -297,7 +297,7 @@ async function runCompareDash() {
     h += j.metaAvailable
       ? `<p>META : ${j.meta.groups.length} groupes, F1=${j.meta.f1 ? j.meta.f1.f1.toFixed(3) : '—'}, Q=${j.meta.planQ === null ? '—' : j.meta.planQ.toFixed(1)}/${j.meta.simQ === null ? '—' : j.meta.simQ.toFixed(1)}</p>`
       : `<p>META : indisponible (${esc(j.metaState)} — aucun résultat simulé).</p>`;
-    h += `<p>Désaccords de paires : <b>${j.disagreements.length}</b>. ${esc(j.note)}</p>`;
+    h += `<p>Désaccords de paires : <b>${j.disagreements.length}</b>. ${esc(j.note)}</p><p><a class="link" href="/municipal/planification">Ouvrir la page Planification →</a></p>`;
     box.innerHTML = h;
   } catch (e) { box.innerHTML = `<p class="perr">${esc(e.message || e)}</p>`; }
 }
