@@ -1,27 +1,27 @@
-// Types partagés du bac à sable CityResolve (données fictives).
+// Shared types of the CityResolve sandbox (fictitious data).
 import 'policy.dart';
 
-/// Un signalement citoyen (donnée d'entrée, possibly bruitée).
+/// A citizen report (input data, possibly noisy).
 class Report {
   final String id;
   final String text;
   final String category;
-  final double x; // km, grille 0..5
+  final double x; // km, grid 0..5
   final double y;
-  final int t; // minutes depuis début du scénario
-  final int? severityHint; // 1..5 ou null = INCONNUE (jamais déduite)
-  final int? exposureHint; // bande 0..4 ou null = inconnue
-  final String? photo; // mediaId (24 hex, voir lib/media.dart) si photo
-  // téléversée, sinon étiquette libre historique ; jamais d'octets ici
-  final String source; // scenario | manuel | injection (provenance)
-  final String? receivedAt; // ISO-8601 UTC de réception serveur (suivi
-  // public) ; null pour les signalements de scénario et l'historique
-  final double? gpsLat; // relevé GPS navigateur (degrés), null si saisie
-  final double? gpsLon; // manuelle sur la grille ; x/y restent la référence
-  final double? gpsAccuracy; // précision annoncée (mètres), si fournie
-  final String? verificationNote; // note de vérification municipale (humain),
-  // null = non vérifié ; ne change jamais le statut calculé, seulement documenté
-  final String? verifiedAt; // ISO-8601 UTC de la vérification, si faite
+  final int t; // minutes since the start of the scenario
+  final int? severityHint; // 1..5 or null = UNKNOWN (never inferred)
+  final int? exposureHint; // band 0..4 or null = unknown
+  final String? photo; // mediaId (24 hex, see lib/media.dart) if photo
+  // uploaded, otherwise free historical label; never bytes here
+  final String source; // scenario | manuel | injection (origin)
+  final String? receivedAt; // ISO-8601 UTC of server receipt (tracking
+  // public); null for scenario reports and history
+  final double? gpsLat; // browser GPS reading (degrees), null if manual entry
+  final double? gpsLon; // on the grid; x/y remain the reference
+  final double? gpsAccuracy; // stated accuracy (metres), if provided
+  final String? verificationNote; // municipal verification note (human),
+  // null = not verified; never changes the computed status, only documented
+  final String? verifiedAt; // ISO-8601 UTC of the verification, if done
 
   const Report({
     required this.id,
@@ -81,17 +81,17 @@ class Report {
       );
 }
 
-/// Groupe de signalements produit par le regroupement.
+/// Group of reports produced by grouping.
 class Group {
   final String id;
   final List<String> reportIds;
-  final double confidence; // 0..1 (min similarité interne ; 0 si singleton)
+  final double confidence; // 0..1 (min internal similarity; 0 if singleton)
   final bool singleton;
   final bool abstained;
   final String method; // classique | meta
-  final bool uncertain; // fusion/séparation à vérifier, jamais imposée en silence
+  final bool uncertain; // merge/split to verify, never imposed silently
   final List<String> uncertaintyReasons;
-  final String? justification; // proposition Meta (texte du modèle), sinon null
+  final String? justification; // Meta proposal (model text), otherwise null
 
   const Group({
     required this.id,
@@ -131,27 +131,27 @@ class Group {
       );
 }
 
-/// Statuts de provenance/vérification d'un attribut d'incident.
-/// declaree : une seule valeur déclarée ; estimee : valeurs proches
-/// agrégées (max) ; contradictoire : valeurs incompatibles conservées,
-/// valeur tranchée = null ; inconnue : aucune valeur déclarée.
+/// Origin/verification statuses of an incident attribute.
+/// declaree: a single declared value; estimee: close values
+/// aggregated (max); contradictoire: incompatible values kept,
+/// decided value = null; inconnue: no declared value.
 const statusDeclaree = 'declaree';
 const statusEstimee = 'estimee';
 const statusContradictoire = 'contradictoire';
 const statusInconnue = 'inconnue';
 
-/// Incident reconstitué (proposition, attributs estimés).
+/// Reconstructed incident (proposal, estimated attributes).
 class Incident {
   final String id;
   final List<String> reportIds;
-  final int? severity; // 1..5 ou null = inconnue/contradictoire (jamais fabriquée)
+  final int? severity; // 1..5 or null = unknown/conflicting (never fabricated)
   final String severityStatus;
-  final List<int> severityValues; // valeurs déclarées conservées (provenance)
-  final int? exposure; // bande proposée ou null = inconnue/contradictoire
+  final List<int> severityValues; // declared values kept (provenance)
+  final int? exposure; // proposed band or null = unknown/conflicting
   final String exposureStatus;
   final List<int> exposureValues;
   final String domain;
-  final bool domainConflict; // catégories déclarées à égalité sur 2 domaines
+  final bool domainConflict; // declared categories tied across 2 domains
   final double x, y;
   final int firstSeen;
   final double confidence;
@@ -178,7 +178,7 @@ class Incident {
   int get severityForDecision => severity ?? unknownSeverityDecision;
   int get exposureForDecision => exposure ?? unknownExposureDecision;
   double get weight => incidentWeight(severityForDecision, exposureForDecision);
-  // -1 = S5 (escalade), -2 = gravité à vérifier (jamais d'échéance fabriquée).
+  // -1 = S5 (escalation), -2 = severity to verify (never a fabricated deadline).
   int get deadline =>
       severity == null ? -2 : deadlineAt(severity!, firstSeen);
 
@@ -224,7 +224,7 @@ class Incident {
       );
 }
 
-/// Équipe d'intervention.
+/// Response team.
 class Team {
   final String id;
   final Set<String> domains;
@@ -236,7 +236,7 @@ List<Team> defaultTeams() => teamDomains.entries
     .map((e) => Team(e.key, e.value.toSet()))
     .toList();
 
-/// Une tâche planifiée.
+/// A planned task.
 class Task {
   final String incidentId;
   final String teamId;
@@ -274,18 +274,18 @@ class Task {
       );
 }
 
-/// Plan d'affectation (proposition calculée, pas une décision réelle).
+/// Assignment plan (computed proposal, not a real decision).
 class Plan {
   final List<Task> tasks;
-  final Map<String, String> unassigned; // incident -> motif
+  final Map<String, String> unassigned; // incident -> reason
   final List<String> escalations; // S5
   final double totalCost;
-  final double q; // Q planifié (attributs proposés)
+  final double q; // planned Q (proposed attributes)
   final bool feasible;
   final List<String> violations;
   final Map<String, String> justifications;
-  final String planId; // identifiant permanent (ex. PLAN-3), jamais réattribué
-  final int version; // numéro de version monotone (persisté)
+  final String planId; // permanent identifier (e.g. PLAN-3), never reassigned
+  final int version; // monotonic version number (persisted)
   const Plan({
     required this.tasks,
     required this.unassigned,
@@ -344,12 +344,12 @@ class Plan {
       );
 }
 
-/// Incident de vérité terrain (scénarios DEV visibles uniquement).
+/// Ground-truth incident (visible DEV scenarios only).
 class TruthIncident {
   final String id;
   final Set<String> reportIds;
   final int severity;
-  final int exposure; // bande 0..4 (toujours connue en DEV)
+  final int exposure; // band 0..4 (always known in DEV)
   final String domain;
   final double x, y;
   final int firstArrival;
@@ -380,7 +380,7 @@ class TruthIncident {
       };
 }
 
-/// Scénario DEV visible : signalements + vérité (fictifs).
+/// Visible DEV scenario: reports + truth (fictitious).
 class Scenario {
   final String id;
   final String label;

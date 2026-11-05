@@ -1,7 +1,7 @@
-// Tests exploratoires VISIBLES CityResolve (indépendants de tout scénario
-// confirmatoire). Ils publient le comportement réel, y compris les limites
-// confirmées du moteur classique. Aucun scénario n'est ajusté pour réussir.
-// Exécution : dart run test/test_exploratoire.dart
+// VISIBLE exploratory CityResolve tests (independent of any confirmatory
+// scenario). They publish the real behaviour, including the confirmed limits
+// of the classic engine. No scenario is tuned to pass.
+// Run: dart run test/test_exploratoire.dart
 import '../lib/grouping.dart';
 import '../lib/incidents.dart';
 import '../lib/optimizer.dart';
@@ -11,15 +11,15 @@ import '../lib/scenarios.dart';
 import '../lib/simulator.dart';
 import '../lib/types.dart';
 
-int _ok = 0, _limite = 0;
+int _ok = 0, _limit = 0;
 
 void observe(String name, bool ideal, String detail) {
   if (ideal) {
     _ok++;
     print('OK     $name :: $detail');
   } else {
-    _limite++;
-    print('LIMITE $name :: $detail');
+    _limit++;
+    print('LIMIT $name :: $detail');
   }
 }
 
@@ -33,7 +33,7 @@ List<Incident> incsOf(List<Report> reps) {
 void main() {
   final teams = defaultTeams();
 
-  // E1. Deux incidents proches, descriptions presque identiques.
+  // E1. Two close incidents, almost identical descriptions.
   {
     final reps = [
       Report(id: 'A1', text: 'fuite eau rue basse trottoir inonde canalisation', category: 'fuite-eau', x: 2.0, y: 2.0, t: 500, severityHint: 3, exposureHint: 1),
@@ -41,14 +41,14 @@ void main() {
       Report(id: 'B1', text: 'fuite eau rue basse trottoir inonde importante', category: 'fuite-eau', x: 2.1, y: 2.0, t: 510, severityHint: 2, exposureHint: 1),
     ];
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
-    // Régression phase 2 : la fusion classique subsiste (faite), mais elle
-    // doit être SIGNALÉE incertaine au lieu d'être imposée en silence.
-    observe('E1 fusion limite signalée incertaine (non imposée en silence)',
+    // Phase 2 regression: the classic merge remains (done), but it
+    // must be FLAGGED uncertain instead of being imposed silently.
+    observe('E1 borderline merge flagged uncertain (not imposed silently)',
         g.length == 1 && g.single.uncertain,
-        '${g.length} groupe(s) pour 2 incidents vrais à 100 m, uncertain=${g.single.uncertain}, raisons=${g.single.uncertaintyReasons}');
+        '${g.length} group(s) for 2 true incidents 100 m apart, uncertain=${g.single.uncertain}, reasons=${g.single.uncertaintyReasons}');
   }
 
-  // E2. Même incident, mots complètement différents (synonymes).
+  // E2. Same incident, completely different words (synonyms).
   {
     final reps = [
       Report(id: 'A1', text: 'trou chaussee dangereux voitures', category: 'nid-de-poule', x: 1.0, y: 1.0, t: 500, severityHint: 2, exposureHint: 1),
@@ -57,14 +57,14 @@ void main() {
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
     final amb = ambiguousPairs(reps, g,
         distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
-    // Régression phase 2 : la scission classique subsiste, mais la paire
-    // doit être signalée ambiguë (même lieu/instant, vocabulaire disjoint).
-    observe('E2 séparation signalée ambiguë (non imposée en silence)',
+    // Phase 2 regression: the classic split remains, but the pair
+    // must be flagged ambiguous (same place/time, disjoint vocabulary).
+    observe('E2 separation flagged ambiguous (not imposed silently)',
         g.length == 2 && amb.isNotEmpty,
-        '${g.length} groupe(s), Jaccard=${jaccard(reps[0].text, reps[1].text).toStringAsFixed(2)}, ambiguës=${amb.map((a) => a['reason']).toList()}');
+        '${g.length} group(s), Jaccard=${jaccard(reps[0].text, reps[1].text).toStringAsFixed(2)}, ambiguous=${amb.map((a) => a['reason']).toList()}');
   }
 
-  // E3. Signalement incomplet (texte vide, aucun indice).
+  // E3. Incomplete report (empty text, no hint).
   {
     final reps = [
       Report(id: 'V1', text: '', category: 'autre', x: 1.0, y: 1.0, t: 500),
@@ -72,15 +72,15 @@ void main() {
     ];
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
     final incs = incsOf(reps);
-    observe('E3a deux textes vides non fusionnés au hasard', g.length == 2,
-        '${g.length} groupe(s) : Jaccard("","")=0.0 (aucune évidence), pas de fusion sans information');
-    observe('E3b gravité inconnue signalée comme telle',
+    observe('E3a two empty texts not merged at random', g.length == 2,
+        '${g.length} group(s): Jaccard("","")=0.0 (no evidence), no merge without information');
+    observe('E3b unknown severity flagged as such',
         incs.every((i) => i.severity == null && i.severityStatus == statusInconnue),
-        'incidents sev=${incs.map((i) => i.severity).toList()} statuts=${incs.map((i) => i.severityStatus).toList()} (aucun défaut catégorie), exposition inconnue décision E=${incs.first.exposureForDecision}');
-    print('       E3 detail: confiance groupe=${g.first.confidence}, singleton=${g.first.singleton}');
+        'incidents sev=${incs.map((i) => i.severity).toList()} statuses=${incs.map((i) => i.severityStatus).toList()} (no category default), unknown exposure, decision E=${incs.first.exposureForDecision}');
+    print('       E3 detail: group confidence=${g.first.confidence}, singleton=${g.first.singleton}');
   }
 
-  // E4. Information géographique contradictoire (même texte, coins opposés).
+  // E4. Contradictory geographical information (same text, opposite corners).
   {
     final reps = [
       Report(id: 'G1', text: 'nid poule rue basse chaussee trou abimee', category: 'nid-de-poule', x: 0.2, y: 0.2, t: 500, severityHint: 2, exposureHint: 1),
@@ -89,47 +89,47 @@ void main() {
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
     final amb4 = ambiguousPairs(reps, g,
         distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
-    // Patch local : la séparation subsiste (deux incidents réels peuvent
-    // partager un texte), mais elle doit être SIGNALÉE comme doublon
-    // distant à vérifier, et non imposée en silence.
-    observe('E4 contradiction géographique signalée (séparation + alerte)',
+    // Local patch: the separation remains (two real incidents can
+    // share a text), but it must be FLAGGED as a distant duplicate
+    // to verify, not imposed silently.
+    observe('E4 geographical contradiction flagged (separation + alert)',
         g.length == 2 && amb4.isNotEmpty,
-        '${g.length} incident(s) pour un même texte à 6,5 km d\'écart, ambiguës=${amb4.map((a) => a['reason']).toList()}');
+        '${g.length} incident(s) for the same text 6.5 km apart, ambiguous=${amb4.map((a) => a['reason']).toList()}');
   }
 
-  // E5. Gravité inconnue (indice absent, catégorie renseignée).
+  // E5. Unknown severity (hint absent, category given).
   {
     final r = Report(id: 'S?', text: 'fuite signalee sans precision', category: 'fuite-eau', x: 2.0, y: 2.0, t: 500);
     final incs = incsOf([r]);
-    observe('E5 gravité inconnue conservée (pas de défaut fabriqué)',
+    observe('E5 unknown severity kept (no invented default)',
         incs.single.severity == null && incs.single.severityStatus == statusInconnue,
-        'severityHint=null -> gravité=${incs.single.severity}, statut=${incs.single.severityStatus} (catégorie fuite-eau sans effet sur la gravité)');
+        'severityHint=null -> severity=${incs.single.severity}, status=${incs.single.severityStatus} (category fuite-eau has no effect on severity)');
   }
 
-  // E6. Incident S5 : escalade, jamais dispatché.
+  // E6. S5 incident: escalation, never dispatched.
   {
     final sc = toyS5();
     final incs = incsOf(sc.reports);
     final p = optimizeExact(incidents: incs, teams: teams);
     final s5 = incs.firstWhere((i) => i.severity != null && i.severity! >= 5);
-    observe('E6 S5 escaladé et non dispatché',
+    observe('E6 S5 escalated and not dispatched',
         p.escalations.contains(s5.id) && !p.tasks.any((t) => t.incidentId == s5.id),
-        'escalations=${p.escalations}, deadline S5=${s5.deadline} (-1 = escalade)');
+        'escalations=${p.escalations}, S5 deadline=${s5.deadline} (-1 = escalation)');
   }
 
-  // E7. Faisable en estimé, budget dépassé en réalisé (graine DEV 7).
+  // E7. Feasible as estimated, budget exceeded as realised (DEV seed 7).
   {
     final sc = generateDev(seed: 7);
     final g = groupReports(sc.reports, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
     final incs = aggregate(g, {for (final r in sc.reports) r.id: r});
     final p = optimizeExact(incidents: incs, teams: teams);
     final sm = simulate(plan: p, proposed: incs, truth: sc.truth, teams: teams);
-    observe('E7 dépassement budget réalisé sans annulation totale de Q',
+    observe('E7 realised budget overrun without fully cancelling Q',
         sm.q != 0.0,
-        'estimé=${p.totalCost.toStringAsFixed(1)}/$budgetUnits, réalisé=${sm.totalCost.toStringAsFixed(1)}, Q=${sm.q}, violations=${sm.violations} (falaise Q=0 imposée par SPEC D-SIMU §7 / V1.5 §3, pas un bug isolé)');
+        'estimated=${p.totalCost.toStringAsFixed(1)}/$budgetUnits, realised=${sm.totalCost.toStringAsFixed(1)}, Q=${sm.q}, violations=${sm.violations} (Q=0 cliff imposed by SPEC D-SIMU §7 / V1.5 §3, not an isolated bug)');
   }
 
-  // E8. Nouvelle information sans modification injustifiée (doublon).
+  // E8. New information without unjustified change (duplicate).
   {
     final sc = toyFixed1();
     final i0 = incsOf(sc.reports);
@@ -137,13 +137,13 @@ void main() {
     final reps = [...sc.reports, Report(id: 'R7', text: 'nid de poule rue des lilas chaussee abimee', category: 'nid-de-poule', x: 1.0, y: 1.0, t: 530, severityHint: 2, exposureHint: 1)];
     final i1 = incsOf(reps);
     final nec = judgeRevision(oldPlan: p0, oldIncidents: i0, updated: i1, teams: teams);
-    observe('E8 doublon sans révision injustifiée', nec.code == 'U' && !nec.necessary,
+    observe('E8 duplicate without unjustified revision', nec.code == 'U' && !nec.necessary,
         'oracle=${nec.code} (${nec.detail})');
   }
 
-  // E9. Garde-fou contenu insuffisant (poussé sur main) : deux
-  // textes vides au même lieu et au même temps ne fusionnent pas, et le
-  // singleton vide est marqué à vérifier au lieu d'être imposé en silence.
+  // E9. Insufficient-content guardrail (pushed to main): two
+  // empty texts at the same place and time do not merge, and the
+  // empty singleton is flagged to verify instead of being imposed silently.
   {
     final reps = [
       Report(id: 'V1', text: '', category: 'autre', x: 1.0, y: 1.0, t: 500),
@@ -152,15 +152,15 @@ void main() {
     ];
     final g = groupReports(reps, distMaxM: dDist, deltaTMaxH: dDt, simMin: dSim);
     final vides = g.where((gr) => gr.reportIds.any((id) => id.startsWith('V')));
-    observe('E9 deux textes vides non fusionnés et marqués garde-fou',
+    observe('E9 two empty texts not merged and flagged guardrail',
         g.length == 3 &&
             vides.length == 2 &&
             vides.every((gr) =>
                 gr.singleton &&
                 gr.uncertaintyReasons.contains(guardrailReason)),
-        '${g.length} groupe(s), raisons vides=${vides.map((gr) => gr.uncertaintyReasons).toList()}');
+        '${g.length} group(s), empty reasons=${vides.map((gr) => gr.uncertaintyReasons).toList()}');
   }
 
-  print('== EXPLORATOIRE : $_ok OK, $_limite LIMITE(S) CONFIRMEE(S) ==');
-  print('Les LIMITE sont des comportements mesurés et publiés, pas des échecs masqués.');
+  print('== EXPLORATORY: $_ok OK, $_limit CONFIRMED LIMIT(S) ==');
+  print('LIMIT items are measured, published behaviours, not hidden failures.');
 }

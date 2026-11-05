@@ -1,12 +1,12 @@
-// Verrou mono-instance DEV (patch poussé sur main, voir commit patch E4 + verrou) : un seul serveur
-// par répertoire data/. Création exclusive du fichier server.lock.
-// Si le fichier existe déjà, le second serveur doit refuser, avec le
-// PID et la date du premier, au lieu d'écrire dans le même état.
-// Limite assumée : après un arrêt brutal, le fichier peut rester
-// (verrou périmé) ; il faut alors le supprimer manuellement après
-// avoir vérifié qu'aucun serveur ne tourne sur ce répertoire.
-// Ce n'est pas un verrou d'OS, et ce n'est pas une garantie de
-// production.
+// DEV single-instance lock (patch pushed to main, see patch E4 + lock commit): one server
+// per data/ directory. Exclusive creation of the server.lock file.
+// If the file already exists, the second server must refuse, with the
+// PID and start date of the first, instead of writing to the same state.
+// Assumed limitation: after an abrupt stop, the file may remain
+// (stale lock); it must then be deleted manually after
+// checking that no server runs on this directory.
+// This is not an OS lock, and it is not a production
+// guarantee.
 import 'dart:io';
 
 class ServerLockResult {

@@ -1,7 +1,7 @@
-# Test réel MongoDB (0.2.1) : le serveur CityResolve doit utiliser
-# MongoDB comme base principale, survivre à un redémarrage et accepter
-# des écritures concurrentes sans doublon d'identifiant.
-# Usage : python test/e2e_mongo.py   (depuis app/, mongod sur 127.0.0.1:27017)
+# Real MongoDB test (0.2.1): the CityResolve server must use
+# MongoDB as its main database, survive a restart and accept
+# concurrent writes without duplicate ids.
+# Usage: python test/e2e_mongo.py   (from app/, mongod on 127.0.0.1:27017)
 import concurrent.futures
 import json
 import os
@@ -44,7 +44,7 @@ def start():
                 return p
         except Exception:
             pass
-    raise RuntimeError("serveur non démarré")
+    raise RuntimeError("server did not start")
 
 
 def stop(p):
@@ -52,7 +52,7 @@ def stop(p):
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     p.wait(timeout=15)
     time.sleep(1)
-    # Arrêt brutal : retirer le verrou mono-instance survivant.
+    # Hard stop: remove the surviving single-instance lock.
     try:
         os.remove("data/server.lock")
     except OSError:
@@ -63,14 +63,14 @@ p = start()
 try:
     st, db = call("GET", "/api/db")
     check(db["mongoConnected"] and "mongodb" in db["backend"],
-          "MONGO backend principal connecté", str(db)[:200])
-    check(db["mongoServerVersion"], "MONGO version serveur connue", str(db))
+          "MONGO main backend connected", str(db)[:200])
+    check(db["mongoServerVersion"], "MONGO server version known", str(db))
     check(call("POST", "/api/scenario/load", {"kind": "jouet-1"})[0] == 200,
-          "MONGO chargement jouet-1")
-    # Écritures concurrentes : 8 ajouts parallèles.
+          "MONGO jouet-1 load")
+    # Concurrent writes: 8 parallel inserts.
     def add(i):
-        # Doublons concurrents du même incident : ids uniques exigés,
-        # regroupement stable (les incidents restent planifiables).
+        # Concurrent duplicates of the same incident: unique ids required,
+        # stable grouping (incidents stay plannable).
         return call("POST", "/api/reports", {
             "text": "nid de poule rue des lilas chaussee abimee",
             "category": "nid-de-poule", "x": 1.0, "y": 1.0, "t": 900 + i,
@@ -78,19 +78,19 @@ try:
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         results = list(ex.map(add, range(8)))
     ids = [r[1]["id"] for r in results]
-    check(all(r[0] == 200 for r in results), "MONGO 8 écritures concurrentes acceptées", str(results)[:200])
-    check(len(ids) == len(set(ids)) == 8, "MONGO aucun doublon d'identifiant en concurrence", str(ids))
-    # POST /api/reports ne regroupe plus : regroupement municipal explicite.
+    check(all(r[0] == 200 for r in results), "MONGO 8 concurrent writes accepted", str(results)[:200])
+    check(len(ids) == len(set(ids)) == 8, "MONGO no duplicate ids under concurrency", str(ids))
+    # POST /api/reports no longer groups: explicit municipal grouping.
     check(call("POST", "/api/group", {"method": "classique"})[0] == 200,
-          "MONGO regroupement municipal explicite")
+          "MONGO explicit municipal grouping")
     st, plan = call("POST", "/api/plan", {})
     plan_id = plan["planId"]
     check(call("POST", "/api/plan/validate", {"decision": "valide"})[0] == 200, "MONGO validation")
     check(call("POST", "/api/simulate", {})[0] == 200, "MONGO simulation")
-    time.sleep(2)  # laisser la file d'écriture Mongo se vider
+    time.sleep(2)  # let the Mongo write queue drain
     st, db = call("GET", "/api/db")
     counts = db["counts"]
-    check(counts.get("reports", 0) >= 14, "MONGO collection reports alimentée", str(counts))
+    check(counts.get("reports", 0) >= 14, "MONGO reports collection populated", str(counts))
     check(counts.get("plans", 0) >= 1 and counts.get("journals", 0) > 0
           and counts.get("teams", 0) == 2 and counts.get("simulations", 0) >= 1,
           "MONGO collections plans/journals/teams/simulations", str(counts))
@@ -103,13 +103,13 @@ try:
     st, state = call("GET", "/api/state")
     st, reps = call("GET", "/api/reports")
     got = [r["id"] for r in reps["reports"]]
-    check(all(i in got for i in ids), "MONGO signalements concurrents persistés après redémarrage", str(got))
+    check(all(i in got for i in ids), "MONGO concurrent reports persisted after restart", str(got))
     check(state["planId"] == plan_id and state["planValidation"] == "valide",
-          "MONGO plan+validation restaurés depuis Mongo", str(state))
+          "MONGO plan+validation restored from Mongo", str(state))
     st, db = call("GET", "/api/db")
-    check(db["mongoConnected"], "MONGO reconnecté au redémarrage", str(db)[:150])
+    check(db["mongoConnected"], "MONGO reconnected after restart", str(db)[:150])
 finally:
     stop(p)
 
-print(f"== E2E MONGO : {'ECHEC ' + str(len(fails)) if fails else 'TOUT PASS'} ==")
+print(f"== E2E MONGO: {'FAILED ' + str(len(fails)) if fails else 'ALL PASS'} ==")
 sys.exit(1 if fails else 0)

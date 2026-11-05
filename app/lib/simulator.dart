@@ -1,9 +1,9 @@
-// Simulateur : applique la VÉRITÉ cachée pour noter (jamais pour planifier).
+// Simulator: applies the hidden TRUTH to score (never to plan).
 //
-// Règles : groupe proposé impur (fusion de vérités) => R=0 ; équipe
-// incompétente sur le vrai domaine => violation d'exécution ; durées, coûts,
-// positions et échéances VRAIS pour noter. Violation globale => Q=0.
-// Robustesse : re-notation à plans figés, durées/coûts ×1,2/×1,5 (6 variantes).
+// Rules: impure proposed group (merge of truths) => R=0; team
+// not competent on the true domain => execution violation; TRUE durations, costs,
+// positions and deadlines for scoring. Global violation => Q=0.
+// Robustness: re-scoring with frozen plans, durations/costs ×1.2/×1.5 (6 variants).
 import 'metrics.dart';
 import 'optimizer.dart';
 import 'policy.dart';
@@ -95,7 +95,7 @@ class SimResult {
       );
 }
 
-/// Fin au plus tôt avec les VRAIES valeurs (équipe compétente dédiée).
+/// Earliest end with the TRUE values (dedicated competent team).
 int earliestEndTruth(TruthIncident t, List<Team> teams) {
   var best = 1 << 30;
   final dur = (siteDurationsMin[t.severity]! * t.durationMult).round();
@@ -125,7 +125,7 @@ SimResult simulate({
   required List<Team> teams,
 }) {
   final propById = {for (final p in proposed) p.id: p};
-  // Appariement proposé -> vérité (recouvrement maximal).
+  // Proposed -> truth matching (maximum overlap).
   final link = <String, TruthIncident?>{};
   final pure = <String, bool>{};
   for (final p in proposed) {
@@ -140,14 +140,14 @@ SimResult simulate({
       }
     }
     link[p.id] = bestN > 0 ? best : null;
-    // Impur = fusion de >= 2 vérités distinctes. Les signalements hors
-    // vérité (ex. ajout manuel) ne rendent pas un groupe impur à eux seuls.
+    // Impure = merge of >= 2 distinct truths. Reports outside
+    // truth (e.g. manual addition) do not make a group impure on their own.
     final hits = truth
         .where((t) => pset.intersection(t.reportIds).isNotEmpty)
         .length;
     pure[p.id] = hits <= 1;
   }
-  // Rejeu par équipe avec valeurs vraies, ordre du plan.
+  // Replay per team with true values, plan order.
   final byTeam = <String, List<Task>>{};
   for (final t in plan.tasks) {
     byTeam.putIfAbsent(t.teamId, () => []).add(t);
@@ -179,14 +179,14 @@ SimResult simulate({
     for (final st in sched.tasks) {
       final tr = link[st.incidentId];
       totalCost += st.cost;
-      // Sans vérité correspondante (incident hors vérité, ex. manuel) :
-      // compétence jugée sur le domaine proposé, aucune violation vérité.
+      // Without a matching truth (incident outside truth, e.g. manual):
+      // competence judged on the proposed domain, no truth violation.
       final competent = tr != null
           ? team.domains.contains(tr.domain)
           : team.domains.contains(propById[st.incidentId]!.domain);
       if (!competent) {
         violations.add(
-            'execution:${team.id}-incompetent(${tr?.domain ?? propById[st.incidentId]!.domain}) pour ${st.incidentId}');
+            'execution:${team.id}-incompetent(${tr?.domain ?? propById[st.incidentId]!.domain}) for ${st.incidentId}');
       }
       final done = tr != null &&
           tr.deadline >= 0 &&
@@ -194,16 +194,16 @@ SimResult simulate({
       var r = 0;
       var reason = '';
       if (tr == null) {
-        reason = 'hors vérité terrain : non noté';
+        reason = 'outside ground truth: not scored';
       } else if (!(pure[st.incidentId] ?? false)) {
-        reason = 'fusion erronée (groupe impur)';
+        reason = 'erroneous merge (impure group)';
       } else if (!competent) {
-        reason = 'équipe incompétente sur vrai domaine';
+        reason = 'team not competent on true domain';
       } else if (!done) {
-        reason = 'échéance vraie dépassée (${fmtMin(tr.deadline)})';
+        reason = 'true deadline exceeded (${fmtMin(tr.deadline)})';
       } else {
         r = 1;
-        reason = 'achevée dans les contraintes';
+        reason = 'completed within constraints';
       }
       outcomes.add(TaskOutcome(
           incidentId: st.incidentId,
@@ -218,9 +218,9 @@ SimResult simulate({
   }
   if (totalCost > budgetUnits) {
     violations.add(
-        'budget dépassé : ${totalCost.toStringAsFixed(1)} > $budgetUnits');
+        'budget exceeded: ${totalCost.toStringAsFixed(1)} > $budgetUnits');
   }
-  // Q vérité S1..S4.
+  // Truth Q S1..S4.
   final weights = <String, double>{};
   for (final t in truth) {
     if (t.severity <= 4) weights[t.id] = t.weight;
@@ -238,8 +238,8 @@ SimResult simulate({
   }
   var q = qScore(weights, completedTruth);
   var feasible = violations.isEmpty;
-  if (!feasible) q = 0.0; // violation globale => Q=0
-  // Infaisabilité structurelle (oracle dédié, valeurs vraies).
+  if (!feasible) q = 0.0; // global violation => Q=0
+  // Structural infeasibility (dedicated oracle, true values).
   final structural = <String>[];
   for (final t in truth) {
     if (t.severity <= 4 && earliestEndTruth(t, teams) > t.deadline) {
@@ -280,7 +280,7 @@ class RobustVariant {
       );
 }
 
-/// Robustesse : re-notation à plans figés (aucune réoptimisation).
+/// Robustness: re-scoring with frozen plans (no re-optimization).
 List<RobustVariant> robustness({
   required Plan plan,
   required List<Incident> proposed,
@@ -309,16 +309,16 @@ List<RobustVariant> robustness({
             firstArrival: t.firstArrival,
             durationMult: t.durationMult * s[0]))
         .toList();
-    // Coûts : on réévalue via une vérité aux durées scalées, puis on
-    // applique costScale au total (taux linéaires).
+    // Costs: re-evaluated via a truth with scaled durations, then
+    // costScale is applied to the total (linear rates).
     final r = simulate(
         plan: plan, proposed: proposed, truth: scaled, teams: teams);
     final scaledCost = r.totalCost * s[1];
     final viol = r.violations
-        .where((v) => !v.startsWith('budget dépassé'))
+        .where((v) => !v.startsWith('budget exceeded'))
         .toList();
     if (scaledCost > budgetUnits) {
-      viol.add('budget dépassé (variante ×${s[1]})');
+      viol.add('budget exceeded (variant ×${s[1]})');
     }
     final feasible = viol.isEmpty;
     out.add(RobustVariant(

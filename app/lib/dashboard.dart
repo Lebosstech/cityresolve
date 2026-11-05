@@ -1,19 +1,19 @@
-// Tableau de bord municipal : agrégats purs et documentés.
+// Municipal dashboard: pure, documented aggregates.
 //
-// Toutes les fonctions ici sont pures (entrées -> sorties) et unit-testées.
-// Elles travaillent sur l'état de travail en mémoire (borné) : aucune
-// lecture Mongo, aucun scan complet. Règles d'honnêteté :
-// - jamais de pourcentage inventé (évolution calculée ou absente) ;
-// - statuts exclusifs et définis (voir incidentStatusBuckets) ;
-// - périodes calculées sur les horodatages réels (receivedAt des
-//   signalements, `at` du journal) ; les données de scénario sans date
-//   sont exclues des fenêtres bornées (documenté, jamais estimé).
+// All functions here are pure (inputs -> outputs) and unit-tested.
+// They work on the bounded in-memory working state: no
+// Mongo read, no full scan. Honesty rules:
+// - never an invented percentage (change computed or absent);
+// - exclusive, defined statuses (see incidentStatusBuckets);
+// - periods computed on real timestamps (reports' receivedAt,
+//   journal `at`); scenario data without a date
+//   is excluded from bounded windows (documented, never estimated).
 import 'grouping.dart';
 import 'optimizer.dart';
 import 'security.dart';
 import 'types.dart';
 
-/// Fenêtre demandée. 'all' = tout l'historique. 'custom' exige from/to.
+/// Requested window. 'all' = all history. 'custom' requires from/to.
 class Period {
   final String kind; // today | 7d | 30d | all | custom
   final DateTime? from;
@@ -27,18 +27,18 @@ Period parsePeriod(String? kind, String? fromIso, String? toIso) {
     final from = DateTime.tryParse(fromIso ?? '');
     final to = DateTime.tryParse(toIso ?? '');
     if (from == null || to == null || !from.isBefore(to)) {
-      throw FormatException('période personnalisée invalide (from/to ISO requis)');
+      throw FormatException('invalid custom period (from/to ISO required)');
     }
     return Period(k, from: from.toUtc(), to: to.toUtc());
   }
   if (!{'today', '7d', '30d', 'all'}.contains(k)) {
-    throw FormatException('période inconnue : $k');
+    throw FormatException('unknown period: $k');
   }
   return Period(k);
 }
 
-/// Bornes [début, fin) d'une fenêtre, et de la fenêtre précédente
-/// (même durée, juste avant) pour l'évolution. null = sans borne.
+/// Bounds [start, end) of a window, and of the previous window
+/// (same duration, just before) for the change. null = unbounded.
 ({DateTime? start, DateTime? end, DateTime? prevStart, DateTime? prevEnd})
 periodBounds(Period p, DateTime nowUtc) {
   if (p.kind == 'all') return (start: null, end: null, prevStart: null, prevEnd: null);
@@ -63,7 +63,7 @@ periodBounds(Period p, DateTime nowUtc) {
 }
 
 bool _inWindow(String? iso, DateTime? start, DateTime? end) {
-  if (iso == null) return start == null; // sans date : que dans 'all'
+  if (iso == null) return start == null; // without a date: only in 'all'
   final t = DateTime.tryParse(iso)?.toUtc();
   if (t == null) return false;
   if (start != null && t.isBefore(start)) return false;
@@ -71,8 +71,8 @@ bool _inWindow(String? iso, DateTime? start, DateTime? end) {
   return true;
 }
 
-/// KPI signalements sur la fenêtre + fenêtre précédente (évolution
-/// calculée, jamais inventée : null si la référence est vide).
+/// Report KPI on the window + previous window (change
+/// computed, never invented: null if the reference is empty).
 Map<String, dynamic> reportsKpi(
     List<Report> reports, DateTime? start, DateTime? end,
     DateTime? prevStart, DateTime? prevEnd) {
@@ -86,13 +86,13 @@ Map<String, dynamic> reportsKpi(
   return {'count': cur, 'previousCount': prev, 'deltaPct': deltaPct};
 }
 
-/// Statuts d'incidents EXCLUSIFS (somme = total) :
-/// - escalade-s5 : gravité déclarée 5 (jamais dispatché) ;
-/// - planifie : présent dans les tâches du plan courant ;
-/// - non-affecte : un plan existe mais l'incident n'y figure pas ;
-/// - a-analyser : aucun plan courant (regroupé, en attente de planification).
-/// Hors plan, tout incident non-S5 est « à analyser » : ce n'est pas un
-/// échec, c'est l'état normal avant planification.
+/// EXCLUSIVE incident statuses (sum = total):
+/// - escalade-s5: declared severity 5 (never dispatched);
+/// - planifie: present in the current plan's tasks;
+/// - non-affecte: a plan exists but the incident is not in it;
+/// - a-analyser: no current plan (grouped, awaiting planning).
+/// Without a plan, every non-S5 incident is "to analyse": this is not a
+/// failure, it is the normal state before planning.
 Map<String, dynamic> incidentStatusBuckets(
     List<Incident> incidents, Plan? plan) {
   final planned =
@@ -125,8 +125,8 @@ Map<String, dynamic> incidentStatusBuckets(
   };
 }
 
-/// Priorité d'affichage dérivée de la gravité DÉCLARÉE uniquement.
-/// S5 = Critique (escalade, jamais dans un plan) ; inconnue = À vérifier.
+/// Display priority derived from the DECLARED severity only.
+/// S5 = Critical (escalation, never in a plan); unknown = To verify.
 String priorityOf(Incident i) {
   final s = i.severity;
   if (s == null) return 'a-verifier';
@@ -137,19 +137,19 @@ String priorityOf(Incident i) {
 }
 
 const Map<String, String> priorityLabels = {
-  'critique': 'Critique (S5, escalade)',
-  'haute': 'Haute',
-  'moyenne': 'Moyenne',
-  'faible': 'Faible',
-  'a-verifier': 'À vérifier',
+  'critique': 'Critical (S5, escalation)',
+  'haute': 'High',
+  'moyenne': 'Medium',
+  'faible': 'Low',
+  'a-verifier': 'To verify',
 };
 
-/// Recommandation GÉNÉRIQUE par domaine (table statique documentée,
-/// affichée comme telle — pas une prescription d'intervention).
+/// GENERIC recommendation per domain (documented static table,
+/// displayed as such — not an intervention prescription).
 const Map<String, String> domainRecommendation = {
-  'voirie': 'Intervention voirie (constat terrain requis)',
-  'reseaux': 'Intervention réseaux eau/électricité (diagnostic requis)',
-  'espaces-verts': 'Intervention espaces verts (constat requis)',
+  'voirie': 'Roads intervention (field observation required)',
+  'reseaux': 'Water/electricity networks intervention (diagnosis required)',
+  'espaces-verts': 'Green spaces intervention (observation required)',
 };
 
 String shortLabel(Incident i, Map<String, Report> byId) {
@@ -159,23 +159,23 @@ String shortLabel(Incident i, Map<String, Report> byId) {
     if (r != null) cats.add(r.category);
   }
   final fam = cats.isEmpty ? 'incident' : cats.join(' + ');
-  return '$fam · ${i.reportIds.length} signalement(s)';
+  return '$fam · ${i.reportIds.length} report(s)';
 }
 
-/// Ligne du plan priorisé (données réelles du plan courant).
+/// Prioritized plan row (real data from the current plan).
 Map<String, dynamic> planRow(Task t, Incident i, Map<String, Report> byId,
     String? validation) {
   final durH = (t.endMin - t.startMin) / 60.0;
   return {
     'incidentId': i.id,
     'label': shortLabel(i, byId),
-    'lieu': '(${i.x.toStringAsFixed(1)}, ${i.y.toStringAsFixed(1)}) km — grille fictive',
+    'lieu': '(${i.x.toStringAsFixed(1)}, ${i.y.toStringAsFixed(1)}) km — fictitious grid',
     'priority': priorityOf(i),
     'priorityLabel': priorityLabels[priorityOf(i)],
     'recommandation':
-        '${domainRecommendation[i.domain] ?? 'Intervention à qualifier'} — générique, à valider sur le terrain',
+        '${domainRecommendation[i.domain] ?? 'Intervention to qualify'} — generic, to validate on site',
     'resources':
-        '${t.teamId} · ${durH.toStringAsFixed(1)} h · ${t.cost.toStringAsFixed(1)} u.',
+        '${t.teamId} · ${durH.toStringAsFixed(1)} h · ${t.cost.toStringAsFixed(1)} units.',
     'teamId': t.teamId,
     'dureeMin': t.endMin - t.startMin,
     'cout': t.cost,
@@ -188,9 +188,9 @@ Map<String, dynamic> planRow(Task t, Incident i, Map<String, Report> byId,
   };
 }
 
-/// Activité : projection d'une entrée de journal vers un événement
-/// d'affichage. Tout événement inconnu est conservé avec son nom brut
-/// (jamais supprimé silencieusement).
+/// Activity: projection of a journal entry to a display event.
+/// Any unknown event is kept with its raw name
+/// (never silently dropped).
 Map<String, dynamic> activityItem(Map<String, dynamic> e) {
   final event = (e['event'] ?? 'inconnu') as String;
   final d = (e['details'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -201,63 +201,63 @@ Map<String, dynamic> activityItem(Map<String, dynamic> e) {
   switch (event) {
     case 'report.created':
       type = 'signalement';
-      label = 'Signalement reçu';
+      label = 'Report received';
       ref = d['id']?.toString();
       detail = ref ?? '';
       break;
     case 'photo.uploaded':
       type = 'signalement';
-      label = 'Photo reçue';
+      label = 'Photo received';
       detail = (d['mime']?.toString() ?? '');
       break;
     case 'group.done':
       type = 'regroupement';
-      label = 'Incidents regroupés';
-      detail = 'méthode ${d['method'] ?? '?'}'
-          '${d['groups'] != null ? ' · ${d['groups']} groupes' : ''}';
+      label = 'Incidents grouped';
+      detail = 'method ${d['method'] ?? '?'}'
+          '${d['groups'] != null ? ' · ${d['groups']} groups' : ''}';
       break;
     case 'plan.proposed':
       type = 'plan';
-      label = 'Plan généré';
+      label = 'Plan generated';
       ref = d['planId']?.toString();
-      detail = '${ref ?? ''} · ${d['tasks'] ?? '?'} tâches'
+      detail = '${ref ?? ''} · ${d['tasks'] ?? '?'} tasks'
           ' · Q=${(d['q'] as num?)?.toStringAsFixed(1) ?? '?'}';
       break;
     case 'plan.validated':
       type = 'validation';
-      label = d['decision'] == 'valide' ? 'Plan validé' : 'Plan rejeté';
+      label = d['decision'] == 'valide' ? 'Plan validated' : 'Plan rejected';
       ref = d['planId']?.toString();
-      detail = 'par ${d['by'] ?? 'humain'}${ref != null ? ' · $ref' : ''}';
+      detail = 'by ${d['by'] ?? 'human'}${ref != null ? ' · $ref' : ''}';
       break;
     case 'simulate.done':
       type = 'simulation';
-      label = 'Simulation exécutée';
+      label = 'Simulation run';
       detail = 'Q=${(d['q'] as num?)?.toStringAsFixed(1) ?? '?'}'
-          ' · faisable=${d['feasible'] ?? '?'}';
+          ' · feasible=${d['feasible'] ?? '?'}';
       break;
     case 'inject.received':
       type = d['type'] == 'team_down' ? 'equipe' : 'injection';
       label = d['type'] == 'team_down'
-          ? 'Équipe indisponible'
-          : 'Information nouvelle reçue';
-      detail = 'nécessité ${d['necessity'] ?? '?'}'
-          '${d['revised'] == true ? ' · plan révisé' : ''}';
+          ? 'Team unavailable'
+          : 'New information received';
+      detail = 'necessity ${d['necessity'] ?? '?'}'
+          '${d['revised'] == true ? ' · plan revised' : ''}';
       break;
     case 'scenario.loaded':
       type = 'systeme';
-      label = 'Scénario chargé (DEV)';
+      label = 'Scenario loaded (DEV)';
       detail = d['id']?.toString() ?? '';
       break;
     case 'meta.verify':
     case 'meta.extract':
     case 'meta.analyze-image':
       type = 'ia';
-      label = 'Analyse IA';
+      label = 'AI analysis';
       detail = '$event${d['reportId'] != null ? ' · ${d['reportId']}' : ''}';
       break;
     case 'server.resumed':
       type = 'systeme';
-      label = 'Serveur redémarré (état restauré)';
+      label = 'Server restarted (state restored)';
       detail = d['scenario']?.toString() ?? '';
       break;
   }
@@ -271,12 +271,12 @@ Map<String, dynamic> activityItem(Map<String, dynamic> e) {
   };
 }
 
-/// Péremption d'un plan : vrai si un regroupement (group.done) est survenu
-/// après la création du plan. Les identifiants d'incidents (I1..) sont
-/// positionnels : un regroupement peut les renumérotationner, et les
-/// tâches du plan ne désignent plus alors les bons incidents. Plutôt que
-/// de présenter une jointure fausse, le backend signale le plan comme
-/// périmé (à replanifier) et l'interface l'affiche explicitement.
+/// Plan staleness: true if a grouping (group.done) happened
+/// after the plan was created. Incident identifiers (I1..) are
+/// positional: a grouping can renumber them, and plan
+/// tasks then no longer point to the right incidents. Rather than
+/// presenting a false join, the backend flags the plan as
+/// stale (to replan) and the interface shows it explicitly.
 bool planIsStale(
     Plan? plan, List<Map<String, dynamic>> planHistory,
     List<Map<String, dynamic>> journalEntries) {
@@ -298,8 +298,8 @@ bool planIsStale(
   return false;
 }
 
-/// Recherche municipale (état borné) : identifiant, texte, catégorie,
-/// famille (lexique split), statut de suivi. Tri déterministe par id.
+/// Municipal search (bounded state): identifier, text, category,
+/// family (split lexicon), tracking status. Deterministic sort by id.
 List<Map<String, dynamic>> searchAll(String query, List<Report> reports,
     List<Group> groups, List<Incident> incidents, Plan? plan) {
   final q = query.trim().toLowerCase();
@@ -332,15 +332,15 @@ List<Map<String, dynamic>> searchAll(String query, List<Report> reports,
   return out;
 }
 
-/// --- Pages municipales dédiées (découpage / planification / révision / fiche) ---
+/// --- Dedicated municipal pages (splitting / planning / review / details) ---
 ///
-/// Toutes les fonctions ci-dessous sont pures et bornées (état de travail
-/// en mémoire uniquement). Aucun pourcentage ni score inventé.
+/// All functions below are pure and bounded (in-memory working
+/// state only). No invented percentage or score.
 
-/// Vue d'ensemble du découpage : méthode réellement utilisée, comptes
-/// d'unités atomiques, problèmes secondaires conservés, incertitudes et
-/// justifications portées par les groupes. Aucune confiance chiffrée
-/// calculée : les confiances affichées sont celles déjà stockées.
+/// Splitting overview: method actually used, atomic-unit
+/// counts, secondary problems kept, uncertainties and
+/// justifications carried by the groups. No numeric confidence
+/// computed: the confidences displayed are those already stored.
 Map<String, dynamic> splitOverviewData(
     List<Report> reports, List<Group> groups, List<Incident> incidents,
     String groupMethod,
@@ -392,13 +392,13 @@ Map<String, dynamic> splitOverviewData(
     'justifications': justifs,
     'perIncident': perIncident,
     'note':
-        'Aucune confiance chiffrée calculée ici : seules les confiances déjà stockées sur les groupes sont affichées.',
+        'No numeric confidence computed here: only the confidences already stored on the groups are displayed.',
   };
 }
 
-/// Détail d'un signalement pour la page découpage : sous-signalements
-/// (unités ORIGINE:FAMILLE), familles détectées, incidents liés (via
-/// origine), incertitudes des groupes concernés.
+/// Report detail for the splitting page: sub-reports
+/// (ORIGIN:FAMILY units), detected families, linked incidents (via
+/// origin), uncertainties of the groups involved.
 Map<String, dynamic>? splitReportDetail(List<Report> reports,
     List<Group> groups, List<Incident> incidents, String reportId) {
   Report? rep;
@@ -440,8 +440,8 @@ Map<String, dynamic>? splitReportDetail(List<Report> reports,
   };
 }
 
-/// Incident planifiable : gravité connue 1..4 (S5 = escalade, jamais
-/// dispatché ; inconnue/contradictoire = vérification requise).
+/// Plannable incident: known severity 1..4 (S5 = escalation, never
+/// dispatched; unknown/conflicting = verification required).
 String incidentPlanningBucket(Incident i, Set<String> plannedIds,
     {bool hasPlan = true}) {
   if (i.severity != null && i.severity! >= 5) return 'escalade-s5';
@@ -451,15 +451,15 @@ String incidentPlanningBucket(Incident i, Set<String> plannedIds,
   return 'non-affecte';
 }
 
-/// Ligne d'incident pour la page planification (données réelles : équipe
-/// et motif issus du plan courant, durée/échéance estimées, inconnues
-/// conservées).
+/// Incident row for the planning page (real data: team
+/// and reason from the current plan, estimated duration/deadline, unknowns
+/// kept).
 Map<String, dynamic> planningIncidentRow(
     Incident i, Map<String, Report> byId, String bucket, String? motif) {
   return {
     'incidentId': i.id,
     'label': shortLabel(i, byId),
-    'lieu': '(${i.x.toStringAsFixed(1)}, ${i.y.toStringAsFixed(1)}) km — grille fictive',
+    'lieu': '(${i.x.toStringAsFixed(1)}, ${i.y.toStringAsFixed(1)}) km — fictitious grid',
     'severity': i.severity,
     'severityStatus': i.severityStatus,
     'severityValues': i.severityValues,
@@ -474,10 +474,10 @@ Map<String, dynamic> planningIncidentRow(
   };
 }
 
-/// Vue d'ensemble planification : équipes réelles (défaut moins down),
-/// incidents classés, plan courant + validation + simulation si présente,
-/// budget et contraintes. Aucun calcul d'optimisation ici (l'action
-/// Optimiser appelle POST /api/plan).
+/// Planning overview: real teams (default minus down),
+/// classified incidents, current plan + validation + simulation if present,
+/// budget and constraints. No optimization computation here (the
+/// Optimize action calls POST /api/plan).
 Map<String, dynamic> planOverviewData({
   required List<Report> reports,
   required List<Incident> incidents,
@@ -558,12 +558,12 @@ Map<String, dynamic> planOverviewData({
     'sim': simQ == null
         ? null
         : {'q': simQ, 'feasible': simFeasible},
-    'budget': {'total': 120.0, 'unit': 'unités fictives (ni euros, ni FCFA, ni dollars)'},
+    'budget': {'total': 120.0, 'unit': 'fictitious units (neither euros, FCFA, nor dollars)'},
   };
 }
 
-/// Historique de révision : versions de plans (plus récent d'abord) +
-/// événements de journal pertinents (plus récents d'abord, curseur = seq).
+/// Review history: plan versions (most recent first) +
+/// relevant journal events (most recent first, cursor = seq).
 Map<String, dynamic> revisionHistoryData(
     List<Map<String, dynamic>> planHistory,
     List<Map<String, dynamic>> auditEntries,
@@ -574,9 +574,9 @@ Map<String, dynamic> revisionHistoryData(
     'plan.validated',
     'simulate.done',
   };
-  // Scoper a la generation d'etat courante : un chargement de scenario
-  // recommence les identifiants (reports, plans) ; les injects d'une
-  // generation anterieure ne concernent plus le plan courant.
+  // Scope to the current state generation: a scenario load
+  // restarts identifiers (reports, plans); injects from a
+  // previous generation no longer concern the current plan.
   String? generationStart;
   for (final e in auditEntries) {
     if (e['event'] == 'scenario.loaded') {
@@ -607,10 +607,10 @@ Map<String, dynamic> revisionHistoryData(
   return {'plans': plans, 'events': events};
 }
 
-/// Fiche signalement complète (données réelles uniquement) : déclaration,
-/// média (référence + métadonnées si téléversé), sous-signalements,
-/// incidents liés, gravité/exposition conservées, vérification municipale,
-/// analyses IA si présentes (étiquetées comme telles), historique.
+/// Complete report details (real data only): declaration,
+/// media (reference + metadata if uploaded), sub-reports,
+/// linked incidents, kept severity/exposure, municipal verification,
+/// AI analyses if present (labelled as such), history.
 Map<String, dynamic> ficheData({
   required Report report,
   required List<Group> groups,
@@ -656,9 +656,9 @@ Map<String, dynamic> ficheData({
   };
 }
 
-/// Validation d'une modification municipale limitée : texte, catégorie,
-/// indices de gravité/exposition, note de vérification. Retourne le
-/// message d'erreur, ou null si valide. Ne regroupe jamais.
+/// Validation of a limited municipal edit: text, category,
+/// severity/exposure hints, verification note. Returns the
+/// error message, or null if valid. Never regroups.
 String? validateReportPatch(Map<String, dynamic> b) {
   if (b.containsKey('text')) {
     final err = publicTextError(b['text'] as String?);
@@ -666,24 +666,24 @@ String? validateReportPatch(Map<String, dynamic> b) {
   }
   if (b.containsKey('category')) {
     final c = (b['category'] ?? '') as String;
-    if (!isPublicCategory(c)) return 'catégorie inconnue : $c';
+    if (!isPublicCategory(c)) return 'unknown category: $c';
   }
   if (b.containsKey('severityHint')) {
     final s = b['severityHint'] as int?;
     if (s != null && (s < 1 || s > 5)) {
-      return 'severityHint hors 1..5 (ou null = inconnue)';
+      return 'severityHint outside 1..5 (or null = unknown)';
     }
   }
   if (b.containsKey('exposureHint')) {
     final e = b['exposureHint'] as int?;
     if (e != null && (e < 0 || e > 4)) {
-      return 'exposureHint hors 0..4 (ou null = inconnue)';
+      return 'exposureHint outside 0..4 (or null = unknown)';
     }
   }
   if (b.containsKey('verificationNote')) {
     final n = b['verificationNote'];
     if (n != null && (n as String).length > 500) {
-      return 'note de vérification trop longue (500 max)';
+      return 'verification note too long (500 max)';
     }
   }
   return null;

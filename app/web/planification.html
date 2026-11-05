@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Planification</title>
+<title>CityResolve — Planning</title>
 <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
-<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
+<header class="demo-banner">DEMONSTRATION — FICTITIOUS DATA — SCIENTIFIC PROTOCOL NOT FROZEN — NO PROOF</header>
 <div id="loginOverlay" class="login-overlay" hidden>
   <div class="login-card">
-    <h2>Espace municipal</h2>
-    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
-    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
-    <button id="loginGo" class="btn primary">Se connecter</button>
+    <h2>Municipal area</h2>
+    <p class="muted">Protected page: sign in with the municipal token.</p>
+    <input id="loginToken" type="password" placeholder="Municipal token" autocomplete="off">
+    <button id="loginGo" class="btn primary">Sign in</button>
     <p id="loginErr" class="err"></p>
   </div>
 </div>
@@ -24,33 +24,33 @@
       <span>CityResolve</span>
     </div>
     <nav class="side-nav">
-      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="/municipal/decoupage"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Dashboard</a>
+      <a href="/municipal/decoupage"><span class="ico">💬</span> Reports</a>
       <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
-      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
-      <a href="/municipal/planification" class="active"><span class="ico">📅</span> Planification</a>
-      <a href="/municipal/revision"><span class="ico">✓</span> Révision</a>
-      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
-      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Map</a>
+      <a href="/municipal/planification" class="active"><span class="ico">📅</span> Planning</a>
+      <a href="/municipal/revision"><span class="ico">✓</span> Review</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Log</a>
     </nav>
-    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+    <div class="side-foot">From reports<br>to intervention<br>decisions.</div>
   </aside>
   <div class="main">
     <header class="topbar">
       <button class="hamburger" id="burger" aria-label="Menu">☰</button>
       <div class="title-block">
         <div class="crumb">CityResolve</div>
-        <h1>Planification</h1>
-        <p class="muted">Planifier et affecter les interventions aux équipes sous contraintes (compétences, disponibilité, budget).</p>
+        <h1>Planning</h1>
+        <p class="muted">Plan and assign interventions to teams under constraints (skills, availability, budget).</p>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
-          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <input id="q" type="search" placeholder="Search for a report, a place, an incident…" aria-label="Search">
           <div class="search-results" id="qResults" hidden></div>
         </div>
-        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
-        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
-        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+        <button class="icon-btn" id="bellBtn" title="Alerts">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Help">?</button>
+        <span class="avatar" title="Municipal user (single-user demo)">CM</span>
       </div>
     </header>
     <div class="alerts" id="alerts" hidden></div>
@@ -64,59 +64,59 @@
 
     <section class="row2">
       <div class="card" id="panelTodo">
-        <div class="card-head"><div><h2>Incidents à planifier</h2>
-        <p class="muted">Tous les incidents admissibles sont proposés à l'optimiseur (pas de sélection partielle).</p></div>
-        <label><select id="todoFilter"><option value="all">Tous les incidents</option><option value="planifiable">Planifiables (admissibles)</option><option value="planifie">Planifiés</option><option value="non-affecte">Non affectés</option><option value="a-verifier">À vérifier</option><option value="escalade-s5">Escalades S5</option></select></label></div>
+        <div class="card-head"><div><h2>Incidents to plan</h2>
+        <p class="muted">All eligible incidents are offered to the optimizer (no partial selection).</p></div>
+        <label><select id="todoFilter"><option value="all">All incidents</option><option value="planifiable">Plannable (eligible)</option><option value="planifie">Planned</option><option value="non-affecte">Unassigned</option><option value="a-verifier">To verify</option><option value="escalade-s5">S5 escalations</option></select></label></div>
         <ul class="timeline" id="todoList"><li><div class="skel"></div></li></ul>
       </div>
       <div class="card" id="panelTeamsBox">
-        <div class="card-head"><div><h2>Équipes disponibles <span class="muted" id="teamCount"></span></h2>
-        <p class="muted">Équipes simulées du bac à sable. <a class="link" id="teamAll" href="#">Voir toutes les équipes →</a></p></div></div>
+        <div class="card-head"><div><h2>Available teams <span class="muted" id="teamCount"></span></h2>
+        <p class="muted">Simulated sandbox teams. <a class="link" id="teamAll" href="#">See all teams →</a></p></div></div>
         <div id="teamList"><div class="skel"></div></div>
       </div>
     </section>
 
     <section class="card" id="panelPlanFull">
       <div class="card-head">
-        <div><h2>Plan d'intervention <span class="tag calc">SIMULÉ</span></h2>
-        <p class="muted">Affectation des incidents aux équipes, avec durée, déplacement et coût estimés.</p></div>
-        <div class="btn-row"><button class="btn primary" id="optBtn">⚙ Optimiser le plan</button>
-        <button class="btn ghost" id="vYes">Valider (humain)</button>
-        <button class="btn ghost" id="vNo">Rejeter (humain)</button></div>
+        <div><h2>Intervention plan <span class="tag calc">SIMULATED</span></h2>
+        <p class="muted">Assignment of incidents to teams, with estimated duration, travel and cost.</p></div>
+        <div class="btn-row"><button class="btn primary" id="optBtn">⚙ Optimize the plan</button>
+        <button class="btn ghost" id="vYes">Validate (human)</button>
+        <button class="btn ghost" id="vNo">Reject (human)</button></div>
       </div>
       <div class="table-wrap"><table id="planTable">
-        <thead><tr><th>#</th><th>Incident</th><th>Priorité</th><th>Équipe assignée</th><th>Durée estimée</th><th>Trajet estimé</th><th>Coût estimé</th></tr></thead>
+        <thead><tr><th>#</th><th>Incident</th><th>Priority</th><th>Assigned team</th><th>Estimated duration</th><th>Estimated travel</th><th>Estimated cost</th></tr></thead>
         <tbody><tr><td colspan="7"><div class="skel"></div></td></tr></tbody>
       </table></div>
       <div id="planMeta" class="muted"></div>
       <div id="simBox" class="muted"></div>
-      <div class="btn-row"><button class="btn ghost" id="simRun">Simuler le plan</button><span class="muted" id="vState"></span></div>
+      <div class="btn-row"><button class="btn ghost" id="simRun">Simulate the plan</button><span class="muted" id="vState"></span></div>
       <div id="planUnassigned"></div>
     </section>
 
     <section class="row2">
       <div class="card" id="panelUnassigned">
-        <div class="card-head"><div><h2>Incidents non assignés</h2>
-        <p class="muted">Incidents exclus du plan et raisons (contraintes de compétences, budget, disponibilité).</p></div></div>
+        <div class="card-head"><div><h2>Unassigned incidents</h2>
+        <p class="muted">Incidents excluded from the plan and reasons (skill, budget, availability constraints).</p></div></div>
         <div class="table-wrap"><table id="unTable">
-          <thead><tr><th>#</th><th>Incident</th><th>Priorité</th><th>Raison de non-assignation</th></tr></thead>
+          <thead><tr><th>#</th><th>Incident</th><th>Priority</th><th>Reason for non-assignment</th></tr></thead>
           <tbody><tr><td colspan="4"><div class="skel"></div></td></tr></tbody>
         </table></div>
       </div>
       <div class="card" id="panelConstraints">
-        <h2>Contraintes du plan</h2>
+        <h2>Plan constraints</h2>
         <div id="constraintsBody"><div class="skel"></div></div>
       </div>
     </section>
-    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé, politiques Q provisoires. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+    <footer class="muted">CityResolve — demonstration. Fictitious data, protocol not frozen, provisional Q policies. <a href="/">Public home</a> · <a href="/municipal/dashboard">Dashboard</a></footer>
   </div>
 </div>
 
 <div class="modal" id="helpModal" hidden>
   <div class="modal-card">
-    <h3>Planification</h3>
-    <p>L'optimiseur exact commun (CLASSIQUE/META) propose des affectations sous contraintes : compétences des équipes, disponibilité, budget de 120 unités fictives, délais. Les incidents S5 ne sont jamais dispatchés : escalade humaine immédiate. Q et coûts sont planifiés (estimations) ; la simulation les note avec les valeurs vraies DEV.</p>
-    <button class="btn primary" id="helpClose">Fermer</button>
+    <h3>Planning</h3>
+    <p>The shared exact optimizer (CLASSIC/META) proposes assignments under constraints: team skills, availability, a budget of 120 fictitious units, deadlines. S5 incidents are never dispatched: immediate human escalation. Q and costs are planned (estimates); the simulation scores them with the true DEV values.</p>
+    <button class="btn primary" id="helpClose">Close</button>
   </div>
 </div>
 <script src="/planification.js"></script>

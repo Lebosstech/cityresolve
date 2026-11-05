@@ -1,12 +1,12 @@
-// Scénarios DEV visibles et fictifs (établissement, débogage, sélection).
-// Aucun scénario confirmatoire caché ici. Vérités visibles.
+// Visible fictitious DEV scenarios (setup, debugging, selection).
+// No hidden confirmatory scenario here. Visible truths.
 import 'dart:math';
 import 'types.dart';
 
 int _min(int day, int h, int m) => day * 1440 + h * 60 + m;
 
-/// Jouet fixe nº1 : 6 signalements, 3 incidents (attendus calculés à la main).
-/// Positions identiques par incident (jouet). Hints parfaits.
+/// Fixed toy no. 1: 6 reports, 3 incidents (expected values hand-computed).
+/// Identical positions per incident (toy). Perfect hints.
 Scenario toyFixed1() {
   final reports = [
     Report(
@@ -97,10 +97,10 @@ Scenario toyFixed1() {
         durationMult: 1.0),
   ];
   return Scenario(
-      id: 'jouet-1', label: 'Jouet fixe nº1 (6 sign., 3 inc.)', reports: reports, truth: truth);
+      id: 'jouet-1', label: 'Fixed toy no. 1 (6 reports, 3 inc.)', reports: reports, truth: truth);
 }
 
-/// Jouet S5 : un S5 + un S2, groupes séparés par construction.
+/// Toy S5: one S5 + one S2, groups separate by construction.
 Scenario toyS5() {
   final reports = [
     Report(
@@ -146,7 +146,7 @@ Scenario toyS5() {
   ];
   return Scenario(
       id: 'jouet-s5',
-      label: 'Jouet S5 (escalade, pas de dispatch)',
+      label: 'Toy S5 (escalation, no dispatch)',
       reports: reports,
       truth: truth);
 }
@@ -159,9 +159,9 @@ class _Archetype {
   const _Archetype(this.category, this.severity, this.exposure, this.variants);
 }
 
-/// Variantes : 6 mots-noyau + 1 mot distinct => Jaccard deux-à-deux = 6/8.
-/// Incidents distincts séparés par >1,8 km => regroupement parfait garanti
-/// sous les paramètres par défaut (250 m, 6 h, 0,75).
+/// Variants: 6 core words + 1 distinct word => pairwise Jaccard = 6/8.
+/// Distinct incidents separated by >1.8 km => perfect grouping guaranteed
+/// under the default parameters (250 m, 6 h, 0.75).
 const _archetypes = [
   _Archetype('nid-de-poule', 1, 0, [
     'nid poule rue basse chaussee trou abimee',
@@ -213,7 +213,7 @@ const _archetypes = [
   ]),
 ];
 
-/// Générateur DEV visible : 20 signalements, 8 incidents (graine fixée).
+/// Visible DEV generator: 20 reports, 8 incidents (fixed seed).
 Scenario generateDev({required int seed}) {
   final rng = Random(seed);
   const sizes = [4, 3, 3, 3, 2, 2, 2, 1];
@@ -244,7 +244,7 @@ Scenario generateDev({required int seed}) {
       final id = 'D$n';
       ids.add(id);
       final unknown = rng.nextDouble() < 0.2;
-      final t = t0 + rng.nextInt(240); // ≤ 14:00, heures de service
+      final t = t0 + rng.nextInt(240); // ≤ 14:00, service hours
       if (t < tMin) tMin = t;
       reports.add(Report(
         id: id,
@@ -282,7 +282,7 @@ Scenario generateDev({required int seed}) {
   }
   return Scenario(
       id: 'dev-$seed',
-      label: 'DEV visible graine $seed (20 sign., 8 inc.)',
+      label: 'Visible DEV seed $seed (20 reports, 8 inc.)',
       reports: reports,
       truth: truth,
       seed: seed);

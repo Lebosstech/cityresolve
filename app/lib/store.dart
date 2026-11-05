@@ -1,11 +1,11 @@
-// Persistance locale CityResolve (équivalent SQLite adapté à Dart
-// hors-ligne, zéro dépendance) : document JSON versionné dans data/.
+// Local CityResolve persistence (offline Dart-adapted SQLite equivalent,
+// zero dependency): versioned JSON document in data/.
 //
-// Écriture quasi-atomique : state.json.tmp -> rotation .bak -> rename.
-// Une coupure peut laisser .tmp (ignoré) ou l'ancien .bak : la reprise
-// essaie state.json puis state.json.bak. Ce n'est PAS une transaction
-// atomique avec le journal d'audit : le serveur écrit l'audit PUIS l'état
-// (champ auditSeq), et réconcilie tout écart au démarrage en le journalisant.
+// Near-atomic write: state.json.tmp -> .bak rotation -> rename.
+// An interruption may leave .tmp (ignored) or the old .bak: recovery
+// tries state.json then state.json.bak. This is NOT an atomic
+// transaction with the audit journal: the server writes the audit THEN the state
+// (auditSeq field), and reconciles any gap at startup by logging it.
 import 'dart:convert';
 import 'dart:io';
 

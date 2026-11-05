@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Signalez un problème urbain</title>
+<title>CityResolve — Report an urban problem</title>
 <link rel="stylesheet" href="/public.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
-<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE SCIENTIFIQUE NON GELÉ — AUCUNE PREUVE</header>
+<header class="demo-banner">DEMONSTRATION — FICTITIOUS DATA — SCIENTIFIC PROTOCOL NOT FROZEN — NO PROOF</header>
 <nav class="navbar">
   <div class="nav-inner">
     <a class="brand" href="#" data-nav="home">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#0b5fff"/><path d="M17 7c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zm0 9.5A2.5 2.5 0 1 1 17 11a2.5 2.5 0 0 1 0 5.5z" fill="#fff"/><circle cx="17" cy="14" r="2.5" fill="#22c55e"/></svg>
       <span class="brand-name">CityResolve</span>
-      <span class="brand-tag">Des signalements citoyens aux décisions d'intervention</span>
+      <span class="brand-tag">From citizen reports to intervention decisions</span>
     </a>
     <div class="nav-links">
-      <a href="#" data-nav="home" class="active">Accueil / Signaler</a>
-      <a href="#carte" data-nav="home" data-scroll="mapCard">Carte des incidents</a>
-      <a href="#" data-nav="suivi">Suivi des signalements</a>
-      <a href="#" data-nav="apropos">À propos</a>
+      <a href="#" data-nav="home" class="active">Home / Report</a>
+      <a href="#carte" data-nav="home" data-scroll="mapCard">Incident map</a>
+      <a href="#" data-nav="suivi">Track reports</a>
+      <a href="#" data-nav="apropos">About</a>
     </div>
     <div class="nav-actions">
-      <a class="btn ghost" href="/municipal/dashboard">Connexion</a>
-      <a class="btn primary" href="/municipal/dashboard">Espace municipal</a>
+      <a class="btn ghost" href="/municipal/dashboard">Sign in</a>
+      <a class="btn primary" href="/municipal/dashboard">Municipal area</a>
     </div>
   </div>
 </nav>
@@ -33,16 +33,16 @@
   <section class="hero">
     <div class="hero-inner">
       <div class="hero-text">
-        <h1>Signalez un <span class="green">problème urbain</span></h1>
-        <p class="subtitle">Photo, message, localisation… CityResolve analyse votre signalement,
-        regroupe les informations similaires et aide la municipalité à planifier les interventions.</p>
+        <h1>Report an <span class="green">urban problem</span></h1>
+        <p class="subtitle">Photo, message, location… CityResolve analyses your report,
+        groups similar information and helps the municipality plan interventions.</p>
         <div class="hero-badges">
-          <div class="hbadge"><span class="hicon">⚡</span><span>Détection des<br>problèmes multiples</span></div>
-          <div class="hbadge"><span class="hicon">▤</span><span>Regroupement<br>intelligent</span></div>
-          <div class="hbadge"><span class="hicon">✓</span><span>Planification des<br>interventions</span></div>
+          <div class="hbadge"><span class="hicon">⚡</span><span>Multiple-problem<br>detection</span></div>
+          <div class="hbadge"><span class="hicon">▤</span><span>Smart<br>grouping</span></div>
+          <div class="hbadge"><span class="hicon">✓</span><span>Intervention<br>planning</span></div>
         </div>
       </div>
-      <div class="hero-visual" aria-label="Illustration d'un agent de terrain documentant un ouvrage">
+      <div class="hero-visual" aria-label="Illustration of a field worker documenting a structure">
         <svg viewBox="0 0 420 300" role="img">
           <defs>
             <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
@@ -71,7 +71,7 @@
             <rect x="310" y="200" width="52" height="52" rx="12" fill="#22c55e"/>
             <text x="336" y="234" font-size="26" text-anchor="middle">✓</text>
           </g>
-          <text x="210" y="278" font-size="12" fill="#dbeafe" text-anchor="middle">Illustration — aucun habitant réel représenté</text>
+          <text x="210" y="278" font-size="12" fill="#dbeafe" text-anchor="middle">Illustration — no real resident depicted</text>
         </svg>
       </div>
     </div>
@@ -80,89 +80,89 @@
   <div class="columns">
     <div class="col-main">
       <section class="card" id="formCard">
-        <h2><span class="hicon blue">📣</span> Déclarer un problème</h2>
-        <p class="muted">Décrivez ce que vous observez dans votre quartier.</p>
-        <label class="field">Description du problème *
-          <textarea id="pText" rows="4" maxlength="500" placeholder="Ex. : Le caniveau est rempli de déchets et les lampadaires ne fonctionnent plus depuis plusieurs jours."></textarea>
+        <h2><span class="hicon blue">📣</span> Report a problem</h2>
+        <p class="muted">Describe what you see in your district.</p>
+        <label class="field">Problem description *
+          <textarea id="pText" rows="4" maxlength="500" placeholder="E.g.: The gutter is full of waste and the street lights have not worked for several days."></textarea>
           <span class="counter"><span id="pCount">0</span> / 500</span>
         </label>
-        <div class="field">Ajouter des preuves <span class="muted">(facultatif)</span>
+        <div class="field">Add evidence <span class="muted">(optional)</span>
           <div class="uploads">
             <label class="upload" id="upPhoto">
               <input id="pFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden>
-              <span class="uicon">📷</span><b>Photo</b><small>JPG, PNG (≤ 5 Mo)</small>
+              <span class="uicon">📷</span><b>Photo</b><small>JPG, PNG (≤ 5 MB)</small>
             </label>
-            <div class="upload disabled" title="Fonctionnalité future, non disponible dans cette démo">🎥<b>Vidéo</b><small>MP4 (≤ 25 Mo)</small><span class="soon">Bientôt disponible</span></div>
-            <div class="upload disabled" title="Fonctionnalité future, non disponible dans cette démo">🎙<b>Message vocal</b><small>MP3, M4A (≤ 10 Mo)</small><span class="soon">Bientôt disponible</span></div>
-            <div class="upload preview" id="pPreview" hidden><img id="pImg" alt="aperçu de la photo téléversée"><button id="pRemove" type="button" title="Retirer la photo">×</button></div>
+            <div class="upload disabled" title="Future feature, not available in this demo">🎥<b>Video</b><small>MP4 (≤ 25 MB)</small><span class="soon">Coming soon</span></div>
+            <div class="upload disabled" title="Future feature, not available in this demo">🎙<b>Voice message</b><small>MP3, M4A (≤ 10 MB)</small><span class="soon">Coming soon</span></div>
+            <div class="upload preview" id="pPreview" hidden><img id="pImg" alt="preview of the uploaded photo"><button id="pRemove" type="button" title="Remove the photo">×</button></div>
           </div>
           <span class="note" id="pMedia"></span>
         </div>
         <div class="field-row">
-          <div class="field">Localisation *
+          <div class="field">Location *
             <div class="btn-row">
-              <button class="btn ghost" id="pGps" title="Utilise la géolocalisation de votre navigateur (avec votre autorisation). Zone de démonstration : 5×5 km autour d'Abidjan-Plateau.">📍 Ma position (GPS)</button>
-              <button class="btn ghost" id="pPick">🗺 Choisir sur la carte</button>
+              <button class="btn ghost" id="pGps" title="Uses your browser geolocation (with your permission). Demo zone: 5×5 km around Abidjan-Plateau.">📍 My position (GPS)</button>
+              <button class="btn ghost" id="pPick">🗺 Choose on the map</button>
             </div>
-            <span class="note" id="pCoords">Position : non choisie (grille fictive 5×5 km)</span>
+            <span class="note" id="pCoords">Position: not chosen (fictitious 5×5 km grid)</span>
           </div>
-          <label class="field">Catégorie principale <span class="muted">(facultatif)</span>
+          <label class="field">Main category <span class="muted">(optional)</span>
             <select id="pCat">
-              <option value="autre" selected>Laisser CityResolve identifier (recommandé)</option>
-              <option value="fuite-eau">Assainissement / Drainage</option>
-              <option value="eclairage">Éclairage public</option>
-              <option value="nid-de-poule">Voirie — nids-de-poule</option>
-              <option value="chaussee">Voirie — chaussée</option>
-              <option value="coupure-electrique">Électricité</option>
-              <option value="arbre">Arbres / espaces verts</option>
-              <option value="autre">Autres (à préciser)</option>
+              <option value="autre" selected>Let CityResolve identify (recommended)</option>
+              <option value="fuite-eau">Sanitation / Drainage</option>
+              <option value="eclairage">Public lighting</option>
+              <option value="nid-de-poule">Roads — potholes</option>
+              <option value="chaussée">Roads — road surface</option>
+              <option value="coupure-electrique">Electricity</option>
+              <option value="arbre">Trees / green spaces</option>
+              <option value="autre">Other (please specify)</option>
             </select>
           </label>
         </div>
-        <button class="btn primary big" id="pSend">➤ Envoyer le signalement</button>
+        <button class="btn primary big" id="pSend">➤ Send the report</button>
         <p class="errline" id="pErr" hidden></p>
         <div class="confirm" id="pConfirm" hidden>
-          <h3>✓ Signalement enregistré</h3>
-          <p>Identifiant de suivi : <b id="pTrackId"></b></p>
-          <p class="muted">Conservez cet identifiant pour suivre votre signalement.
-          Démonstration : les données peuvent être réinitialisées à tout moment.</p>
-          <button class="btn primary" id="pTrackGo">Suivre ce signalement</button>
+          <h3>✓ Report saved</h3>
+          <p>Tracking ID: <b id="pTrackId"></b></p>
+          <p class="muted">Keep this ID to track your report.
+          Demonstration: data may be reset at any time.</p>
+          <button class="btn primary" id="pTrackGo">Track this report</button>
         </div>
       </section>
 
       <section class="card" id="tilesCard">
-        <h2>💡 Types de problèmes que vous pouvez signaler</h2>
+        <h2>💡 Types of problems you can report</h2>
         <div class="tiles">
-          <button class="tile" data-cat="fuite-eau"><span>💧</span><b>Assainissement</b><small>(drainage, eaux usées)</small></button>
-          <button class="tile" data-cat="eclairage"><span>💡</span><b>Éclairage public</b><small>(panne, lampadaire)</small></button>
-          <button class="tile" data-cat="nid-de-poule"><span>🚧</span><b>Voirie</b><small>(nids-de-poule, routes)</small></button>
-          <button class="tile" data-cat="autre"><span>🗑</span><b>Propreté</b><small>(déchets, dépotoirs)</small></button>
-          <button class="tile" data-cat="coupure-electrique"><span>⚡</span><b>Électricité</b><small>(coupure, câbles)</small></button>
-          <button class="tile" data-cat="autre"><span>⋯</span><b>Autres</b><small>(à préciser)</small></button>
+          <button class="tile" data-cat="fuite-eau"><span>💧</span><b>Sanitation</b><small>(drainage, wastewater)</small></button>
+          <button class="tile" data-cat="eclairage"><span>💡</span><b>Public lighting</b><small>(outage, street light)</small></button>
+          <button class="tile" data-cat="nid-de-poule"><span>🚧</span><b>Roads</b><small>(potholes, roads)</small></button>
+          <button class="tile" data-cat="autre"><span>🗑</span><b>Cleanliness</b><small>(waste, dumps)</small></button>
+          <button class="tile" data-cat="coupure-electrique"><span>⚡</span><b>Electricity</b><small>(outage, cables)</small></button>
+          <button class="tile" data-cat="autre"><span>⋯</span><b>Other</b><small>(please specify)</small></button>
         </div>
       </section>
     </div>
 
     <div class="col-side">
       <section class="card" id="mapCard">
-        <div class="card-head"><h2>📍 Incidents récents près de vous</h2><a href="#" id="mapBig">Voir la carte complète →</a></div>
-        <p class="fictive-tag">Carte de démonstration — positions fictives projetées (grille 5×5 km), fond © contributeurs OpenStreetMap. Aucune position GPS réelle.</p>
-        <div class="map-wrap"><div id="pMap" role="img" aria-label="Carte des incidents (positions fictives projetées)"></div>
+        <div class="card-head"><h2>📍 Recent incidents near you</h2><a href="#" id="mapBig">See the full map →</a></div>
+        <p class="fictive-tag">Demo map — projected fictitious positions (5×5 km grid), base map © OpenStreetMap contributors. No real GPS position.</p>
+        <div class="map-wrap"><div id="pMap" role="img" aria-label="Incident map (projected fictitious positions)"></div>
           <ul class="legend">
-            <li><span class="dot" style="background:#0b5fff"></span>Votre point choisi</li>
+            <li><span class="dot" style="background:#0b5fff"></span>Your chosen point</li>
             <li><span class="dot" style="background:#b3261e"></span>Urgent (S5)</li>
-            <li><span class="dot" style="background:#f97316"></span>Élevé (S4)</li>
-            <li><span class="dot" style="background:#eab308"></span>Moyen (S3)</li>
-            <li><span class="dot" style="background:#22c55e"></span>Faible (S1-S2)</li>
-            <li><span class="dot" style="background:#94a3b8"></span>À vérifier</li>
+            <li><span class="dot" style="background:#f97316"></span>High (S4)</li>
+            <li><span class="dot" style="background:#eab308"></span>Medium (S3)</li>
+            <li><span class="dot" style="background:#22c55e"></span>Low (S1-S2)</li>
+            <li><span class="dot" style="background:#94a3b8"></span>To verify</li>
           </ul>
         </div>
       </section>
 
       <section class="card" id="recentCard">
-        <div class="card-head"><h2>🕐 Signalements récents</h2><a href="#" id="recentAll">Tout voir →</a></div>
+        <div class="card-head"><h2>🕐 Recent reports</h2><a href="#" id="recentAll">See all →</a></div>
         <ul class="recent" id="pRecent"></ul>
-        <p class="muted">Données de démonstration (fictives). Les signalements de scénario n'ont pas d'heure de réception réelle.</p>
+        <p class="muted">Demonstration data (fictitious). Scenario reports have no real receipt time.</p>
       </section>
     </div>
   </div>
@@ -170,9 +170,9 @@
 
 <main id="view-suivi" class="view">
   <section class="card narrow">
-    <h2>Suivre un signalement</h2>
-    <p class="muted">Saisissez l'identifiant reçu après l'envoi (ex. M101). Statuts calculés à partir des données réelles, sans délai promis.</p>
-    <div class="btn-row"><input id="tId" placeholder="Ex. M101" size="14"><button class="btn primary" id="tGo">Rechercher</button></div>
+    <h2>Track a report</h2>
+    <p class="muted">Enter the ID received after sending (e.g. M101). Statuses computed from real data, with no promised deadline.</p>
+    <div class="btn-row"><input id="tId" placeholder="E.g. M101" size="14"><button class="btn primary" id="tGo">Search</button></div>
     <p class="errline" id="tErr" hidden></p>
     <div id="tOut"></div>
   </section>
@@ -180,29 +180,29 @@
 
 <main id="view-apropos" class="view">
   <section class="card narrow">
-    <h2>À propos de CityResolve</h2>
-    <p>CityResolve transforme des observations urbaines désorganisées en incidents distincts,
-    géolocalisés et priorisés, puis en propositions d'interventions réalisables.</p>
+    <h2>About CityResolve</h2>
+    <p>CityResolve turns disorganized urban observations into distinct,
+    geolocated, prioritized incidents, then into feasible intervention proposals.</p>
     <ol>
-      <li><b>Signaler</b> : description, photo, position sur la grille de démonstration.</li>
-      <li><b>Analyser</b> : détection des problèmes multiples, regroupement des signalements similaires, inconnues conservées.</li>
-      <li><b>Planifier</b> : l'espace municipal propose des interventions sous contraintes (équipes, délais, budget).</li>
+      <li><b>Report</b>: description, photo, position on the demo grid.</li>
+      <li><b>Analyse</b>: multiple-problem detection, grouping of similar reports, unknowns kept.</li>
+      <li><b>Plan</b>: the municipal area proposes interventions under constraints (teams, deadlines, budget).</li>
     </ol>
-    <p class="fictive-tag">Démonstration — Données fictives — Protocole scientifique NON GELÉ — Aucune preuve. Cette page ne remplace pas les services d'urgence.</p>
-    <p><a class="btn ghost" href="/municipal/dashboard">Accéder à l'espace municipal (protégé)</a></p>
+    <p class="fictive-tag">Demonstration — Fictitious data — Scientific protocol NOT FROZEN — No proof. This page does not replace emergency services.</p>
+    <p><a class="btn ghost" href="/municipal/dashboard">Access the municipal area (protected)</a></p>
   </section>
 </main>
 
 <div class="modal" id="pickModal" hidden>
   <div class="modal-card">
-    <h3>Choisir une position (grille fictive)</h3>
-    <p class="muted">Cliquez sur la carte : le point est converti en coordonnées fictives 0–5 km (pas une position GPS). Fond © contributeurs OpenStreetMap.</p>
+    <h3>Choose a position (fictitious grid)</h3>
+    <p class="muted">Click on the map: the point is converted to fictitious coordinates 0–5 km (not a GPS position). Base map © OpenStreetMap contributors.</p>
     <div id="pickMap"></div>
-    <div class="btn-row"><button class="btn primary" id="pickOk">Valider cette position</button><button class="btn ghost" id="pickCancel">Annuler</button></div>
+    <div class="btn-row"><button class="btn primary" id="pickOk">Confirm this position</button><button class="btn ghost" id="pickCancel">Cancel</button></div>
   </div>
 </div>
 
-<footer><p>CityResolve — démonstration civic-tech. Données fictives, protocole non gelé. Fond cartographique © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a> (ODbL). <a href="/municipal/dashboard">Espace municipal</a></p></footer>
+<footer><p>CityResolve — civic-tech demonstration. Fictitious data, protocol not frozen. Map base © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL). <a href="/municipal/dashboard">Municipal area</a></p></footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/public.js"></script>
 </body>

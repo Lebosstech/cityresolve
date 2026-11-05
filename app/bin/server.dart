@@ -1,6 +1,6 @@
-// Serveur CityResolve (bac à sable) : API JSON + interface statique.
-// Données fictives uniquement. Protocole NON GELÉ. Port : --port, sinon
-// variable d'environnement PORT, sinon 8080. Écoute sur 0.0.0.0.
+// CityResolve server (sandbox): JSON API + static interface.
+// Fictitious data only. Protocol NOT FROZEN. Port: --port, otherwise
+// PORT environment variable, otherwise 8080. Listens on 0.0.0.0.
 import 'dart:convert';
 import 'dart:io';
 
@@ -28,7 +28,7 @@ class AppState {
   Scenario? scenario;
   List<Report> reports = [];
   List<TruthIncident> truth = [];
-  Set<String> manualReports = {}; // hors vérité terrain
+  Set<String> manualReports = {}; // outside ground truth
   Map<String, dynamic> groupParams = {
     'distMaxM': 250.0,
     'deltaTMaxH': 6.0,
@@ -42,7 +42,7 @@ class AppState {
   List<RobustVariant> robust = [];
   Set<String> teamsDown = {};
   int reportSeq = 100;
-  int planSeq = 0; // monotone persisté : identifiants de plan jamais réattribués
+  int planSeq = 0; // monotonic persisted: plan identifiers never reassigned
   List<Map<String, dynamic>> planHistory = [];
   String scenarioKind = 'jouet-1';
   int scenarioSeed = 7;
@@ -65,17 +65,17 @@ class AppState {
   final RateLimiter rateLimiter = RateLimiter();
 }
 
-/// Audit PUIS persistance, ATTENDUE avant la réponse HTTP : quand le
-/// client reçoit un succès, l'état est durable dans MongoDB (et le JSON).
-/// Ordre explicite, toujours non atomique entre journal et état.
+/// Audit THEN persistence, EXPECTED before the HTTP response: when the
+/// client receives a success, the state is durable in MongoDB (and JSON).
+/// Explicit order, always non-atomic between journal and state.
 Future<void> auditPersist(AppState s, String event,
     [Map<String, dynamic>? details]) async {
   s.audit.append(event, details);
   persist(s);
   await s.mongoQueue;
   if (s.mongoError != null) {
-    // Écriture Mongo échouée : le signaler dans le journal (JSON durable),
-    // sans prétendre que la base principale est à jour.
+    // Mongo write failed: flag it in the journal (durable JSON),
+    // without claiming the primary database is up to date.
     s.audit.append('mongo.write_error', {'error': s.mongoError});
     try {
       s.store.save(stateDoc(s));
@@ -112,16 +112,16 @@ Map<String, dynamic> stateDoc(AppState s) => {
 
 String _uploadsDir(String base) => '$base/data/uploads';
 
-/// Corps brut borné (upload photo). Les octets ne sont jamais du JSON.
+/// Bounded raw body (photo upload). Bytes are never JSON.
 Future<List<int>> _rawBody(HttpRequest req, int maxBytes) async {
   if (req.contentLength > maxBytes) {
-    throw const MediaValidationError('corps trop volumineux');
+    throw const MediaValidationError('body too large');
   }
   final bytes = <int>[];
   await for (final chunk in req) {
     bytes.addAll(chunk);
     if (bytes.length > maxBytes) {
-      throw const MediaValidationError('corps trop volumineux');
+      throw const MediaValidationError('body too large');
     }
   }
   return bytes;
@@ -129,12 +129,12 @@ Future<List<int>> _rawBody(HttpRequest req, int maxBytes) async {
 
 void persist(AppState s) {
   final doc = stateDoc(s);
-  // Sauvegarde JSON locale conservée (secours + trace pré-migration).
+  // Local JSON backup kept (fallback + pre-migration trace).
   try {
     s.store.save(doc);
   } catch (_) {}
-  // Base principale MongoDB : écritures sérialisées par une file,
-  // collection par collection (aucune transaction multi-documents).
+  // Primary MongoDB database: writes serialized by a queue,
+  // collection by collection (no multi-document transactions).
   final mongo = s.mongo;
   if (mongo != null && mongo.connected) {
     final entries = List<Map<String, dynamic>>.from(s.audit.entries);
@@ -149,18 +149,18 @@ void persist(AppState s) {
   }
 }
 
-/// Connexion MongoDB (base principale). Repli JSON explicite si injoignable.
-/// Migration : si Mongo est vide mais qu'un état JSON existe, il est
-/// importé tel quel (identifiants, validations, historiques préservés),
-/// sans supprimer le JSON.
+/// MongoDB connection (primary database). Explicit JSON fallback if unreachable.
+/// Migration: if Mongo is empty but a JSON state exists, it is
+/// imported as-is (identifiers, validations, histories preserved),
+/// without deleting the JSON.
 Future<void> _initMongo(AppState s) async {
   final mongo = MongoStore(
       uri: Platform.environment['CITYRESOLVE_MONGO_URI'] ??
           'mongodb://127.0.0.1:27017/cityresolve_dev');
   s.mongo = mongo;
-  // Atlas distant (TLS + SRV) dépasse souvent 5 s au premier contact ;
-  // laisser 25 s avant de basculer sur le repli JSON (mesuré : poignée
-  // de main ~6-10 s sur cette machine, connexion directe OK en ~8 s).
+  // Remote Atlas (TLS + SRV) often exceeds 5 s on first contact;
+  // allow 25 s before switching to the JSON fallback (measured: handshake
+  // ~6-10 s on this machine, direct connection OK in ~8 s).
   final ok = await mongo.connect(timeout: const Duration(seconds: 25));
   if (!ok) {
     s.mongoPrimary = false;
@@ -175,10 +175,10 @@ Future<void> _initMongo(AppState s) async {
       s.restoredFromStore = true;
       s.docAuditSeq = mongoDoc['auditSeq'] as int?;
     } catch (e) {
-      s.mongoError = 'restauration Mongo impossible: $e';
+      s.mongoError = 'Mongo restore impossible: $e';
     }
   } else {
-    // Migration depuis l'état JSON restauré par _initState (le cas échéant).
+    // Migration from the JSON state restored by _initState (if any).
     await mongo.saveSnapshot(stateDoc(s),
         journalEntries: List.from(s.audit.entries));
     if (s.restoredFromStore) {
@@ -203,7 +203,7 @@ List<Team> activeTeams(AppState s) =>
 
 Map<String, dynamic> metricsFor(AppState s) {
   if (s.truth.isEmpty) {
-    return {'available': false, 'reason': 'hors vérité terrain'};
+    return {'available': false, 'reason': 'no ground truth'};
   }
   final truthGroups = s.truth.map((t) => t.reportIds).toList();
   final trueOf = <String, int>{};
@@ -212,13 +212,13 @@ Map<String, dynamic> metricsFor(AppState s) {
       trueOf[id] = i;
     }
   }
-  // Hors vérité (ex. manuels) : exclus du scoring, ni FP ni FN.
-  // Groupes découpés : scorés sur leurs origines (E1:eclairage -> E1).
-  // Limite assumée : une origine présente dans deux groupes découpés ne
-  // compte que pour le dernier dans predOf ; le F1 d'un état découpé est
-  // donc une approximation au niveau origine, pas une preuve au niveau
-  // sous-signalement. La preuve première du découpage reste le nombre
-  // d'incidents produits (2, pas 1), pas ce F1.
+  // Outside truth (e.g. manual ones): excluded from scoring, neither FP nor FN.
+  // Split groups: scored on their origins (E1:eclairage -> E1).
+  // Assumed limitation: an origin present in two split groups only
+  // counts for the last one in predOf; the F1 of a split state is
+  // therefore an approximation at origin level, not proof at
+  // sub-report level. The primary proof of splitting remains the number
+  // of incidents produced (2, not 1), not this F1.
   final scored = originMappedGroups(s.groups);
   final pred = scored
       .map((g) => g.reportIds.where(trueOf.containsKey).toList())
@@ -246,9 +246,9 @@ void regroup(AppState s, {bool keepPlan = false}) {
       deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble(),
       simMin: (s.groupParams['simMin'] as num).toDouble());
   s.incidents = aggregate(s.groups, byId);
-  // Les incidents changent d'identité : l'ancien plan ne doit pas être
-  // appliqué silencieusement aux nouveaux groupes (sauf flux /api/inject
-  // qui juge explicitement la révision avec keepPlan: true).
+  // Incidents change identity: the old plan must not be
+  // silently applied to the new groups (except the /api/inject flow
+  // which explicitly judges the review with keepPlan: true).
   if (!keepPlan) {
     s.plan = null;
     s.planValidation = null;
@@ -279,28 +279,28 @@ AppState _initState(String base, {bool restore = true}) {
         s.storeRecovered = load.recoveredFromBackup;
         s.docAuditSeq = doc['auditSeq'] as int?;
       } catch (e) {
-        // Document illisible : repartir du scénario par défaut, le signaler.
+        // Unreadable document: restart from the default scenario, flag it.
         s.audit.append('store.restore_failed', {'error': '$e'});
       }
     } else if (load.corrupt) {
       s.audit.append('store.corrupt',
-          {'note': 'state.json et .bak illisibles : état par défaut'});
+          {'note': 'state.json and .bak unreadable: default state'});
     }
   }
-  // Pas d'écriture journal de démarrage ici : un bind échoué ne pollue pas.
+  // No startup journal write here: a failed bind does not pollute it.
   return s;
 }
 
-/// --- Branchement serveur du découpage multi-problème ---
+/// --- Server wiring of multi-problem splitting ---
 ///
-/// Règle d'or : un groupe dont un identifiant contient `:` (sous-signalement
-/// `ORIGINE:FAMILLE`) n'est JAMAIS agrégé par `aggregate()` classique, qui
-/// échouerait en cherchant `E1:eclairage` dans la table des signalements.
-/// `aggregateForGroups()` route vers `aggregateMixedGroups()` dès qu'un
-/// groupe découpé est présent, sinon vers `aggregate()` (chemin inchangé).
-/// Le découpage est EXPLICITE, jamais silencieux : le serveur ne découpe
-/// que sur demande (`method: 'split'` ou `split: true` sur classique/meta),
-/// le chemin classique par défaut est strictement conservé.
+/// Golden rule: a group whose identifier contains `:` (sub-report
+/// `ORIGIN:FAMILY`) is NEVER aggregated by classic `aggregate()`, which
+/// would fail looking up `E1:eclairage` in the reports table.
+/// `aggregateForGroups()` routes to `aggregateMixedGroups()` as soon as a
+/// split group is present, otherwise to `aggregate()` (unchanged path).
+/// Splitting is EXPLICIT, never silent: the server only splits
+/// on request (`method: 'split'` or `split: true` on classic/meta),
+/// the default classic path is strictly preserved.
 bool groupsUseSplitIds(List<Group> groups) =>
     groups.any((g) => g.reportIds.any((id) => id.contains(':')));
 
@@ -310,9 +310,9 @@ List<Incident> aggregateForGroups(
         ? aggregateMixedGroups(groups, byId)
         : aggregate(groups, byId);
 
-/// Origines d'une liste d'identifiants (pleins ou découpés), sans doublon,
-/// ordre préservé. `originIdOfSubunit` laisse un identifiant plein inchangé,
-/// donc cette fonction est l'identité sur des groupes non découpés.
+/// Origins of a list of identifiers (full or split), without duplicates,
+/// order preserved. `originIdOfSubunit` leaves a full identifier unchanged,
+/// so this function is the identity on unsplit groups.
 List<String> originIdsOfRefs(List<String> ids) {
   final out = <String>[];
   for (final id in ids) {
@@ -337,11 +337,11 @@ List<Group> originMappedGroups(List<Group> groups) => [
         ),
     ];
 
-/// Copie d'un incident dont les identifiants découpés sont ramenés à leurs
-/// origines, pour l'appariement à la vérité terrain lors d'une simulation.
-/// Les champs de planification (identifiant, domaine, position, gravité,
-/// échéance via firstSeen/severity) sont conservés : seules les références
-/// de signalements changent, donc un incident plein est inchangé.
+/// Copy of an incident whose split identifiers are brought back to their
+/// origins, for matching to ground truth during a simulation.
+/// Planning fields (identifier, domain, position, severity,
+/// deadline via firstSeen/severity) are kept: only the report
+/// references change, so a full incident is unchanged.
 Incident originMappedIncident(Incident i) => Incident(
       id: i.id,
       reportIds: originIdsOfRefs(i.reportIds),
@@ -359,10 +359,10 @@ Incident originMappedIncident(Incident i) => Incident(
       domainConflict: i.domainConflict,
     );
 
-/// Regroupement par découpage global (groupSplitReports) : chaque
-/// signalement est expansé en sous-signalements par famille DEV, groupés
-/// par famille, puis agrégés par aggregateMixedGroups. L'origine reste
-/// récupérable depuis chaque incident découpé (partie avant `:`).
+/// Global splitting grouping (groupSplitReports): each
+/// report is expanded into sub-reports by DEV family, grouped
+/// by family, then aggregated by aggregateMixedGroups. The origin stays
+/// recoverable from each split incident (part before `:`).
 void regroupSplit(AppState s, {bool keepPlan = false}) {
   final byId = {for (final r in s.reports) r.id: r};
   s.groups = groupSplitReports(s.reports,
@@ -377,12 +377,12 @@ void regroupSplit(AppState s, {bool keepPlan = false}) {
   }
 }
 
-/// Regroupement Meta reel (jamais simule) : rapprochement par le modele,
-/// avec post-filtre de decoupage optionnel, puis agregation mixte
-/// (jamais aggregate() classique sur des identifiants decoupes).
-/// Ne touche pas au plan : l'appelant gere l'invalidation
-/// (/api/group invalide ; /api/inject conserve pour juger la revision).
-/// Leve MetaException en cas d'echec (appel reel refuse ou en erreur).
+/// Real Meta grouping (never simulated): matching by the model,
+/// with optional splitting post-filter, then mixed aggregation
+/// (never classic aggregate() on split identifiers).
+/// Does not touch the plan: the caller handles invalidation
+/// (/api/group invalidates; /api/inject keeps it to judge the review).
+/// Throws MetaException on failure (real call refused or in error).
 Future<({List<Group> groups, int splitGroups})> regroupMeta(AppState s,
     {bool split = false}) async {
   var groups = await proposeMatchingWithMeta(s.meta, s.reports,
@@ -434,12 +434,12 @@ void _restore(AppState s, Map<String, dynamic> doc) {
       ((doc['extractions'] as Map?) ?? {}).cast<String, dynamic>();
   s.visualAnalyses =
       ((doc['visualAnalyses'] as Map?) ?? {}).cast<String, dynamic>();
-  // Groupes persistés capturés AVANT regroup() : regroup() écrase s.groups
-  // par le classique, et un état découpé (méthode 'split', identifiants
-  // ORIGINE:FAMILLE) serait sinon perdu au redémarrage. Le format 1 ne
-  // change pas : les identifiants découpés survivent déjà dans
-  // Group.toJson/fromJson, et groupMethod='split' est persisté dans
-  // stateDoc. Un ancien état sans `:` restaure exactement l'ancien chemin.
+  // Persisted groups captured BEFORE regroup(): regroup() overwrites s.groups
+  // with the classic one, and a split state ('split' method, ORIGIN:FAMILY
+  // identifiers) would otherwise be lost on restart. Format 1 does not
+  // change: split identifiers already survive in
+  // Group.toJson/fromJson, and groupMethod='split' is persisted in
+  // stateDoc. An old state without `:` restores exactly the old path.
   final persistedGroups = ((doc['groups'] as List?) ?? [])
       .map((e) => Group.fromJson(e as Map<String, dynamic>))
       .toList();
@@ -468,9 +468,9 @@ void _restore(AppState s, Map<String, dynamic> doc) {
   }
 }
 
-/// Autocontrôle sans sockets : chaîne complète en processus.
+/// Self-check without sockets: full in-process chain.
 void _check(AppState s) {
-  // Sonde panne d'équipe sur jouet-1 (plan connu utilisant les 2 équipes).
+  // Team-down probe on toy-1 (known plan using both teams).
   final toyTeams = defaultTeams();
   final toyPlan = optimizeExact(incidents: s.incidents, teams: toyTeams);
   final necToyDown = judgeRevision(
@@ -530,29 +530,29 @@ void _check(AppState s) {
 }
 
 Future<void> main(List<String> args) async {
-  // Port : --port gagne, sinon variable PORT (hébergeurs type Render),
-  // sinon 8080. L'écoute se fait sur 0.0.0.0 pour être joignable derrière
-  // un routeur ; en local, http://127.0.0.1:PORT continue de fonctionner.
+  // Port: --port wins, otherwise PORT variable (Render-type hosts),
+  // otherwise 8080. Listening happens on 0.0.0.0 to be reachable behind
+  // a router; locally, http://127.0.0.1:PORT keeps working.
   var port = int.tryParse(Platform.environment['PORT'] ?? '') ?? 8080;
   for (var i = 0; i < args.length - 1; i++) {
     if (args[i] == '--port') port = int.parse(args[i + 1]);
   }
   final base =
       File(Platform.script.toFilePath()).parent.parent.path;
-  // Patch local : refuser un second serveur sur le même répertoire data/,
-  // au lieu de laisser deux processus écrire le même état.
-  // Le verrou est libéré à l'arrêt propre (SIGINT/SIGTERM) ; après un
-  // arrêt brutal, le fichier peut survivre (limite documentée).
+  // Local patch: refuse a second server on the same data/ directory,
+  // instead of letting two processes write the same state.
+  // The lock is released on clean stop (SIGINT/SIGTERM); after an
+  // abrupt stop, the file may survive (documented limitation).
   if (!args.contains('--check')) {
     final lock = tryAcquireServerLock('$base/data');
     if (!lock.acquired) {
-      print('Refus : un serveur CityResolve tourne déjà sur ce répertoire '
-          'data/ (PID ${lock.holderPid}, démarré ${lock.holderStartedAt}). '
-          'Si aucun serveur ne tourne, supprimer data/server.lock puis relancer.');
+      print('Refused: a CityResolve server is already running on this '
+          'data/ directory (PID ${lock.holderPid}, started ${lock.holderStartedAt}). '
+          'If no server is running, delete data/server.lock then restart.');
       exit(2);
     }
-    // SIGTERM n'existe pas sur Windows (l'erreur est asynchrone, donc
-    // un simple try/catch ne suffit pas) : écoute best-effort.
+    // SIGTERM does not exist on Windows (the error is asynchronous, so
+    // a plain try/catch is not enough): best-effort listening.
     final signals = Platform.isWindows
         ? [ProcessSignal.sigint]
         : [ProcessSignal.sigint, ProcessSignal.sigterm];
@@ -577,19 +577,19 @@ Future<void> main(List<String> args) async {
   try {
     server = await HttpServer.bind(InternetAddress.anyIPv4, port);
   } catch (e) {
-    print('Impossible d\u2019écouter sur 0.0.0.0:$port : $e');
-    print('(port occupé ou sockets interdits par le bac à sable)');
+    print('Cannot listen on 0.0.0.0:$port: $e');
+    print('(port busy or sockets forbidden by the sandbox)');
     return;
   }
   if (s.restoredFromStore) {
-    // Cohérence journal/état : écart possible si arrêt entre l'écriture
-    // de l'audit et celle de l'état (non atomique, assumé et journalisé).
+    // Journal/state consistency: a gap is possible if stopped between writing
+    // the audit and the state (non-atomic, assumed and logged).
     if (s.docAuditSeq != null && s.docAuditSeq != s.audit.entries.length) {
       s.audit.append('store.reconciled', {
         'docAuditSeq': s.docAuditSeq,
         'journalSeq': s.audit.entries.length,
         'recoveredFromBackup': s.storeRecovered,
-        'note': 'écart audit/état détecté au redémarrage',
+        'note': 'audit/state gap detected at restart',
       });
     }
     s.audit.append('server.resumed', {
@@ -604,21 +604,21 @@ Future<void> main(List<String> args) async {
   }
   persist(s);
   await s.mongoQueue;
-  print('CityResolve DEV (données fictives, protocole NON GELÉ) sur '
+  print('CityResolve DEV (fictitious data, protocol NOT FROZEN) at '
       'http://localhost:$port');
   await for (final req in server) {
     try {
       await _handle(req, s, base);
     } catch (e) {
-      // Entrées client invalides => 400 explicite, jamais 500 brut.
+      // Invalid client inputs => explicit 400, never a raw 500.
       var code = 500;
       var msg = e.toString();
       if (e is FormatException) {
         code = 400;
-        msg = 'Corps JSON invalide : ${e.message}';
+        msg = 'Invalid JSON body: ${e.message}';
       } else if (e is TypeError) {
         code = 400;
-        msg = 'Types de champs incorrects dans la requête JSON.';
+        msg = 'Incorrect field types in the JSON request.';
       }
       req.response.statusCode = code;
       req.response.headers.contentType = ContentType.json;
@@ -641,7 +641,7 @@ void _json(HttpRequest req, Object o, [int code = 200]) async {
   await req.response.close();
 }
 
-// --- Sécurité exposition publique (§6) ---
+// --- Public exposure security (§6) ---
 String _clientIp(HttpRequest req) {
   final xff = req.headers.value('x-forwarded-for');
   if (xff != null && xff.trim().isNotEmpty) {
@@ -663,13 +663,13 @@ String? _bearer(HttpRequest req) {
   return null;
 }
 
-/// Hôte MongoDB effectif (sans identifiants) : variable d'environnement
-/// si présente, sinon boucle locale. Utilisé uniquement pour affichage.
+/// Effective MongoDB host (no credentials): environment variable
+/// if present, otherwise local loopback. Used for display only.
 String _mongoHost() {
   final uri = Platform.environment['CITYRESOLVE_MONGO_URI'] ?? '';
   final m = RegExp(r'@([^/?#]+)').firstMatch(uri);
-  if (m != null) return '${m.group(1)} (distant, voir tableau de bord Atlas)';
-  return '127.0.0.1:27017 (local uniquement)';
+  if (m != null) return '${m.group(1)} (remote, see Atlas dashboard)';
+  return '127.0.0.1:27017 (local only)';
 }
 
 bool _municipalOk(HttpRequest req, AppState s) => s.municipal.isAuthorized(
@@ -677,12 +677,12 @@ bool _municipalOk(HttpRequest req, AppState s) => s.municipal.isAuthorized(
 
 void _denyMunicipal(HttpRequest req) {
   _json(req, {
-    'error': 'espace municipal : authentification requise',
+    'error': 'municipal area: authentication required',
     'loginRequired': true,
   }, 401);
 }
 
-/// Limite de débit par IP. Retourne false + répond 429 si dépassée.
+/// Rate limit per IP. Returns false + answers 429 if exceeded.
 Future<bool> _rateLimit(HttpRequest req, AppState s, String bucket,
     {required int max, required Duration window}) async {
   final ok = s.rateLimiter
@@ -692,7 +692,7 @@ Future<bool> _rateLimit(HttpRequest req, AppState s, String bucket,
     req.response.headers.contentType = ContentType.json;
     req.response.headers.set('Retry-After', window.inSeconds.toString());
     req.response.write(jsonEncode({
-      'error': 'trop de requêtes, réessayez dans ${window.inMinutes} minute(s)',
+      'error': 'too many requests, retry in ${window.inMinutes} minute(s)',
       'retryAfterSec': window.inSeconds,
     }));
     await req.response.close();
@@ -703,7 +703,7 @@ Future<bool> _rateLimit(HttpRequest req, AppState s, String bucket,
 Future<void> _handle(HttpRequest req, AppState s, String base) async {
   final p = req.uri.path;
   final m = req.method;
-  // --- Statique : page publique ouverte, espace municipal protégé ---
+  // --- Static: open public page, protected municipal area ---
   if (m == 'GET' && p == '/') {
     return _static(req, '$base/web/public.html', ContentType.html);
   }
@@ -715,16 +715,16 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _static(req, '$base/web/public.css',
         ContentType('text', 'css', charset: 'utf-8'));
   }
-  // Espace municipal UNIQUE : le tableau de bord. L'ancienne interface
-  // DEV (municipal.html/app.js/styles.css) est supprimée : /municipal et
-  // /index.html redirigent vers /municipal/dashboard (chemin unique).
+  // SINGLE municipal area: the dashboard. The old DEV interface
+  // (municipal.html/app.js/styles.css) is removed: /municipal and
+  // /index.html redirect to /municipal/dashboard (single path).
   if (m == 'GET' && (p == '/municipal' || p == '/index.html')) {
     req.response.statusCode = 302;
     req.response.headers.set('Location', '/municipal/dashboard');
     await req.response.close();
     return;
   }
-  // --- Authentification municipale ---
+  // --- Municipal authentication ---
   if (m == 'GET' && p == '/api/municipal/status') {
     return _json(req, {
       'enforced': s.municipal.enforced,
@@ -742,7 +742,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final b = await _body(req);
     final token = (b['token'] ?? '') as String;
     if (!s.municipal.checkToken(token)) {
-      return _json(req, {'error': 'jeton invalide'}, 401);
+      return _json(req, {'error': 'invalid token'}, 401);
     }
     final sid = s.municipal.createSession();
     req.response.cookies.add(Cookie('municipal_session', sid)
@@ -765,10 +765,10 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {
       'ok': true,
       'version': appVersion,
-      'protocol': 'NON GELÉ (brouillon)',
-      'data': 'fictive (bac à sable)',
+      'protocol': 'NOT FROZEN (draft)',
+      'data': 'fictitious (sandbox)',
       'persistence':
-          'état persistant data/state.json (JSON local, tmp+rename+.bak, non atomique avec le journal JSONL, écart réconcilié au démarrage)',
+          'persistent state data/state.json (local JSON, tmp+rename+.bak, not atomic with the JSONL journal, gap reconciled at startup)',
       'groupMethod': s.groupMethod,
       'planId': s.plan?.planId,
       'planVersion': s.plan?.version,
@@ -778,12 +778,12 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     return _json(req, {
       'qWeights': [qWeightSeverity, qWeightExposure],
       'deadlines': deadlinesMin.map((k, v) => MapEntry('$k', v)),
-      'exposureBands': '0/1-9/10-49/50-199/200+, inconnue≠0, décision E=4',
+      'exposureBands': '0/1-9/10-49/50-199/200+, unknown≠0, decision E=4',
       'teams': teamDomains,
       'budget': budgetUnits,
       'grid': '${gridSizeKm}x${gridSizeKm} km, 20 km/h',
-      'availability': '08:00-16:00, 14 jours',
-      'note': 'Politique expérimentale provisoire, NON validée métier.',
+      'availability': '08:00-16:00, 14 days',
+      'note': 'Provisional experimental policy, NOT business-validated.',
     });
   }
   if (m == 'GET' && p == '/api/meta') {
@@ -794,24 +794,24 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'calls': s.metaCalls.map((c) => c.toJson()).toList(),
-      'note': 'Appels réels ou refus explicites. Aucun résultat simulé.',
+      'note': 'Real calls or explicit refusals. No simulated result.',
     });
   }
   if (m == 'GET' && p == '/api/db') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final mongo = s.mongo;
     return _json(req, {
-      'backend': s.mongoPrimary ? 'mongodb (principal) + json (sauvegarde)' : 'json (repli, MongoDB injoignable)',
+      'backend': s.mongoPrimary ? 'mongodb (primary) + json (backup)' : 'json (fallback, MongoDB unreachable)',
       'mongoConnected': mongo?.connected ?? false,
       'mongoServerVersion': mongo?.serverVersion,
       'database': 'cityresolve_dev',
-      // Hôte seul, JAMAIS d'identifiants dans la réponse.
+      // Host only, NEVER credentials in the response.
       'host': _mongoHost(),
-      'uri': 'mongodb://127.0.0.1:27017 (local uniquement)',
+      'uri': 'mongodb://127.0.0.1:27017 (local only)',
       'counts': mongo != null && mongo.connected ? await mongo.counts() : {},
       'lastError': s.mongoError,
       'transactions':
-          'aucune transaction multi-documents (pas de replica set) : document d\'état + miroirs collection par collection, écart journal/état réconcilié au démarrage',
+          'no multi-document transactions (no replica set): state document + mirrors collection by collection, journal/state gap reconciled at startup',
     });
   }
   if (m == 'GET' && p == '/api/state') {
@@ -854,7 +854,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (r.id == rid) rep = r;
     }
     if (rep == null) {
-      return _json(req, {'error': 'signalement inconnu: $rid'}, 404);
+      return _json(req, {'error': 'unknown report: $rid'}, 404);
     }
     try {
       final out = await extractStructuredWithMeta(s.meta, rep,
@@ -867,7 +867,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       return _json(req, {'error': e.message, 'call': e.record.toJson()}, 502);
     }
   }
-  // --- Photos (P1) : octets sur disque, jamais dans l'état ni en base ---
+  // --- Photos (P1): bytes on disk, never in the state or database ---
   if (m == 'POST' && p == '/api/photos') {
     if (!await _rateLimit(req, s, 'photo-upload',
         max: 10, window: const Duration(minutes: 10))) {
@@ -877,7 +877,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (!ct.startsWith('image/')) {
       return _json(req, {
         'error':
-            'Content-Type image/* requis (jpeg/png/gif/webp), reçu : ${ct.isEmpty ? 'absent' : ct}'
+            'Content-Type image/* required (jpeg/png/gif/webp), received: ${ct.isEmpty ? 'missing' : ct}'
       }, 400);
     }
     List<int> bytes;
@@ -914,7 +914,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     final id = p.substring('/api/photos/'.length);
     if (!isMediaId(id)) {
-      return _json(req, {'error': 'identifiant média invalide'}, 400);
+      return _json(req, {'error': 'invalid media identifier'}, 400);
     }
     final dir = _uploadsDir(base);
     for (final ext in ['jpg', 'png', 'gif', 'webp']) {
@@ -930,7 +930,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         return;
       }
     }
-    return _json(req, {'error': 'média introuvable'}, 404);
+    return _json(req, {'error': 'media not found'}, 404);
   }
   if (m == 'POST' && p == '/api/meta/analyze-image') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
@@ -947,13 +947,13 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (mid.isEmpty || !isMediaId(mid)) {
       return _json(req, {
         'error':
-            'mediaId requis (ou reportId dont la photo est un média téléversé)'
+            'mediaId required (or reportId whose photo is an uploaded media)'
       }, 400);
     }
     final dir = _uploadsDir(base);
     final metaFile = mediaMetaFile(dir, mid);
     if (!metaFile.existsSync()) {
-      return _json(req, {'error': 'média introuvable : téléverser d\'abord'}, 404);
+      return _json(req, {'error': 'media not found: upload first'}, 404);
     }
     final meta =
         jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
@@ -962,14 +962,14 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (File('$dir/$mid.$ext').existsSync()) foundExt = ext;
     }
     if (foundExt == null) {
-      return _json(req, {'error': 'fichier média manquant'}, 404);
+      return _json(req, {'error': 'media file missing'}, 404);
     }
     final bytes = await File('$dir/$mid.$foundExt').readAsBytes();
     try {
-      // Vision pixels seuls : le texte déclaré n'est PAS transmis (mesuré
-      // nov. 2026 : le modèle projetait le texte déclaré — lampadaires —
-      // dans les « observations visibles » d'un schéma qui n'en contenait
-      // pas). Le rapprochement texte/image se fait en aval, pas dans l'œil.
+      // Vision on pixels alone: the declared text is NOT sent (measured
+      // Nov 2026: the model projected the declared text — street lamps —
+      // into the "visible observations" of a diagram that contained none).
+      // Text/image matching happens downstream, not in the eye.
       final out = await analyzeImageWithMeta(s.meta, bytes,
           mime: (meta['mime'] ?? mimeForExt(foundExt)) as String,
           reportId: rep?.id,
@@ -999,9 +999,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     return _json(req, {
       'scenarios': [
-        {'kind': 'jouet-1', 'label': 'Jouet fixe nº1 (6 sign., 3 inc.)'},
-        {'kind': 'jouet-s5', 'label': 'Jouet S5 (escalade)'},
-        {'kind': 'dev', 'label': 'DEV généré (20 sign., 8 inc., graine)'},
+        {'kind': 'jouet-1', 'label': 'Fixed toy no. 1 (6 reports, 3 inc.)'},
+        {'kind': 'jouet-s5', 'label': 'Toy S5 (escalation)'},
+        {'kind': 'dev', 'label': 'Generated DEV (20 reports, 8 inc., seed)'},
       ]
     });
   }
@@ -1042,7 +1042,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'truthKnown': s.truth.map((t) => t.toJson()).toList(),
     });
   }
-  // --- API publique : données filtrées uniquement, jamais la vérité ---
+  // --- Public API: filtered data only, never the truth ---
   if (m == 'GET' && p == '/api/public/reports') {
     if (!await _rateLimit(req, s, 'public-read',
         max: 600, window: const Duration(minutes: 10))) {
@@ -1061,8 +1061,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
           .toList(),
     });
   }
-  // Note : '/api/public/reports/recent' (pagination curseur, définie
-  // plus bas) est exclue ici pour ne pas être lue comme un identifiant.
+  // Note: '/api/public/reports/recent' (cursor pagination, defined
+  // below) is excluded here so it is not read as an identifier.
   if (m == 'GET' &&
       p.startsWith('/api/public/reports/') &&
       p != '/api/public/reports/recent') {
@@ -1076,7 +1076,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (r.id == rid) rep = r;
     }
     if (rep == null) {
-      return _json(req, {'error': 'signalement introuvable'}, 404);
+      return _json(req, {'error': 'report not found'}, 404);
     }
     final status = trackingStatus(rep, s.groups, s.incidents, s.plan);
     Incident? inc;
@@ -1102,17 +1102,17 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     return _json(req, {
       'fictive': true,
-      'grid': '5x5 km fictive (pas une carte réelle)',
+      'grid': '5x5 km fictitious (not a real map)',
       'incidents': s.incidents.map(publicIncidentJson).toList(),
     });
   }
-  // Création publique : validée + limitée en fréquence. Ne regroupe PAS :
-  // un visiteur ne doit ni invalider le plan municipal ni déclencher un
-  // calcul (l'interface municipale regroupe explicitement). Le statut
-  // passe à « regroupé » au prochain regroupement municipal.
-  // Création partagée (fonction locale) : l'alias canonique public
-  // POST /api/public/report et le chemin historique POST /api/reports
-  // appliquent exactement les mêmes validation, limites et persistance.
+  // Public creation: validated + rate-limited. Does NOT group:
+  // a visitor must neither invalidate the municipal plan nor trigger a
+  // computation (the municipal interface groups explicitly). The status
+  // becomes "grouped" at the next municipal grouping.
+  // Shared creation (local function): the canonical public alias
+  // POST /api/public/report and the historical path POST /api/reports
+  // apply exactly the same validation, limits and persistence.
   Future<void> _createPublicReport(
       HttpRequest req, AppState s, String base) async {
     if (!await _rateLimit(req, s, 'report-create',
@@ -1122,7 +1122,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     if (s.reports.length >= maxReportsTotal) {
       return _json(req, {
         'error':
-            'capacité maximale de signalements atteinte ($maxReportsTotal)'
+            'maximum report capacity reached ($maxReportsTotal)'
       }, 429);
     }
     final b = await _body(req);
@@ -1131,23 +1131,23 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final sevH = b['severityHint'] as int?;
     final expH = b['exposureHint'] as int?;
     if (sevH != null && (sevH < 1 || sevH > 5)) {
-      return _json(req, {'error': 'severityHint hors 1..5 (ou null = inconnue)'}, 400);
+      return _json(req, {'error': 'severityHint outside 1..5 (or null = unknown)'}, 400);
     }
     if (expH != null && (expH < 0 || expH > 4)) {
-      return _json(req, {'error': 'exposureHint hors 0..4 (ou null = inconnue)'}, 400);
+      return _json(req, {'error': 'exposureHint outside 0..4 (or null = unknown)'}, 400);
     }
     final category = (b['category'] ?? 'autre') as String;
     if (!isPublicCategory(category)) {
-      return _json(req, {'error': 'catégorie inconnue : $category'}, 400);
+      return _json(req, {'error': 'unknown category: $category'}, 400);
     }
-    // Photo : soit un mediaId téléversé (vérifié), soit l'étiquette libre historique.
+    // Photo: either an uploaded mediaId (verified), or the historical free label.
     String? photoRef = b['photo'] as String?;
     final mediaId = b['photoMediaId'] as String?;
     if (mediaId != null && mediaId.isNotEmpty) {
       if (!isMediaId(mediaId) ||
           !mediaMetaFile(_uploadsDir(base), mediaId).existsSync()) {
         return _json(req, {
-          'error': 'photoMediaId invalide ou média introuvable : téléverser d\'abord via POST /api/photos'
+          'error': 'invalid photoMediaId or media not found: upload first via POST /api/photos'
         }, 400);
       }
       photoRef = mediaId;
@@ -1185,7 +1185,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'statusLabel': trackingLabels['enregistre'],
       'fictive': true,
       'note':
-          'Signalement enregistré. Démonstration : les données peuvent être réinitialisées à tout moment.',
+          'Report registered. Demonstration: data can be reset at any time.',
     });
   }
 
@@ -1225,11 +1225,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 100)
         .clamp(1, 200));
     if (minx > maxx || miny > maxy) {
-      return _json(req, {'error': 'bbox invalide'}, 400);
+      return _json(req, {'error': 'invalid bbox'}, 400);
     }
     return _json(req, {
       'fictive': true,
-      'grid': '5x5 km fictive (pas une carte réelle)',
+      'grid': '5x5 km fictitious (not a real map)',
       'incidents': filterIncidentsBbox(
               s.incidents, minx, miny, maxx, maxy, limit)
           .map(publicIncidentJson)
@@ -1237,7 +1237,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     });
   }
   if (m == 'GET' && p.startsWith('/api/public/report/')) {
-    // Suivi canonique par identifiant (jamais de liste massive).
+    // Canonical tracking by identifier (never a massive list).
     if (!await _rateLimit(req, s, 'public-read',
         max: 600, window: const Duration(minutes: 10))) {
       return;
@@ -1248,7 +1248,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (r.id == rid) rep = r;
     }
     if (rep == null) {
-      return _json(req, {'error': 'signalement introuvable'}, 404);
+      return _json(req, {'error': 'report not found'}, 404);
     }
     final status = trackingStatus(rep, s.groups, s.incidents, s.plan);
     return _json(req, {
@@ -1272,8 +1272,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final method = (b['method'] ?? 'classique') as String;
     final split = b['split'] == true;
     if (method == 'split') {
-      // Regroupement découpé global, explicite : jamais de aggregate()
-      // classique sur des identifiants ORIGINE:FAMILLE.
+      // Global split grouping, explicit: never classic aggregate()
+      // on ORIGIN:FAMILY identifiers.
       regroupSplit(s);
       await auditPersist(s, 'group.done', {
         'method': 'split',
@@ -1297,7 +1297,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (s.meta.state != MetaState.verified) {
         return _json(req, {
           'error':
-              'Méthode META indisponible (connecteur ${s.meta.state.name}) : aucun regroupement simulé, classique toujours disponible.',
+              'META method unavailable (connector ${s.meta.state.name}): no simulated grouping, classic still available.',
           'meta': s.meta.toJson(),
         }, 400);
       }
@@ -1334,9 +1334,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     regroup(s);
     var splitGroups = 0;
     if (split) {
-      // Post-filtre découpage sur le regroupement classique : même règle
-      // que pour Meta, agrégation mixte, jamais aggregate() classique
-      // sur des identifiants découpés.
+      // Splitting post-filter on classic grouping: same rule
+      // as for Meta, mixed aggregation, never classic aggregate()
+      // on split identifiers.
       final sp = splitGroupsByFamily(s.reports, s.groups);
       s.groups = sp.groups;
       splitGroups = sp.splitGroups;
@@ -1376,7 +1376,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final teams = activeTeams(s);
     if (teams.isEmpty) {
       return _json(req, {
-        'error': 'Aucune équipe active (down : ${s.teamsDown.join(',')}).'
+        'error': 'No active team (down: ${s.teamsDown.join(',')}).'
       }, 400);
     }
     try {
@@ -1407,12 +1407,12 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   if (m == 'POST' && p == '/api/plan/validate') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     if (s.plan == null) {
-      return _json(req, {'error': 'aucun plan à valider'}, 400);
+      return _json(req, {'error': 'no plan to validate'}, 400);
     }
     if (planIsStale(s.plan, s.planHistory, s.audit.entries)) {
       return _json(req, {
         'error':
-            'plan périmé (regroupement postérieur) : replanifier avant de valider'
+            'stale plan (later grouping): replan before validating'
       }, 400);
     }
     final b = await _body(req);
@@ -1430,22 +1430,22 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   }
   if (m == 'POST' && p == '/api/simulate') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
-    if (s.plan == null) return _json(req, {'error': 'aucun plan'}, 400);
+    if (s.plan == null) return _json(req, {'error': 'no plan'}, 400);
     final knownIds = s.incidents.map((i) => i.id).toSet();
     if (s.plan!.tasks.any((t) => !knownIds.contains(t.incidentId))) {
       return _json(req, {
-        'error': 'plan périmé (incidents regroupés depuis) : relancer la planification'
+        'error': 'stale plan (incidents regrouped since): restart planning'
       }, 400);
     }
     if (s.truth.isEmpty) {
-      return _json(req, {'error': 'vérité terrain indisponible'}, 400);
+      return _json(req, {'error': 'ground truth unavailable'}, 400);
     }
-    // Appariement vérité sur les origines : sans cette projection, un
-    // incident découpé [E1:eclairage] n'intersecterait jamais la vérité
-    // [E1] et serait compté 'hors vérité', avec la vérité manquée, alors
-    // même que le découpage a produit la bonne tâche. Les champs de
-    // planification sont conservés (voir originMappedIncident) ; un
-    // incident plein est inchangé par la projection.
+    // Truth matching on origins: without this projection, a
+    // split incident [E1:eclairage] would never intersect the truth
+    // [E1] and would be counted 'outside truth', with the truth missed, even
+    // though splitting produced the right task. Planning
+    // fields are kept (see originMappedIncident); a
+    // full incident is unchanged by the projection.
     final simProposed =
         s.incidents.map(originMappedIncident).toList();
     s.sim = simulate(
@@ -1468,14 +1468,14 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'result': s.sim!.toJson(),
       'robustness': s.robust.map((r) => r.toJson()).toList(),
       'splitOriginMapped': groupsUseSplitIds(s.groups),
-      'note': 'Interventions SIMULÉES, pas des interventions urbaines réelles.',
+      'note': 'SIMULATED interventions, not real urban interventions.',
     });
   }
   if (m == 'POST' && p == '/api/inject') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
     final b = await _body(req);
     final type = (b['type'] ?? 'reports') as String;
-    if (s.plan == null) return _json(req, {'error': 'aucun plan'}, 400);
+    if (s.plan == null) return _json(req, {'error': 'no plan'}, 400);
     final oldPlan = s.plan!;
     final oldIncidents = List<Incident>.from(s.incidents);
     if (type == 'team_down') {
@@ -1499,9 +1499,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         s.reports.add(r);
         s.manualReports.add(r.id);
       }
-      // Regrouper avec la méthode active : un regroupement classique sur
-      // un état découpé changerait les identifiants (ORIGINE:FAMILLE ->
-      // pleins) et fabriquerait de fausses escalades S5 (faux N3-S5).
+      // Regroup with the active method: a classic grouping on
+      // a split state would change identifiers (ORIGIN:FAMILY ->
+      // full) and fabricate false S5 escalations (false N3-S5).
       if (s.groupMethod == 'split') {
         regroupSplit(s, keepPlan: true);
       } else if (s.groupMethod == 'meta') {
@@ -1509,12 +1509,12 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
           await regroupMeta(s);
         } on MetaException catch (e) {
           await auditPersist(s, 'inject.meta.error',
-              {'error': e.message, 'note': 'signalements ajoutés mais regroupement non rejoué'});
+              {'error': e.message, 'note': 'reports added but grouping not rerun'});
           return _json(req, {
             'error': e.message,
             'call': e.record.toJson(),
             'note':
-                'signalements ajoutés, regroupement META non rejoué : relancer un regroupement explicite',
+                'reports added, META grouping not rerun: rerun an explicit grouping',
           }, 502);
         }
       } else {
@@ -1588,7 +1588,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final b = await _body(req);
     final configs = (b['configs'] as List? ?? []).take(5).toList();
     if (configs.isEmpty || s.truth.isEmpty) {
-      return _json(req, {'error': 'configs requises + vérité terrain'}, 400);
+      return _json(req, {'error': 'configs required + ground truth'}, 400);
     }
     final rows = [];
     final byId = {for (final r in s.reports) r.id: r};
@@ -1627,19 +1627,19 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
   }
   if (m == 'GET' && p == '/api/compare-methods') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
-    // Comparaison visible DEV : CLASSIQUE (référence) vs META (si disponible).
+    // Visible DEV comparison: CLASSIC (reference) vs META (if available).
     final byId = {for (final r in s.reports) r.id: r};
     final classicGroups = groupReports(s.reports,
         distMaxM: (s.groupParams['distMaxM'] as num).toDouble(),
         deltaTMaxH: (s.groupParams['deltaTMaxH'] as num).toDouble(),
         simMin: (s.groupParams['simMin'] as num).toDouble());
     Map<String, dynamic> side(List<Group> gs, String method) {
-      // Agrégation mixte : si metaGroups a été découpé (split: true),
-      // aggregate() classique échouerait sur les identifiants découpés.
-      // F1 scoré sur les origines, avec la même limite documentée que
-      // metricsFor (une origine dans deux groupes découpés ne compte que
-      // pour le dernier) ; la preuve du découpage reste le nombre
-      // d'incidents, pas ce F1.
+      // Mixed aggregation: if metaGroups was split (split: true),
+      // classic aggregate() would fail on split identifiers.
+      // F1 scored on origins, with the same documented limitation as
+      // metricsFor (an origin in two split groups only counts for
+      // the last one); the proof of splitting remains the number
+      // of incidents, not this F1.
       final incs = aggregateForGroups(gs, byId);
       Map<String, dynamic>? metrics;
       if (s.truth.isNotEmpty) {
@@ -1679,11 +1679,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final disagreements = <Map<String, dynamic>>[];
     if (s.metaGroups.isNotEmpty) {
       mSide = side(s.metaGroups, 'meta');
-      // Désaccords au niveau origine : un groupe découpé [E1:eclairage]
-      // et un groupe plein [E1] désignent le même signalement E1. Sans
-      // cette projection, chaque paire découpée serait comptée comme
-      // désaccord artificiel. Limite : une origine dans deux groupes
-      // découpés ne garde que le dernier dans ces cartes.
+      // Disagreements at origin level: a split group [E1:eclairage]
+      // and a full group [E1] designate the same report E1. Without
+      // this projection, each split pair would be counted as an
+      // artificial disagreement. Limitation: an origin in two split
+      // groups only keeps the last one in these maps.
       final cg = <String, String>{};
       for (final g in originMappedGroups(classicGroups)) {
         for (final id in g.reportIds) {
@@ -1705,8 +1705,8 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
             disagreements.add({
               'a': ids[i],
               'b': ids[j],
-              'classique': togetherC ? 'fusionnés' : 'séparés',
-              'meta': togetherM ? 'fusionnés' : 'séparés',
+              'classique': togetherC ? 'merged' : 'separated',
+              'meta': togetherM ? 'merged' : 'separated',
             });
           }
         }
@@ -1730,16 +1730,16 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         'calls': s.metaCalls.map((c) => c.toJson()).toList(),
       },
       'truthNote': s.truth.isEmpty
-          ? 'Aucune vérité terrain : F1 non calculé (explicite).'
-          : 'F1 calculé uniquement sur les signalements disposant d\'une vérité DEV ; manuels exclus, absence signalée.',
+          ? 'No ground truth: F1 not computed (explicit).'
+          : 'F1 computed only on reports with a DEV ground truth; manual reports excluded, absence flagged.',
       'note':
-          'DEV exploratoire uniquement. Un meilleur F1 n\'est pas présenté comme une meilleure allocation : Q affichés séparément, aucune supériorité déclarée.',
+          'Exploratory DEV only. A better F1 is not presented as a better allocation: Q scores shown separately, no superiority claimed.',
     });
   }
   if (m == 'GET' && p == '/api/journal') {
     if (!_municipalOk(req, s)) return _denyMunicipal(req);
-    // limit optionnelle bornée (défaut : tout — l'interface utilise le
-    // curseur de /api/municipal/dashboard/activity pour les gros volumes).
+    // Optional bounded limit (default: all — the interface uses the
+    // /api/municipal/dashboard/activity cursor for large volumes).
     final lim = int.tryParse(req.uri.queryParameters['limit'] ?? '');
     final entries = s.audit.toJson();
     if (lim != null) {
@@ -1753,10 +1753,10 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     return _json(req, {'entries': entries});
   }
-  // --- Tableau de bord municipal : endpoints agrégés dédiés ---
-  // Tous protégés (espace municipal), limités et paginés. Calculés sur
-  // l'état de travail borné ; voir docs/PERSISTANCE_EVOLUTION.md pour
-  // la trajectoire vers des lectures MongoDB indexées à grand volume.
+  // --- Municipal dashboard: dedicated aggregate endpoints ---
+  // All protected (municipal area), limited and paginated. Computed on
+  // the bounded working state; see docs/PERSISTANCE_EVOLUTION.md for
+  // the path towards indexed MongoDB reads at large volume.
   if (m == 'GET' && p == '/municipal/dashboard') {
     return _static(req, '$base/web/dashboard.html', ContentType.html);
   }
@@ -1768,9 +1768,9 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
             ? ContentType('application', 'javascript', charset: 'utf-8')
             : ContentType('text', 'css', charset: 'utf-8'));
   }
-  // Pages municipales dédiées (même espace protégé, même design system).
-  // Le HTML est public par construction (aucune donnée dedans) ; toutes
-  // les données et actions restent protégées côté API, sans exception.
+  // Dedicated municipal pages (same protected area, same design system).
+  // The HTML is public by construction (no data inside); all
+  // data and actions remain protected on the API side, without exception.
   const municipalPages = {
     '/municipal/decoupage': 'decoupage.html',
     '/municipal/planification': 'planification.html',
@@ -1819,27 +1819,27 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'period': period.kind,
       'reports': rep,
       'reportsNote': period.kind == 'all'
-          ? 'tous les signalements de l\u2019état courant'
-          : 'signalements reçus horodatés uniquement (scénarios DEV sans date exclus)',
+          ? 'all reports in the current state'
+          : 'timestamped received reports only (DEV scenarios without a date excluded)',
       'incidents': {
         'count': s.incidents.length,
         'note':
-            'reconstruction actuelle (un incident = un groupe ; un signalement multi-problème peut contribuer à plusieurs incidents)',
+            'current reconstruction (one incident = one group; a multi-problem report can contribute to several incidents)',
       },
       'teams': {
         'available': teams.length - down.length,
         'total': teams.length,
         'down': down.toList(),
         'fictive': true,
-        'note': 'équipes simulées du bac à sable',
+        'note': 'simulated sandbox teams',
       },
       'budget': {
         'total': budgetUnits,
         'committed': committed,
         'remaining': budgetUnits - committed,
         'pctUsed': budgetUnits == 0 ? 0.0 : 100.0 * committed / budgetUnits,
-        'unit': 'unités fictives (ni FCFA, ni euros, ni dollars)',
-        'source': s.plan == null ? 'aucun plan' : 'plan ${s.plan!.planId}',
+        'unit': 'fictitious units (neither FCFA, euros, nor dollars)',
+        'source': s.plan == null ? 'no plan' : 'plan ${s.plan!.planId}',
       },
       'generatedAt': now.toIso8601String(),
     });
@@ -1878,7 +1878,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'fictive': true,
       ...incidentStatusBuckets(s.incidents, s.plan),
       'note':
-          'statuts exclusifs dérivés de l\u2019état réel (définitions : voir lib/dashboard.dart)',
+          'exclusive statuses derived from the real state (definitions: see lib/dashboard.dart)',
     });
   }
   if (m == 'GET' && p == '/api/municipal/dashboard/map') {
@@ -1894,11 +1894,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 200)
         .clamp(1, 500));
     if (minx > maxx || miny > maxy) {
-      return _json(req, {'error': 'bbox invalide'}, 400);
+      return _json(req, {'error': 'invalid bbox'}, 400);
     }
     return _json(req, {
       'fictive': true,
-      'grid': '5x5 km fictive projetée (pas des relevés GPS)',
+      'grid': '5x5 km fictitious projected (not GPS readings)',
       'incidents': filterIncidentsBbox(s.incidents, minx, miny, maxx, maxy, limit)
           .map(publicIncidentJson)
           .toList(),
@@ -1941,7 +1941,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
         'plan': null,
         'stalePlan': false,
         'staleNote': null,
-        'note': 'aucun plan généré (lancer Optimiser le plan)',
+        'note': 'no plan generated (run Optimize plan)',
       });
     }
     final limit = ((int.tryParse(req.uri.queryParameters['limit'] ?? '') ?? 50)
@@ -1978,7 +1978,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'fictive': true,
       'stalePlan': stale,
       'staleNote': stale
-          ? 'regroupement postérieur au plan : identifiants incidents possiblement renumérotés, replanifier avant toute validation'
+          ? 'grouping after the plan: incident identifiers possibly renumbered, replan before any validation'
           : null,
       'plan': {
         'planId': s.plan!.planId,
@@ -1997,7 +1997,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
           {'incidentId': e.key, 'motif': e.value},
       ],
       'note':
-          'proposition calculée (optimiseur exact, périmètre borné), pas une intervention effectuée ; S5 jamais dispatchés (voir escalades)',
+          'computed proposal (exact optimizer, bounded scope), not a completed intervention; S5 never dispatched (see escalations)',
     });
   }
   if (m == 'GET' && p == '/api/municipal/split/overview') {
@@ -2021,11 +2021,11 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     }
     final rid = (req.uri.queryParameters['reportId'] ?? '').trim();
     if (rid.isEmpty) {
-      return _json(req, {'error': 'reportId requis'}, 400);
+      return _json(req, {'error': 'reportId required'}, 400);
     }
     final det = splitReportDetail(s.reports, s.groups, s.incidents, rid);
     if (det == null) {
-      return _json(req, {'error': 'signalement introuvable'}, 404);
+      return _json(req, {'error': 'report not found'}, 404);
     }
     return _json(req, {'fictive': true, ...det});
   }
@@ -2040,7 +2040,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'fictive': true,
       'stalePlan': stale,
       'staleNote': stale
-          ? 'regroupement postérieur au plan : identifiants incidents possiblement renumérotés, replanifier avant toute validation'
+          ? 'grouping after the plan: incident identifiers possibly renumbered, replan before any validation'
           : null,
       ...planOverviewData(
         reports: s.reports,
@@ -2087,7 +2087,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       if (r.id == rid) rep = r;
     }
     if (rep == null) {
-      return _json(req, {'error': 'signalement introuvable'}, 404);
+      return _json(req, {'error': 'report not found'}, 404);
     }
     Map<String, dynamic>? photoMeta;
     if (rep.photo != null && isMediaId(rep.photo!)) {
@@ -2126,7 +2126,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
     final rid = p.substring('/api/municipal/report/'.length).trim();
     final idx = s.reports.indexWhere((r) => r.id == rid);
     if (idx < 0) {
-      return _json(req, {'error': 'signalement introuvable'}, 404);
+      return _json(req, {'error': 'report not found'}, 404);
     }
     final b = await _body(req);
     final err = validateReportPatch(b);
@@ -2217,7 +2217,7 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'report': updated.toJson(),
       'staleGrouping': true,
       'note':
-          'Regroupement non relancé : relancer un regroupement municipal pour propager.'
+          'Grouping not rerun: rerun a municipal grouping to propagate.'
     });
   }
   if (m == 'GET' && p == '/api/municipal/dashboard/search') {
@@ -2240,12 +2240,12 @@ Future<void> _handle(HttpRequest req, AppState s, String base) async {
       'nextCursor':
           start + page.length < all.length ? start + page.length - 1 : null,
       'note':
-          'recherche plein-état borné ; à grand volume : index texte MongoDB (voir docs/PERSISTANCE_EVOLUTION.md)',
+          'bounded full-state search; at large volume: MongoDB text index (see docs/PERSISTANCE_EVOLUTION.md)',
     });
   }
   req.response.statusCode = 404;
   req.response.headers.contentType = ContentType.json;
-  req.response.write(jsonEncode({'error': 'route inconnue'}));
+  req.response.write(jsonEncode({'error': 'unknown route'}));
   await req.response.close();
 }
 
@@ -2253,7 +2253,7 @@ Future<void> _static(HttpRequest req, String path, ContentType ct) async {
   final f = File(path);
   if (!await f.exists()) {
     req.response.statusCode = 404;
-    req.response.write('introuvable');
+    req.response.write('not found');
     await req.response.close();
     return;
   }

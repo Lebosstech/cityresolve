@@ -1,8 +1,8 @@
-// Oracle décisionnel (C6 §5) : nécessité d'une révision avec les seules
-// informations disponibles (observables + estimations). La vérité cachée
-// ne sert qu'à noter, jamais à juger. Déterministe.
-// Appariement inter-phases par recouvrement de signalements (ids stables
-// non requis) ; équipes retirées détectées.
+// Decision oracle (C6 §5): necessity of a review with only the
+// available information (observables + estimates). Hidden truth
+// is only used to score, never to judge. Deterministic.
+// Cross-phase matching by report overlap (stable ids
+// not required); removed teams detected.
 import 'optimizer.dart';
 import 'policy.dart';
 import 'types.dart';
@@ -16,7 +16,7 @@ class Necessity {
       {'code': code, 'necessary': necessary, 'detail': detail};
 }
 
-/// Appariement ancien -> nouvel incident (recouvrement maximal, >0 requis).
+/// Old -> new incident matching (maximum overlap, >0 required).
 String? matchIncident(Set<String> oldReports, List<Incident> updated) {
   String? best;
   var bestN = 0;
@@ -30,7 +30,7 @@ String? matchIncident(Set<String> oldReports, List<Incident> updated) {
   return best;
 }
 
-/// Juge si l'ancien plan doit changer face aux incidents mis à jour.
+/// Judges whether the old plan must change given the updated incidents.
 Necessity judgeRevision({
   required Plan oldPlan,
   required List<Incident> oldIncidents,
@@ -40,7 +40,7 @@ Necessity judgeRevision({
 }) {
   if (newS5.isNotEmpty) {
     return const Necessity('N3-S5', true,
-        'S5 révélé : escalade humaine exigée, pas de réaffectation.');
+        'S5 revealed: human escalation required, no reassignment.');
   }
   final oldById = {for (final i in oldIncidents) i.id: i};
   final newById = {for (final i in updated) i.id: i};
@@ -48,7 +48,7 @@ Necessity judgeRevision({
   for (final t in oldPlan.tasks) {
     if (!teamIds.contains(t.teamId)) {
       return Necessity('N1', true,
-          'Équipe ${t.teamId} indisponible : réaffectation requise.');
+          'Team ${t.teamId} unavailable: reassignment required.');
     }
   }
   final mapping = <String, String>{}; // ancien id -> nouvel id
@@ -59,12 +59,12 @@ Necessity judgeRevision({
         : matchIncident(old.reportIds.toSet(), updated);
     if (m == null) {
       return Necessity('N1', true,
-          'Regroupement modifié : ${t.incidentId} a disparu.');
+          'Grouping changed: ${t.incidentId} disappeared.');
     }
     mapping[t.incidentId] = m;
   }
-  // Réévalue l'ancien plan (mappé) avec les estimations mises à jour,
-  // ordres conservés.
+  // Re-evaluates the old plan (mapped) with the updated estimates,
+  // orders kept.
   final perTeam = <String, List<SchedTask>>{};
   final oldOrder = {for (final t in oldPlan.tasks) t.incidentId: t.order};
   for (final t in oldPlan.tasks) {
@@ -117,18 +117,18 @@ Necessity judgeRevision({
   if (infeasible) {
     if (fresh != null && fresh.tasks.isNotEmpty) {
       return Necessity('N1', true,
-          'Ancien plan infaisable ; alternative réalisable (Q=${fresh.q.toStringAsFixed(1)}).');
+          'Old plan infeasible; feasible alternative (Q=${fresh.q.toStringAsFixed(1)}).');
     }
     return const Necessity('N1b', false,
-        'Ancien plan infaisable sans alternative : signaler, ne pas réaffecter.');
+        'Old plan infeasible with no alternative: flag it, do not reassign.');
   }
   if (fresh != null && fresh.q - oldQ >= revisionThresholdQ - 1e-9) {
     return Necessity('N2', true,
-        'Gain +${(fresh.q - oldQ).toStringAsFixed(1)} points Q (seuil $revisionThresholdQ).');
+        'Gain +${(fresh.q - oldQ).toStringAsFixed(1)} Q points (threshold $revisionThresholdQ).');
   }
   final g = fresh == null ? 0.0 : fresh.q - oldQ;
   return Necessity('U', false,
-      'Ancien plan faisable, gain +${g.toStringAsFixed(1)} < $revisionThresholdQ : stabilité.');
+      'Old plan feasible, gain +${g.toStringAsFixed(1)} < $revisionThresholdQ: stability.');
 }
 
 class PlanDiff {
@@ -137,15 +137,15 @@ class PlanDiff {
   const PlanDiff(this.material, this.detail);
 }
 
-/// Changement matériel entre deux plans (appariements par recouvrement,
-/// règle 30 min cosmétique).
+/// Material change between two plans (overlap matching,
+/// 30 min cosmetic rule).
 PlanDiff comparePlans(
   Plan oldPlan,
   Plan newPlan, {
   required Map<String, Set<String>> oldReports,
   required Map<String, Set<String>> newReports,
 }) {
-  // Apparie chaque tâche ancienne (recouvrement maximal).
+  // Match each old task (maximum overlap).
   final match = <String, String>{};
   for (final t in oldPlan.tasks) {
     final ors = oldReports[t.incidentId] ?? {};
@@ -159,37 +159,37 @@ PlanDiff comparePlans(
       }
     });
     if (best == null) {
-      return const PlanDiff(true, 'Sélection d\u2019incidents modifiée.');
+      return const PlanDiff(true, 'Incident selection changed.');
     }
     match[t.incidentId] = best!;
   }
-  // Nouvelles tâches sans antériorité ?
+  // New tasks without a predecessor?
   final matchedNew = match.values.toSet();
   for (final t in newPlan.tasks) {
     if (!matchedNew.contains(t.incidentId)) {
-      return const PlanDiff(true, 'Sélection d\u2019incidents modifiée.');
+      return const PlanDiff(true, 'Incident selection changed.');
     }
   }
   final n = {for (final t in newPlan.tasks) t.incidentId: t};
   for (final t in oldPlan.tasks) {
-    // Un incident apparié mais sans tâche dans le nouveau plan (ex. plus
-    // aucune équipe compétente après team_down) est un changement matériel,
-    // jamais un plantage : l'ancien code déréférençait n[...] sans contrôle.
+    // A matched incident with no task in the new plan (e.g. no
+    // competent team left after team_down) is a material change,
+    // never a crash: the old code dereferenced n[...] without a check.
     final u = n[match[t.incidentId]!];
     if (u == null) {
       return PlanDiff(true,
-          'Incident ${t.incidentId} non repris dans le nouveau plan.');
+          'Incident ${t.incidentId} not carried over to the new plan.');
     }
     if (t.teamId != u.teamId) {
-      return PlanDiff(true, 'Réaffectation de ${t.incidentId}.');
+      return PlanDiff(true, 'Reassignment of ${t.incidentId}.');
     }
     if (t.order != u.order) {
-      return PlanDiff(true, 'Ordre modifié pour ${t.incidentId}.');
+      return PlanDiff(true, 'Order changed for ${t.incidentId}.');
     }
     if ((t.startMin - u.startMin).abs() >= cosmeticShiftMin ||
         (t.endMin - u.endMin).abs() >= cosmeticShiftMin) {
-      return PlanDiff(true, 'Horaires modifiés ≥ $cosmeticShiftMin min.');
+      return PlanDiff(true, 'Times changed ≥ $cosmeticShiftMin min.');
     }
   }
-  return const PlanDiff(false, 'Inchangé ou écarts cosmétiques < 30 min.');
+  return const PlanDiff(false, 'Unchanged or cosmetic differences < 30 min.');
 }

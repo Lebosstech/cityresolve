@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Tableau de bord municipal</title>
+<title>CityResolve — Municipal dashboard</title>
 <link rel="stylesheet" href="/dashboard.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
-<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<header class="demo-banner">DEMONSTRATION — FICTITIOUS DATA — PROTOCOL NOT FROZEN — NO PROOF</header>
 <div id="loginOverlay" class="login-overlay" hidden>
   <div class="login-card">
-    <h2>Espace municipal</h2>
-    <p class="muted">Tableau de bord protégé : connectez-vous avec le jeton municipal.</p>
-    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
-    <button id="loginGo" class="btn primary">Se connecter</button>
+    <h2>Municipal area</h2>
+    <p class="muted">Protected dashboard: sign in with the municipal token.</p>
+    <input id="loginToken" type="password" placeholder="Municipal token" autocomplete="off">
+    <button id="loginGo" class="btn primary">Sign in</button>
     <p id="loginErr" class="err"></p>
   </div>
 </div>
@@ -25,43 +25,43 @@
       <span>CityResolve</span>
     </div>
     <nav class="side-nav">
-      <a href="/municipal/dashboard" class="active"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="/municipal/dashboard" data-anchor="top"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="#panelReports" data-anchor="panelReports"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard" class="active"><span class="ico">⌂</span> Dashboard</a>
+      <a href="/municipal/dashboard" data-anchor="top"><span class="ico">⌂</span> Dashboard</a>
+      <a href="#panelReports" data-anchor="panelReports"><span class="ico">💬</span> Reports</a>
       <a href="#panelIncidents" data-anchor="panelIncidents"><span class="ico">⚠</span> Incidents</a>
-      <a href="#panelMap" data-anchor="panelMap"><span class="ico">🗺</span> Carte</a>
-      <a href="#panelPlan" data-anchor="panelPlan"><span class="ico">📅</span> Planification</a>
-      <a href="#panelRevision" data-anchor="panelRevision"><span class="ico">✓</span> Révision</a>
-      <a href="#panelCompare" data-anchor="panelCompare"><span class="ico">📊</span> Comparaison</a>
-      <a href="#panelJournal" data-anchor="panelJournal"><span class="ico">📓</span> Journal</a>
+      <a href="#panelMap" data-anchor="panelMap"><span class="ico">🗺</span> Map</a>
+      <a href="#panelPlan" data-anchor="panelPlan"><span class="ico">📅</span> Planning</a>
+      <a href="#panelRevision" data-anchor="panelRevision"><span class="ico">✓</span> Review</a>
+      <a href="#panelCompare" data-anchor="panelCompare"><span class="ico">📊</span> Comparison</a>
+      <a href="#panelJournal" data-anchor="panelJournal"><span class="ico">📓</span> Log</a>
     </nav>
-    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+    <div class="side-foot">From reports<br>to intervention<br>decisions.</div>
   </aside>
   <div class="main">
     <header class="topbar">
       <button class="hamburger" id="burger" aria-label="Menu">☰</button>
       <div class="title-block">
         <div class="crumb">CityResolve</div>
-        <h1>Tableau de bord</h1>
-        <p class="muted">Transformer les signalements urbains en décisions d'intervention efficaces.</p>
+        <h1>Dashboard</h1>
+        <p class="muted">Turn urban reports into effective intervention decisions.</p>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
-          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <input id="q" type="search" placeholder="Search for a report, a place, an incident…" aria-label="Search">
           <div class="search-results" id="qResults" hidden></div>
         </div>
-        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
-        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
-        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
-        <select id="period" title="Période">
-          <option value="today">Aujourd'hui</option>
-          <option value="7d" selected>7 derniers jours</option>
-          <option value="30d">30 derniers jours</option>
-          <option value="all">Tout l'historique</option>
-          <option value="custom">Personnalisée…</option>
+        <button class="icon-btn" id="bellBtn" title="Alerts">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Help">?</button>
+        <span class="avatar" title="Municipal user (single-user demo)">CM</span>
+        <select id="period" title="Period">
+          <option value="today">Today</option>
+          <option value="7d" selected>Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="all">All history</option>
+          <option value="custom">Custom…</option>
         </select>
         <span id="customRange" hidden>
-          <input type="date" id="fromDate" aria-label="Début"> <input type="date" id="toDate" aria-label="Fin">
+          <input type="date" id="fromDate" aria-label="Start"> <input type="date" id="toDate" aria-label="End">
           <button class="btn small" id="customGo">OK</button>
         </span>
       </div>
@@ -76,119 +76,119 @@
     </section>
 
     <section class="row3">
-      <div class="card" id="panelLatest"><h2>⚡ Dernier signalement reçu</h2><div class="skel tall"></div></div>
-      <div class="card" id="panelStatus"><h2>📊 Statut des incidents</h2><div class="skel tall"></div></div>
+      <div class="card" id="panelLatest"><h2>⚡ Latest report received</h2><div class="skel tall"></div></div>
+      <div class="card" id="panelStatus"><h2>📊 Incident status</h2><div class="skel tall"></div></div>
       <div class="card" id="panelMap">
-        <h2>🗺 Répartition des incidents</h2>
-        <p class="fictive-tag">Carte de démonstration — positions fictives projetées, fond © contributeurs OpenStreetMap.</p>
+        <h2>🗺 Incident distribution</h2>
+        <p class="fictive-tag">Demo map — projected fictitious positions, base map © OpenStreetMap contributors.</p>
         <div id="dashMap"></div>
       </div>
     </section>
 
     <section class="row2">
       <div class="card" id="panelActivity">
-        <div class="card-head"><h2>🕐 Activité récente</h2><button class="link" id="actMore">Tout voir →</button></div>
+        <div class="card-head"><h2>🕐 Recent activity</h2><button class="link" id="actMore">See all →</button></div>
         <ul class="timeline" id="timeline"><li><div class="skel"></div></li></ul>
-        <button class="btn ghost" id="actNext" hidden>Événements plus anciens</button>
+        <button class="btn ghost" id="actNext" hidden>Older events</button>
       </div>
       <div class="card" id="panelPlan">
         <div class="card-head">
-          <div><h2>📋 Plan d'intervention (priorisé)</h2>
-          <p class="muted">Proposition calculée (optimiseur exact, périmètre borné) — pas une intervention effectuée.</p></div>
-          <button class="btn primary" id="optBtn">⚙ Optimiser le plan</button>
+          <div><h2>📋 Intervention plan (prioritized)</h2>
+          <p class="muted">Computed proposal (exact optimizer, bounded scope) — not a completed intervention.</p></div>
+          <button class="btn primary" id="optBtn">⚙ Optimize the plan</button>
         </div>
         <div class="table-wrap"><table id="planTable">
-          <thead><tr><th>#</th><th>Incident</th><th>Lieu</th><th>Priorité</th><th>Intervention recommandée</th><th>Ressources</th><th>Statut</th></tr></thead>
+          <thead><tr><th>#</th><th>Incident</th><th>Place</th><th>Priority</th><th>Recommended intervention</th><th>Resources</th><th>Status</th></tr></thead>
           <tbody><tr><td colspan="7"><div class="skel"></div></td></tr></tbody>
         </table></div>
         <div id="planMeta" class="muted"></div>
         <div id="planUnassigned"></div>
-        <p><a class="link" href="/municipal/planification">Ouvrir la page Planification →</a> <a class="link" href="/municipal/revision">Ouvrir la page Révision →</a></p>
+        <p><a class="link" href="/municipal/planification">Open the Planning page →</a> <a class="link" href="/municipal/revision">Open the Review page →</a></p>
       </div>
     </section>
     <section class="row2" id="panelReports">
       <div class="card">
-        <div class="card-head"><div><h2>💬 Signalements</h2>
-        <p class="muted">Regrouper recalcule les incidents et invalide le plan courant (comportement voulu, journalisé).</p></div></div>
+        <div class="card-head"><div><h2>💬 Reports</h2>
+        <p class="muted">Grouping recalculates incidents and invalidates the current plan (intended behavior, logged).</p></div></div>
         <div class="btn-row">
-          <select id="scKind" title="Scénario DEV"><option value="jouet-1">Jouet fixe nº1</option><option value="jouet-s5">Jouet S5</option><option value="dev">DEV généré</option></select>
-          <input id="scSeed" type="number" value="7" min="1" max="9999" title="graine" style="width:80px">
-          <button class="btn ghost" id="scLoad">Charger le scénario</button>
+          <select id="scKind" title="DEV scenario"><option value="jouet-1">Fixed toy #1</option><option value="jouet-s5">Toy S5</option><option value="dev">Generated DEV</option></select>
+          <input id="scSeed" type="number" value="7" min="1" max="9999" title="seed" style="width:80px">
+          <button class="btn ghost" id="scLoad">Load scenario</button>
         </div>
         <div class="btn-row">
-          <label>Méthode <select id="gMethod"><option value="classique">CLASSIQUE</option><option value="split">DÉCOUPÉ (multi-problème)</option><option value="meta">META</option></select></label>
-          <button class="btn primary" id="gRun">Regrouper</button>
-          <span class="muted">F1 calculé uniquement sur vérité DEV ; manuels exclus, absence signalée.</span>
+          <label>Method <select id="gMethod"><option value="classique">CLASSIC</option><option value="split">SPLIT (multi-problem)</option><option value="meta">META</option></select></label>
+          <button class="btn primary" id="gRun">Group</button>
+          <span class="muted">F1 computed only against DEV ground truth; manual reports excluded, absence flagged.</span>
         </div>
         <div class="btn-row">
-          <button class="btn ghost" id="metaVerifyBtn">Vérifier Meta</button>
-          <span class="muted" id="metaState">État Meta : chargement…</span>
+          <button class="btn ghost" id="metaVerifyBtn">Verify Meta</button>
+          <span class="muted" id="metaState">Meta status: loading…</span>
         </div>
         <div id="metaCalls" class="muted"></div>
         <div id="groupMeta" class="muted"></div>
-        <div class="table-wrap"><table id="repTable"><thead><tr><th>ID</th><th>Description</th><th>Catégorie</th><th>Position</th><th>S / E</th></tr></thead>
+        <div class="table-wrap"><table id="repTable"><thead><tr><th>ID</th><th>Description</th><th>Category</th><th>Position</th><th>S / E</th></tr></thead>
         <tbody><tr><td colspan="5"><div class="skel"></div></td></tr></tbody></table></div>
       </div>
       <div class="card" id="panelIncidents">
         <h2>⚠ Incidents <span class="muted" id="incCount"></span></h2>
-        <div class="table-wrap"><table id="incTable"><thead><tr><th>ID</th><th>Signalements</th><th>S</th><th>E</th><th>Domaine</th><th>Poids</th><th>Échéance</th><th>Confiance</th></tr></thead>
+        <div class="table-wrap"><table id="incTable"><thead><tr><th>ID</th><th>Reports</th><th>S</th><th>E</th><th>Domain</th><th>Weight</th><th>Deadline</th><th>Confidence</th></tr></thead>
         <tbody><tr><td colspan="8"><div class="skel"></div></td></tr></tbody></table></div>
       </div>
     </section>
 
     <section class="row2">
       <div class="card" id="panelSimulate">
-        <div class="card-head"><div><h2>🧪 Simulation (interventions SIMULÉES)</h2>
-        <p class="muted">Rejoue le plan avec les valeurs vraies DEV. Pas des interventions réelles.</p></div>
-        <button class="btn primary" id="simRun">Simuler le plan</button></div>
-        <div id="simBox"><p class="muted">Aucune simulation.</p></div>
+        <div class="card-head"><div><h2>🧪 Simulation (SIMULATED interventions)</h2>
+        <p class="muted">Replays the plan with the true DEV values. Not real interventions.</p></div>
+        <button class="btn primary" id="simRun">Simulate the plan</button></div>
+        <div id="simBox"><p class="muted">No simulation yet.</p></div>
       </div>
       <div class="card" id="panelRevision">
-        <div class="card-head"><div><h2>📥 Information nouvelle / révision</h2>
-        <p class="muted">L'oracle juge la nécessité (estimations uniquement). U = stabilité, pas d'échec.</p></div></div>
+        <div class="card-head"><div><h2>📥 New information / review</h2>
+        <p class="muted">The oracle judges necessity (estimates only). U = stability, not failure.</p></div></div>
         <div class="form-grid">
           <input id="iText" placeholder="description" size="30">
-          <select id="iCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select>
+          <select id="iCat"><option value="nid-de-poule">Roads — potholes</option><option value="chaussée">Roads — road surface</option><option value="eclairage">Public lighting</option><option value="fuite-eau">Sanitation / Drainage</option><option value="coupure-electrique">Electricity</option><option value="arbre">Trees / green spaces</option><option value="autre">Other (please specify)</option></select>
           <input id="iX" type="number" step="0.1" value="2.5" title="x km" style="width:70px"> <input id="iY" type="number" step="0.1" value="2.5" title="y km" style="width:70px">
           <input id="iT" type="number" value="1500" title="minutes" style="width:90px">
         </div>
-        <div class="btn-row"><button class="btn ghost" id="iAdd">Injecter + réévaluer</button><button class="btn ghost" id="iTeam">Simuler panne équipe-1</button></div>
+        <div class="btn-row"><button class="btn ghost" id="iAdd">Inject + re-evaluate</button><button class="btn ghost" id="iTeam">Simulate equipe-1 outage</button></div>
         <div id="injBox"></div>
       </div>
     </section>
 
     <section class="row2">
       <div class="card" id="panelCompare">
-        <div class="card-head"><div><h2>📊 Comparaison CLASSIQUE vs META</h2>
-        <p class="muted">DEV uniquement. Un meilleur F1 n'est pas une meilleure allocation.</p></div>
-        <button class="btn ghost" id="c2Run">Comparer les méthodes</button></div>
-        <div id="c2Box"><p class="muted">Pas encore comparé.</p></div>
+        <div class="card-head"><div><h2>📊 CLASSIC vs META comparison</h2>
+        <p class="muted">DEV only. A better F1 is not a better allocation.</p></div>
+        <button class="btn ghost" id="c2Run">Compare methods</button></div>
+        <div id="c2Box"><p class="muted">Not compared yet.</p></div>
       </div>
       <div class="card" id="panelJournal">
-        <div class="card-head"><h2>📓 Journal des décisions</h2><span class="muted" id="jCount"></span></div>
-        <table id="jTable"><thead><tr><th>#</th><th>Heure</th><th>Événement</th><th>Détails</th></tr></thead>
+        <div class="card-head"><h2>📓 Decision log</h2><span class="muted" id="jCount"></span></div>
+        <table id="jTable"><thead><tr><th>#</th><th>Time</th><th>Event</th><th>Details</th></tr></thead>
         <tbody><tr><td colspan="4"><div class="skel"></div></td></tr></tbody></table>
-        <div class="btn-row"><button class="btn ghost" id="jMore">Événements plus anciens</button></div>
+        <div class="btn-row"><button class="btn ghost" id="jMore">Older events</button></div>
       </div>
     </section>
 
-    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé, politiques Q provisoires. <a href="/">Accueil public</a></footer>
+    <footer class="muted">CityResolve — demonstration. Fictitious data, protocol not frozen, provisional Q policies. <a href="/">Public home</a></footer>
   </div>
 </div>
 
 <div class="modal" id="helpModal" hidden>
   <div class="modal-card">
-    <h3>À propos de ce tableau de bord</h3>
-    <p>Démonstration municipale sur données fictives. Les chiffres sont calculés en direct depuis l'état courant :</p>
+    <h3>About this dashboard</h3>
+    <p>Municipal demonstration on fictitious data. Figures are computed live from the current state:</p>
     <ul>
-      <li>Signalements : reçus horodatés sur la période (scénarios sans date exclus des fenêtres).</li>
-      <li>Incidents : reconstruction actuelle (un multi-problème peut compter plusieurs fois).</li>
-      <li>Équipes : équipes simulées disponibles / total.</li>
-      <li>Budget : 120 unités fictives (ni francs, ni euros, ni dollars).</li>
-      <li>Statuts : exclusifs et définis (escalade S5, planifié, non affecté, à analyser).</li>
+      <li>Reports: timestamped receipts within the period (dateless scenarios excluded from windows).</li>
+      <li>Incidents: current reconstruction (one multi-problem report may count several times).</li>
+      <li>Teams: simulated teams available / total.</li>
+      <li>Budget: 120 fictitious units (neither francs, nor euros, nor dollars).</li>
+      <li>Statuses: exclusive and defined (S5 escalation, planned, unassigned, to review).</li>
     </ul>
-    <p>Protocole scientifique non gelé — aucune preuve d'impact.</p>
-    <button class="btn primary" id="helpClose">Fermer</button>
+    <p>Scientific protocol not frozen — no proof of impact.</p>
+    <button class="btn primary" id="helpClose">Close</button>
   </div>
 </div>
 

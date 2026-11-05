@@ -1,15 +1,15 @@
-// Connecteur Meta Model API (serveur uniquement, clé jamais exposée).
+// Meta Model API connector (server only, key never exposed).
 //
-// Documentation officielle (developer.meta.ai) : base https://api.meta.ai/v1,
-// authentification "Authorization: Bearer MODEL_API_KEY", GET /models,
-// POST /chat/completions (compatible OpenAI ; images via content parts
-// `image_url` en base64 uniquement dans les messages `user`).
+// Official documentation (developer.meta.ai): base https://api.meta.ai/v1,
+// authentication "Authorization: Bearer MODEL_API_KEY", GET /models,
+// POST /chat/completions (OpenAI-compatible; images via `image_url`
+// content parts in base64 only in `user` messages).
 //
-// Trois états explicites : non configuré / vérifié / erreur d'accès.
-// Aucun résultat n'est simulé : sans accès vérifié, tout appel est refusé.
-// Chaque appel réel (ou tentative) produit un MetaCallRecord horodaté
-// avec modèle, entrées, sortie brute analysée, erreur, latence et usage
-// si l'API le fournit. La clé n'apparaît dans aucun enregistrement.
+// Three explicit states: unconfigured / verified / access error.
+// No result is simulated: without verified access, every call is refused.
+// Each real call (or attempt) produces a timestamped MetaCallRecord
+// with model, inputs, parsed raw output, error, latency and usage
+// if the API provides it. The key appears in no record.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -24,12 +24,12 @@ class MetaCallRecord {
   final String id;
   final String kind; // verify-models | extraction | rapprochement
   final String? model;
-  final String status; // ok | erreur | refuse
+  final String status; // ok | error | refused
   final String? error;
   final int latencyMs;
   final Map<String, dynamic>? usage;
   final String at;
-  final Map<String, dynamic> input; // ids + textes envoyés (jamais la clé)
+  final Map<String, dynamic> input; // ids + texts sent (never the key)
   final Map<String, dynamic>? output;
 
   const MetaCallRecord({
@@ -80,20 +80,20 @@ class MetaException implements Exception {
   String toString() => message;
 }
 
-/// Base officielle Meta Model API (developer.meta.ai/docs/api-reference).
+/// Official Meta Model API base (developer.meta.ai/docs/api-reference).
 const String metaOfficialBaseUrl = 'https://api.meta.ai/v1';
 
-/// Libellé explicite par statut HTTP (distinction exigée des erreurs).
+/// Explicit label per HTTP status (error distinction required).
 String metaHttpErrorLabel(int status, {String? errorType, String? errorCode}) {
   final detail = [errorType, errorCode].whereType<String>().join('/');
   final suffix = detail.isEmpty ? '' : ' ($detail)';
   return switch (status) {
-    401 => 'HTTP 401 authentification refusée$suffix',
-    402 => 'HTTP 402 paiement/facturation requis$suffix',
-    403 => 'HTTP 403 autorisation insuffisante$suffix',
-    404 => 'HTTP 404 ressource ou modèle introuvable$suffix',
-    429 => 'HTTP 429 limite de débit dépassée$suffix',
-    >= 500 => 'HTTP $status erreur temporaire du service$suffix',
+    401 => 'HTTP 401 authentication refused$suffix',
+    402 => 'HTTP 402 payment/billing required$suffix',
+    403 => 'HTTP 403 insufficient authorization$suffix',
+    404 => 'HTTP 404 resource or model not found$suffix',
+    429 => 'HTTP 429 rate limit exceeded$suffix',
+    >= 500 => 'HTTP $status temporary service error$suffix',
     _ => 'HTTP $status$suffix',
   };
 }
@@ -102,10 +102,10 @@ class MetaConnector {
   final MetaState state;
   final List<String> models;
   final String message;
-  final String? _apiKey; // serveur uniquement, jamais sérialisée
+  final String? _apiKey; // server only, never serialized
   final String baseUrl;
   final String? preferredModel;
-  final String? keySource; // NOM de la variable d'environnement, jamais la clé
+  final String? keySource; // NAME of the environment variable, never the key
 
   MetaConnector._(this.state, this.models, this.message,
       {String? apiKey,
@@ -114,10 +114,10 @@ class MetaConnector {
       this.keySource})
       : _apiKey = apiKey;
 
-  /// Variable principale : MODEL_API_KEY (documentation Meta Model API).
-  /// Alias historiques acceptés uniquement en repli explicite (anciens
-  /// déploiements Llama API), jamais mélangés : la source est conservée.
-  /// La clé est utilisée EXACTEMENT telle que fournie, sans transformation.
+  /// Main variable: MODEL_API_KEY (Meta Model API documentation).
+  /// Historical aliases accepted only as an explicit fallback (old
+  /// Llama API deployments), never mixed: the source is kept.
+  /// The key is used EXACTLY as provided, without transformation.
   static String? keySourceFromEnv(Map<String, String> env) {
     for (final name in ['MODEL_API_KEY', 'LLAMA_API_KEY', 'CITYRESOLVE_META_API_KEY']) {
       final v = env[name];
@@ -131,18 +131,18 @@ class MetaConnector {
     return source == null ? null : env[source];
   }
 
-  /// État depuis l'environnement, sans aucun appel réseau.
+  /// State from the environment, without any network call.
   factory MetaConnector.fromEnvironment(Map<String, String> env) {
     final source = keySourceFromEnv(env);
     final key = source == null ? null : env[source];
     final base = env['CITYRESOLVE_META_BASE_URL'] ?? metaOfficialBaseUrl;
     if (key == null) {
       return MetaConnector._(MetaState.unconfigured, [],
-          'Non configuré : MODEL_API_KEY absente. Moteur classique actif.',
+          'Not configured: MODEL_API_KEY missing. Classic engine active.',
           baseUrl: base, preferredModel: env['CITYRESOLVE_META_MODEL']);
     }
     return MetaConnector._(MetaState.accessError, [],
-        'Clé présente via $source mais accès non vérifié (POST /api/meta/verify requis).',
+        'Key present via $source but access not verified (POST /api/meta/verify required).',
         apiKey: key,
         baseUrl: base,
         preferredModel: env['CITYRESOLVE_META_MODEL'],
@@ -154,7 +154,7 @@ class MetaConnector {
 
   MetaConnector verified(List<String> authorizedModels) => MetaConnector._(
       MetaState.verified, authorizedModels,
-      'Connecté et vérifié : ${authorizedModels.length} modèle(s) autorisé(s).',
+      'Connected and verified: ${authorizedModels.length} authorized model(s).',
       apiKey: _apiKey,
       baseUrl: baseUrl,
       preferredModel: preferredModel,
@@ -164,15 +164,15 @@ class MetaConnector {
       preferredModel ?? (models.isEmpty ? null : models.first);
 
   static const List<String> capabilities = [
-    'analyse-texte',
-    'analyse-image (vision via chat completions, base64, messages user)',
-    'extraction-structuree',
-    'rapprochement-signalements',
+    'text-analysis',
+    'image-analysis (vision via chat completions, base64, user messages)',
+    'structured-extraction',
+    'report-matching',
   ];
 
-  /// Corps de requête pur (testable sans réseau) : texte seul ou texte +
-  /// images. Les images ne sont placées QUE dans le message `user`
-  /// (l'API rejette en 400 les images ailleurs).
+  /// Pure request body (testable without network): text alone or text +
+  /// images. Images are placed ONLY in the `user` message
+  /// (the API rejects images elsewhere with 400).
   static Map<String, dynamic> buildChatRequest({
     required String model,
     required String system,
@@ -214,7 +214,7 @@ class MetaConnector {
         'baseUrl': baseUrl,
         'keySource': keySource,
         'integration':
-            'connecteur serveur réel Meta Model API (api.meta.ai), aucun résultat simulé',
+            'real server connector Meta Model API (api.meta.ai), no simulated result',
       };
 
   int _seq = 0;
@@ -252,14 +252,14 @@ class MetaConnector {
     }
   }
 
-  /// Vérification réelle : GET /models. Ne fabrique aucun modèle.
+  /// Real verification: GET /models. Fabricates no model.
   Future<(MetaConnector, MetaCallRecord)> verify(
       {Duration timeout = const Duration(seconds: 15)}) async {
     final sw = Stopwatch()..start();
     const input = {'endpoint': 'GET /models'};
     if (_apiKey == null) {
       final r = _record('verify-models', null, 'refuse',
-          'MODEL_API_KEY absente', sw, input, null, null);
+          'MODEL_API_KEY missing', sw, input, null, null);
       return (MetaConnector.fromEnvironment(Platform.environment), r);
     }
     try {
@@ -272,11 +272,11 @@ class MetaConnector {
             errorType: envErr?['type']?.toString(),
             errorCode: envErr?['code']?.toString());
         final r = _record('verify-models', null, 'erreur',
-            '$label sur /models', sw, input,
+            '$label on /models', sw, input,
             {'httpStatus': resp.statusCode, 'error': envErr}, null);
         return (
           MetaConnector._(MetaState.accessError, [],
-              'Accès Meta Model API refusé : $label. Vérifier la clé dans le tableau de bord Meta Model API.',
+              'Meta Model API access refused: $label. Check the key in the Meta Model API dashboard.',
               apiKey: _apiKey, baseUrl: baseUrl, preferredModel: preferredModel, keySource: keySource),
           r
         );
@@ -289,11 +289,11 @@ class MetaConnector {
       final r = _record(
           'verify-models', null, 'ok', null, sw, input, {'models': models}, null);
       if (models.isEmpty) {
-        // Cas réel observé : clé acceptée (HTTP 200) mais le compte
-        // n'a accès à aucun modèle. Ne jamais inventer de modèle.
+        // Real observed case: key accepted (HTTP 200) but the account
+        // has access to no model. Never invent a model.
         return (
           MetaConnector._(MetaState.accessError, [],
-              'Clé acceptée par Meta (HTTP 200) mais aucun modèle autorisé retourné par /models pour ce compte : IA indisponible.',
+              'Key accepted by Meta (HTTP 200) but no authorized model returned by /models for this account: AI unavailable.',
               apiKey: _apiKey, baseUrl: baseUrl, preferredModel: preferredModel, keySource: keySource),
           r
         );
@@ -302,17 +302,17 @@ class MetaConnector {
     } catch (e) {
       sw.stop();
       final r = _record('verify-models', null, 'erreur',
-          'échec réseau/délai : $e', sw, input, null, null);
+          'network/timeout failure: $e', sw, input, null, null);
       return (
         MetaConnector._(MetaState.accessError, [],
-            'Vérification impossible : $e',
+            'Verification impossible: $e',
             apiKey: _apiKey, baseUrl: baseUrl, preferredModel: preferredModel, keySource: keySource),
         r
       );
     }
   }
 
-  /// Appel chat réel exigeant une sortie JSON. Lève MetaException sinon.
+  /// Real chat call requiring JSON output. Throws MetaException otherwise.
   Future<Map<String, dynamic>> chatJson({
     required String kind,
     required String system,
@@ -325,7 +325,7 @@ class MetaConnector {
     final sw = Stopwatch()..start();
     if (state != MetaState.verified || _apiKey == null) {
       final r = _record(kind, model, 'refuse',
-          'Connecteur Meta ${state.name} : appel refusé, aucune réponse simulée.',
+          'Meta connector ${state.name}: call refused, no simulated response.',
           sw, inputLog, null, null);
       onRecord?.call(r);
       throw MetaException(r.error!, r);
@@ -333,7 +333,7 @@ class MetaConnector {
     final mdl = model;
     if (mdl == null) {
       final r = _record(kind, null, 'erreur',
-          'Aucun modèle autorisé déterminé.', sw, inputLog, null, null);
+          'No authorized model determined.', sw, inputLog, null, null);
       onRecord?.call(r);
       throw MetaException(r.error!, r);
     }
@@ -352,7 +352,7 @@ class MetaConnector {
             errorType: envErr?['type']?.toString(),
             errorCode: envErr?['code']?.toString());
         final r = _record(kind, mdl, 'erreur',
-            '$label sur /chat/completions', sw, inputLog,
+            '$label on /chat/completions', sw, inputLog,
             {'httpStatus': resp.statusCode, 'error': envErr}, null);
         onRecord?.call(r);
         throw MetaException(r.error!, r);
@@ -361,7 +361,7 @@ class MetaConnector {
       final content = _contentText(parsed);
       if (content == null) {
         final r = _record(kind, mdl, 'erreur',
-            'Réponse Meta sans contenu texte exploitable.', sw, inputLog,
+            'Meta response without usable text content.', sw, inputLog,
             parsed, _usage(parsed));
         onRecord?.call(r);
         throw MetaException(r.error!, r);
@@ -376,14 +376,14 @@ class MetaConnector {
       rethrow;
     } catch (e) {
       sw.stop();
-      final r = _record(kind, mdl, 'erreur', 'échec appel : $e', sw, inputLog,
+      final r = _record(kind, mdl, 'erreur', 'call failed: $e', sw, inputLog,
           null, null);
       onRecord?.call(r);
       throw MetaException(r.error!, r);
     }
   }
 
-  /// Enveloppe d'erreur OpenAI-style de Meta Model API (sans secret).
+  /// OpenAI-style error envelope of Meta Model API (no secret).
   static Map<String, dynamic>? _errorEnvelope(String body) {
     try {
       final parsed = jsonDecode(body);
@@ -398,14 +398,14 @@ class MetaConnector {
       resp['usage'] is Map ? (resp['usage'] as Map).cast<String, dynamic>() : null;
 
   static String? _contentText(Map<String, dynamic> resp) {
-    // Format natif Llama API : completion_message.content.text
+    // Native Llama API format: completion_message.content.text
     final cm = resp['completion_message'];
     if (cm is Map && cm['content'] is Map) {
       final t = (cm['content'] as Map)['text'];
       if (t is String) return t;
     }
     if (cm is Map && cm['content'] is String) return cm['content'] as String;
-    // Format compatible OpenAI : choices[0].message.content
+    // OpenAI-compatible format: choices[0].message.content
     final choices = resp['choices'];
     if (choices is List && choices.isNotEmpty) {
       final msg = (choices.first as Map)['message'];
@@ -424,8 +424,8 @@ class MetaConnector {
   }
 }
 
-/// Extraction structurée d'un signalement (aucune certitude inventée :
-/// champ absent du texte -> null + incertitude listée).
+/// Structured extraction of a report (no invented certainty:
+/// field absent from the text -> null + listed uncertainty).
 Future<Map<String, dynamic>> extractStructuredWithMeta(
   MetaConnector c,
   Report report, {
@@ -434,13 +434,13 @@ Future<Map<String, dynamic>> extractStructuredWithMeta(
 }) {
   return c.chatJson(
     kind: 'extraction',
-    system: 'Tu extrais des informations de signalements municipaux fictifs. '
-        'Réponds UNIQUEMENT en JSON. Si une information est absente ou '
-        'incertaine, mets null et décris-la dans "incertitudes". '
-        'N\'invente jamais de gravité, de lieu ni de fait.',
-    user: 'Signalement ${report.id} (catégorie déclarée: ${report.category}) : '
+    system: 'You extract information from fictitious municipal reports. '
+        'Answer ONLY in JSON. If information is missing or '
+        'uncertain, set null and describe it in "incertitudes". '
+        'Never invent severity, place or fact.',
+    user: 'Report ${report.id} (declared category: ${report.category}): '
         '"${report.text}"\n'
-        'JSON attendu: {"probleme": string, "description": string, '
+        'Expected JSON: {"probleme": string, "description": string, '
         '"localisationMentionnee": string|null, '
         '"graviteExprimee": integer 1..5|null, '
         '"expositionMentionnee": string|null, '
@@ -451,11 +451,11 @@ Future<Map<String, dynamic>> extractStructuredWithMeta(
   );
 }
 
-/// Analyse visuelle réelle d'une photo de signalement (P1, §7).
-/// Le modèle ne reçoit que les octets + le contexte déclaré ; le contrat
-/// de sortie exige observations / hypothèses / incertitudes, jamais de
-/// gravité fabriquée ni de localisation GPS prétendue. Tout écart de
-/// contrat lève MetaException (aucune fausse démo multimodale).
+/// Real visual analysis of a report photo (P1, §7).
+/// The model receives only the bytes + the declared context; the output
+/// contract requires observations / hypotheses / uncertainties, never a
+/// fabricated severity or a claimed GPS location. Any contract
+/// deviation throws MetaException (no fake multimodal demo).
 Future<Map<String, dynamic>> analyzeImageWithMeta(
   MetaConnector c,
   List<int> bytes, {
@@ -468,20 +468,20 @@ Future<Map<String, dynamic>> analyzeImageWithMeta(
   final b64 = base64Encode(bytes);
   final out = await c.chatJson(
     kind: 'analyse-visuelle',
-    system: 'Tu analyses une photo de signalement urbain fictif. Décris '
-        'UNIQUEMENT ce qui est visible sur les pixels de l\'image, sans '
-        'utiliser aucune information extérieure : tu ne reçois pas la '
-        'description de l\'usager. Tu distingues OBLIGATOIREMENT : ce qui '
-        'est visible sur l\'image, tes hypothèses, et ce qui reste à '
-        'vérifier. Tout élément non visible va dans les incertitudes, '
-        'jamais dans les observations. Réponds UNIQUEMENT en JSON. '
-        'N\'invente jamais de gravité, de nombre de personnes exposées, '
-        'de localisation GPS ni de danger. Une photo de jour ne prouve '
-        'jamais une panne d\'éclairage nocturne.',
-    user: 'Analyse cette photo de signalement urbain fictif.'
-        '${reportId != null ? ' Signalement $reportId.' : ''}'
-        '${descriptionDeclaree != null && descriptionDeclaree.isNotEmpty ? ' Description déclarée par l\'usager (à ne pas confondre avec le visible) : "$descriptionDeclaree".' : ''}\n'
-        'JSON attendu: {"observationsVisibles": [string], '
+    system: 'You analyse a photo of a fictitious urban report. Describe '
+        'ONLY what is visible in the image pixels, without '
+        'using any outside information: you do not receive the '
+        'user\'s description. You MUST distinguish: what '
+        'is visible in the image, your hypotheses, and what remains '
+        'to verify. Any element that is not visible goes into the uncertainties, '
+        'never into the observations. Answer ONLY in JSON. '
+        'Never invent severity, number of people exposed, '
+        'GPS location or danger. A daytime photo never proves '
+        'a night-time lighting failure.',
+    user: 'Analyse this photo of a fictitious urban report.'
+        '${reportId != null ? ' Report $reportId.' : ''}'
+        '${descriptionDeclaree != null && descriptionDeclaree.isNotEmpty ? ' Description declared by the user (not to be confused with the visible): "$descriptionDeclaree".' : ''}\n'
+        'Expected JSON: {"observationsVisibles": [string], '
         '"problemesPossibles": [{"famille": string, "hypothese": string, '
         '"confirmation": "a_verifier"}], '
         '"localisation": string|null, "gravite": integer 1..5|null, '
@@ -502,13 +502,13 @@ Future<Map<String, dynamic>> analyzeImageWithMeta(
   final flaw = validateVisualAnalysis(out);
   if (flaw != null) {
     throw MetaException(
-        'Contrat d\'analyse visuelle non respecté : $flaw.',
+        'Visual analysis contract not respected: $flaw.',
         MetaCallRecord(
           id: 'META-local-${DateTime.now().millisecondsSinceEpoch}',
           kind: 'analyse-visuelle',
           model: c.model,
           status: 'erreur',
-          error: 'contrat non respecté : $flaw',
+          error: 'contract not respected: $flaw',
           latencyMs: 0,
           usage: null,
           at: DateTime.now().toUtc().toIso8601String(),
@@ -519,50 +519,50 @@ Future<Map<String, dynamic>> analyzeImageWithMeta(
   return out;
 }
 
-/// Listing Meta avec unités explicites (patch unités, local).
+/// Meta listing with explicit units (units patch, local).
 ///
-/// Correctif de l'échec distinct-temps de phase4-misleading, où le
-/// modèle écrivait que « l'unité temporelle était absente » et
-/// fusionnait deux nids-de-poule à 3 jours d'intervalle : chaque ligne
-/// donne t en minutes et x/y en kilomètres, jamais de nombre nu, et
-/// chaque paire affiche sa distance en km et son délai en minutes
-/// avec conversion (heures/jours). Le retest DEV avec ce listing
-/// (phase4-retest-units) sépare distinct-temps : le modèle y écrit
-/// explicitement « délai 4320 min = 3,0 jours, délai long pas court ».
-String _fmt1(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
-String _fmt2(double v) => v.toStringAsFixed(2).replaceAll('.', ',');
+/// Fix for the phase4-misleading distinct-time failure, where the
+/// model wrote that "the time unit was missing" and
+/// merged two potholes 3 days apart: each line
+/// gives t in minutes and x/y in kilometres, never a bare number, and
+/// each pair shows its distance in km and its delay in minutes
+/// with conversion (hours/days). The DEV retest with this listing
+/// (phase4-retest-units) separates distinct-time: the model writes there
+/// explicitly "delay 4320 min = 3.0 days, long delay not short".
+String _fmt1(double v) => v.toStringAsFixed(1);
+String _fmt2(double v) => v.toStringAsFixed(2);
 
 String formatDelayMin(int dt) {
-  if (dt >= 1440) return '$dt min = ${_fmt1(dt / 1440)} jours';
-  if (dt >= 60) return '$dt min = ${_fmt1(dt / 60)} heures';
+  if (dt >= 1440) return '$dt min = ${_fmt1(dt / 1440)} days';
+  if (dt >= 60) return '$dt min = ${_fmt1(dt / 60)} hours';
   return '$dt min';
 }
 
-/// Listing complet : en-tête d'unités + lignes + paires calculées.
+/// Complete listing: units header + lines + computed pairs.
 String metaListingWithUnits(List<Report> reports) {
   final lines = <String>[
-    'Unités (données ici, ne jamais les supposer absentes) : '
-        'x et y en kilomètres (km) sur une grille fictive, '
-        't en minutes (min) depuis le début du scénario. '
-        '60 min = 1 heure, 1440 min = 1 jour.'
+    'Units (given here, never assume them missing): '
+        'x and y in kilometres (km) on a fictitious grid, '
+        't in minutes (min) since the start of the scenario. '
+        '60 min = 1 hour, 1440 min = 1 day.'
   ];
   for (final r in reports) {
     lines.add(
-        '${r.id} | x=${_fmt1(r.x)} km, y=${_fmt1(r.y)} km, t=${r.t} min | catégorie=${r.category} | "${r.text}"');
+        '${r.id} | x=${_fmt1(r.x)} km, y=${_fmt1(r.y)} km, t=${r.t} min | category=${r.category} | "${r.text}"');
   }
-  lines.add('Distances et délais calculés :');
+  lines.add('Computed distances and delays:');
   for (var i = 0; i < reports.length; i++) {
     for (var j = i + 1; j < reports.length; j++) {
       final a = reports[i], b = reports[j];
       lines.add(
-          'Paire ${a.id}-${b.id} : distance ${_fmt2(distKm(a, b))} km, délai ${formatDelayMin(dtMin(a, b))}.');
+          'Pair ${a.id}-${b.id}: distance ${_fmt2(distKm(a, b))} km, delay ${formatDelayMin(dtMin(a, b))}.');
     }
   }
   return lines.join('\n');
 }
 
-/// Proposition de rapprochement Meta : mêmes objets Group que le moteur
-/// classique (method: meta), avec justification et incertitude du modèle.
+/// Meta matching proposal: same Group objects as the classic
+/// engine (method: meta), with the model's justification and uncertainty.
 Future<List<Group>> proposeMatchingWithMeta(
   MetaConnector c,
   List<Report> reports, {
@@ -572,23 +572,23 @@ Future<List<Group>> proposeMatchingWithMeta(
   final listing = metaListingWithUnits(reports);
   final out = await c.chatJson(
     kind: 'rapprochement',
-    system: 'Tu proposes un regroupement de signalements municipaux fictifs '
-        'décrivant le même incident réel. Réponds UNIQUEMENT en JSON. '
-        'Chaque signalement dans au plus un groupe. Si un rapprochement '
-        'est douteux, dis-le dans "incertitude" (0=certain, 1=très douteux) '
-        'et justifie. N\'invente aucun signalement. '
-        "RÈGLE D'UNITÉS, À APPLIQUER SANS EXCEPTION : les unités SONT "
-        'données dans le listing (x et y en kilomètres, t en minutes). '
-        'Ne jamais écrire qu\'une unité est absente, inconnue ou non '
-        'vérifiable quand le listing la donne. Un délai de 4320 min vaut '
-        '3 jours, pas un délai court. Pour un incident ponctuel '
-        "(nid-de-poule, fuite d'eau), un délai de plusieurs jours au même "
-        "lieu ne prouve pas qu'il s'agit du même incident : deux "
-        'incidents distincts restent possibles même avec un texte quasi '
-        "identique, et la persistance d'une dégradation ne prouve pas "
-        "l'identité.",
-    user: 'Signalements:\n$listing\n'
-        'JSON attendu: {"groupes": [{"reportIds": [string], '
+    system: 'You propose a grouping of fictitious municipal reports '
+        'describing the same real incident. Answer ONLY in JSON. '
+        'Each report in at most one group. If a match '
+        'is doubtful, say so in "incertitude" (0=certain, 1=very doubtful) '
+        'and justify it. Never invent a report. '
+        'UNIT RULE, TO APPLY WITHOUT EXCEPTION: the units ARE '
+        'given in the listing (x and y in kilometres, t in minutes). '
+        'Never write that a unit is missing, unknown or not '
+        'verifiable when the listing gives it. A delay of 4320 min is '
+        '3 days, not a short delay. For a one-off incident '
+        '(pothole, water leak), a delay of several days at the same '
+        'place does not prove it is the same incident: two '
+        'distinct incidents remain possible even with an almost '
+        'identical text, and the persistence of damage does not prove '
+        'identity.',
+    user: 'Reports:\n$listing\n'
+        'Expected JSON: {"groupes": [{"reportIds": [string], '
         '"justification": string, "incertitude": number 0..1}]}',
     inputLog: {'reportIds': reports.map((r) => r.id).toList()},
     timeout: timeout,
@@ -616,7 +616,7 @@ Future<List<Group>> proposeMatchingWithMeta(
       method: 'meta',
       uncertain: inc >= 0.35,
       uncertaintyReasons:
-          inc >= 0.35 ? ['incertitude modèle ${inc.toStringAsFixed(2)}'] : [],
+          inc >= 0.35 ? ['model uncertainty ${inc.toStringAsFixed(2)}'] : [],
       justification: g['justification']?.toString(),
     ));
   }
@@ -630,7 +630,7 @@ Future<List<Group>> proposeMatchingWithMeta(
           singleton: true,
           method: 'meta',
           uncertain: true,
-          uncertaintyReasons: ['non classé par le modèle : singleton forcé']));
+          uncertaintyReasons: ['not classified by the model: forced singleton']));
     }
   }
   groups.sort((a, b) => a.reportIds.first.compareTo(b.reportIds.first));
@@ -646,44 +646,44 @@ Future<List<Group>> proposeMatchingWithMeta(
         uncertaintyReasons: g.uncertaintyReasons,
         justification: g.justification);
   }
-  // Chaîne de filtres déterministes post-modèle, dans cet ordre :
-  // 1. Garde-fou contenu insuffisant (poussé sur main) : même si le
-  // modèle propose une fusion impliquant un contenu insuffisant —
-  // c'est exactement l'échec inc-vide de phase4-hard, où le modèle avait
-  // fusionné deux textes vides avec incertitude 1,0 — la fusion est
-  // annulée et chaque signalement concerné redevient un singleton marqué
-  // 'garde-fou-contenu-insuffisant'. L'annulation est journalisée dans
-  // les groupes retournés eux-mêmes (raison + justification), qui sont
-  // persistés par le serveur dans metaGroups ; le nombre de fusions
-  // annulées est donc vérifiable groupe par groupe, sans dépendre de
-  // l'incertitude du modèle. Un pré-filtre (ne pas envoyer ces textes au
-  // modèle) n'a pas été choisi : il masquerait la proposition du modèle
-  // au lieu de la corriger visiblement.
-  // 2. Porte temps Meta (patch unités, local) : découpe les fusions
-  // proposées au-delà du seuil (360 min local, 10080 min étendu).
-  // Chaque découpe est comptée (splitGroups) et tracée par une raison
-  // 'porte-temps-meta'. Sur le retest DEV, la porte n'a rien eu à
-  // découper (le nouveau listing avait déjà corrigé distinct-temps),
-  // mais appliquée aux anciennes sorties elle corrige distinct-temps
-  // (1 découpe, F1 0,0 -> 1,0) : c'est un filet de sécurité, pas la
-  // cause du gain du nouveau listing.
-  // 3. Statuts (patch unités, local) : marquent les groupes
-  // contradictoires et multi-problème, SANS les découper. Un groupe
-  // fusionné signalé n'est pas un incident propre : l'optimiseur et
-  // l'humain doivent le voir comme « à vérifier », pas comme une
-  // fusion validée. Les statuts ne remplacent pas une vérification
-  // humaine, surtout pour la contradiction d'état (résolu contre en
-  // cours) et pour le second problème d'un signalement multi-problème.
+  // Chain of deterministic post-model filters, in this order:
+  // 1. Insufficient-content guardrail (pushed to main): even if the
+  // model proposes a merge involving insufficient content —
+  // exactly the phase4-hard empty-inc failure, where the model had
+  // merged two empty texts with uncertainty 1.0 — the merge is
+  // cancelled and each report involved becomes a singleton marked
+  // 'insufficient-content-guardrail'. The cancellation is logged in
+  // the returned groups themselves (reason + justification), which are
+  // persisted by the server in metaGroups; the number of cancelled
+  // merges is therefore verifiable group by group, without depending on
+  // the model's uncertainty. A pre-filter (not sending these texts to the
+  // model) was not chosen: it would hide the model's proposal
+  // instead of correcting it visibly.
+  // 2. Meta time gate (units patch, local): splits proposed
+  // merges beyond the threshold (360 min local, 10080 min extended).
+  // Each split is counted (splitGroups) and traced by a
+  // 'meta-time-gate' reason. On the DEV retest, the gate had nothing
+  // to split (the new listing had already fixed distinct-time),
+  // but applied to the old outputs it fixes distinct-time
+  // (1 split, F1 0.0 -> 1.0): it is a safety net, not the
+  // cause of the new listing's gain.
+  // 3. Statuses (units patch, local): flag conflicting
+  // and multi-problem groups WITHOUT splitting them. A flagged merged
+  // group is not a clean incident: the optimizer and
+  // the human must see it as "to verify", not as a
+  // validated merge. Statuses do not replace human verification,
+  // especially for state contradiction (resolved vs
+  // ongoing) and for the second problem of a multi-problem report.
   final filtered = applyContentGuardrail(reports, groups);
   final gated = applyMetaTimeGate(reports, filtered.groups);
   final statused = applyGroupStatuses(reports, gated.groups);
   return statused.groups;
 }
 
-/// Regroupement IA synchrone conservé pour compatibilité : toujours refusé
-/// (le vrai chemin est asynchrone, proposeMatchingWithMeta).
+/// Synchronous AI grouping kept for compatibility: always refused
+/// (the real path is asynchronous, proposeMatchingWithMeta).
 List<Group> groupWithMeta(MetaConnector c, List<Report> reports) {
   throw StateError(
-      'Connecteur Meta ${c.state.name} : utiliser proposeMatchingWithMeta '
-      '(asynchrone). Aucune réponse simulée.');
+      'Meta connector ${c.state.name}: use proposeMatchingWithMeta '
+      '(asynchronous). No simulated response.');
 }

@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Révision du plan</title>
+<title>CityResolve — Plan review</title>
 <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
-<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<header class="demo-banner">DEMONSTRATION — FICTITIOUS DATA — PROTOCOL NOT FROZEN — NO PROOF</header>
 <div id="loginOverlay" class="login-overlay" hidden>
   <div class="login-card">
-    <h2>Espace municipal</h2>
-    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
-    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
-    <button id="loginGo" class="btn primary">Se connecter</button>
+    <h2>Municipal area</h2>
+    <p class="muted">Protected page: sign in with the municipal token.</p>
+    <input id="loginToken" type="password" placeholder="Municipal token" autocomplete="off">
+    <button id="loginGo" class="btn primary">Sign in</button>
     <p id="loginErr" class="err"></p>
   </div>
 </div>
@@ -24,78 +24,78 @@
       <span>CityResolve</span>
     </div>
     <nav class="side-nav">
-      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="/municipal/dashboard#panelReports"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Dashboard</a>
+      <a href="/municipal/dashboard#panelReports"><span class="ico">💬</span> Reports</a>
       <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
-      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
-      <a href="/municipal/planification"><span class="ico">📅</span> Planification</a>
-      <a href="/municipal/revision" class="active"><span class="ico">✓</span> Révision</a>
-      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
-      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Map</a>
+      <a href="/municipal/planification"><span class="ico">📅</span> Planning</a>
+      <a href="/municipal/revision" class="active"><span class="ico">✓</span> Review</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Log</a>
     </nav>
-    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+    <div class="side-foot">From reports<br>to intervention<br>decisions.</div>
   </aside>
   <div class="main">
     <header class="topbar">
       <button class="hamburger" id="burger" aria-label="Menu">☰</button>
       <div class="title-block">
         <div class="crumb">CityResolve</div>
-        <h1>Révision du plan</h1>
-        <p class="muted">Évaluer l'impact des nouvelles informations et décider d'ajuster le plan d'intervention.</p>
+        <h1>Plan review</h1>
+        <p class="muted">Assess the impact of new information and decide whether to adjust the intervention plan.</p>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
-          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <input id="q" type="search" placeholder="Search for a report, a place, an incident…" aria-label="Search">
           <div class="search-results" id="qResults" hidden></div>
         </div>
-        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
-        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
-        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+        <button class="icon-btn" id="bellBtn" title="Alerts">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Help">?</button>
+        <span class="avatar" title="Municipal user (single-user demo)">CM</span>
       </div>
     </header>
     <div class="alerts" id="alerts" hidden></div>
 
     <section class="row2">
-      <div class="card" id="newsCard"><h2>Nouvelle information</h2><div class="skel tall"></div></div>
-      <div class="card" id="decisionCard"><h2>Décision de révision</h2><div class="skel tall"></div></div>
+      <div class="card" id="newsCard"><h2>New information</h2><div class="skel tall"></div></div>
+      <div class="card" id="decisionCard"><h2>Review decision</h2><div class="skel tall"></div></div>
     </section>
 
     <section class="card">
-      <h2>Injecter une information nouvelle (cas reproductibles DEV)</h2>
+      <h2>Inject new information (reproducible DEV cases)</h2>
       <div class="btn-row">
-        <button class="btn ghost" id="injU">Signalement ordinaire (stabilité U attendue)</button>
-        <button class="btn ghost" id="injR1">Simuler panne équipe-1 (révision R1 attendue)</button>
-        <button class="btn ghost" id="injS5">Signaler un S5 (escalade, jamais dispatché)</button>
+        <button class="btn ghost" id="injU">Ordinary report (U stability expected)</button>
+        <button class="btn ghost" id="injR1">Simulate equipe-1 outage (R1 review expected)</button>
+        <button class="btn ghost" id="injS5">Report an S5 (escalation, never dispatched)</button>
       </div>
-      <p class="muted">L'oracle juge avec les estimations uniquement (jamais la vérité cachée). U = plan conservé, pas un échec. N2 (gain de Q) n'a aucun cas reproductible : il n'est pas proposé.</p>
+      <p class="muted">The oracle judges using estimates only (never the hidden truth). U = plan kept, not a failure. N2 (Q gain) has no reproducible case: it is not offered.</p>
       <div id="injOut"></div>
     </section>
 
     <section class="row2">
-      <div class="card" id="oldPlanCard"><h2>Ancien plan</h2><div class="skel tall"></div></div>
-      <div class="card" id="newPlanCard"><h2>Plan révisé</h2><div class="skel tall"></div></div>
+      <div class="card" id="oldPlanCard"><h2>Old plan</h2><div class="skel tall"></div></div>
+      <div class="card" id="newPlanCard"><h2>Revised plan</h2><div class="skel tall"></div></div>
     </section>
 
     <section class="row2">
-      <div class="card" id="diffCard"><h2>Principales modifications</h2><div class="skel"></div></div>
-      <div class="card" id="globCard"><h2>Comparaison globale</h2><div class="skel"></div></div>
+      <div class="card" id="diffCard"><h2>Main changes</h2><div class="skel"></div></div>
+      <div class="card" id="globCard"><h2>Overall comparison</h2><div class="skel"></div></div>
     </section>
 
     <section class="card" id="histCard">
-      <div class="card-head"><div><h2>Journal des événements</h2>
-      <p class="muted">Chronologie des révisions : information reçue, analyse, décision, validation, plan.</p></div>
-      <a class="link" href="/municipal/dashboard#panelJournal">Tout voir →</a></div>
+      <div class="card-head"><div><h2>Event log</h2>
+      <p class="muted">Review timeline: information received, analysis, decision, validation, plan.</p></div>
+      <a class="link" href="/municipal/dashboard#panelJournal">See all →</a></div>
       <ul class="timeline" id="histList"><li><div class="skel"></div></li></ul>
     </section>
-    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+    <footer class="muted">CityResolve — demonstration. Fictitious data, protocol not frozen. <a href="/">Public home</a> · <a href="/municipal/dashboard">Dashboard</a></footer>
   </div>
 </div>
 
 <div class="modal" id="helpModal" hidden>
   <div class="modal-card">
-    <h3>Révision du plan</h3>
-    <p>Une information nouvelle (panne d'équipe, signalement, S5) est jugée par l'oracle avec les seules estimations : U = stabilité (plan conservé), N1 = réaffectation requise, N3-S5 = escalade humaine sans réaffectation. Le seuil de révision (+5 points Q) est une hypothèse non gelée. Un plan calculé n'est jamais « publié » : seule une validation humaine le rend opposable.</p>
-    <button class="btn primary" id="helpClose">Fermer</button>
+    <h3>Plan review</h3>
+    <p>New information (team outage, report, S5) is judged by the oracle using estimates only: U = stability (plan kept), N1 = reassignment required, N3-S5 = human escalation without reassignment. The review threshold (+5 Q points) is an unfrozen hypothesis. A computed plan is never "published": only human validation makes it binding.</p>
+    <button class="btn primary" id="helpClose">Close</button>
   </div>
 </div>
 <script src="/revision.js"></script>

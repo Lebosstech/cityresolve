@@ -1,9 +1,9 @@
-// Regroupement classique déterministe (DEV exploratoire).
+// Deterministic classic grouping (exploratory DEV).
 //
-// Règle : arête entre deux signalements ssi distance <= distMax ET
-// écart temporel <= deltaTMax ET similarité Jaccard >= simMin.
-// Groupes = composantes connexes (union-find), ordre déterministe.
-// Confiance d'un groupe = similarité minimale de ses arêtes (0 si singleton).
+// Rule: edge between two reports iff distance <= distMax AND
+// time gap <= deltaTMax AND Jaccard similarity >= simMin.
+// Groups = connected components (union-find), deterministic order.
+// Group confidence = minimum similarity of its edges (0 if singleton).
 import 'types.dart';
 
 final RegExp _splitter = RegExp(r'[^a-zàâäéèêëîïôöùûüç0-9]+');
@@ -14,15 +14,15 @@ Set<String> tokens(String text) => text
     .where((w) => w.length > 2)
     .toSet();
 
-/// Garde-fou contenu insuffisant (poussé sur main).
+/// Insufficient-content guardrail (pushed to main).
 ///
-/// Un texte est insuffisant si, après passage en minuscules, il contient
-/// moins de 2 caractères alphanumériques (lettres accentuées comprises).
-/// Donc : texte vide, ponctuation/espaces seuls, ou un seul caractère.
-/// Un texte de 2 caractères ou plus PASSE le garde-fou (limite assumée :
-/// il peut rester vide de sens, ex. "ab") — le garde-fou ne vise que
-/// l'absence de contenu, pas la qualité du contenu. Il ne résout ni le
-/// lieu inconnu, ni le temps inconnu, ni les contradictions (voir
+/// A text is insufficient if, after lowercasing, it contains
+/// fewer than 2 alphanumeric characters (accented letters included).
+/// So: empty text, punctuation/spaces only, or a single character.
+/// A text of 2 characters or more PASSES the guardrail (assumed limitation:
+/// it may still be meaningless, e.g. "ab") — the guardrail only targets
+/// the absence of content, not content quality. It resolves neither
+/// unknown place, nor unknown time, nor contradictions (see
 /// PATCH_GUARDRAIL_NOTES.md).
 final RegExp _alphanum = RegExp(r'[a-zàâäéèêëîïôöùûüç0-9]');
 
@@ -36,15 +36,15 @@ bool hasInsufficientContent(String text) {
 }
 
 const String guardrailReason =
-    'garde-fou-contenu-insuffisant : signalement non fusionnable, contenu insuffisant, à vérifier';
+    'insufficient-content-guardrail: report not mergeable, insufficient content, to verify';
 
-/// Filtre déterministe post-modèle (ou post-classique) : découpe tout
-/// groupe contenant un signalement à contenu insuffisant en singletons,
-/// chacun marqué incertain avec la raison garde-fou explicite. Les groupes
-/// sans contenu insuffisant sont retournés inchangés. Le comptage
-/// `cancelledMerges` = nombre de groupes multi-signalements découpés :
-/// c'est la trace journalisable de l'annulation, même si le modèle avait
-/// proposé la fusion avec une incertitude faible.
+/// Deterministic post-model (or post-classic) filter: splits any
+/// group containing an insufficient-content report into singletons,
+/// each marked uncertain with the explicit guardrail reason. Groups
+/// without insufficient content are returned unchanged. The
+/// `cancelledMerges` count = number of multi-report groups split:
+/// it is the loggable trace of the cancellation, even if the model had
+/// proposed the merge with low uncertainty.
 ({List<Group> groups, int cancelledMerges}) applyContentGuardrail(
     List<Report> reports, List<Group> groups) {
   final byId = {for (final r in reports) r.id: r};
@@ -71,8 +71,8 @@ const String guardrailReason =
             ? [guardrailReason]
             : g.uncertaintyReasons,
         justification: isBad
-            ? 'Garde-fou : fusion proposée annulée (contenu insuffisant)'
-                '${g.justification == null ? '' : ' ; proposition d’origine : ${g.justification}'}'
+            ? 'Guardrail: proposed merge cancelled (insufficient content)'
+                '${g.justification == null ? '' : ' ; original proposal: ${g.justification}'}'
             : g.justification,
       ));
     }
@@ -94,24 +94,24 @@ const String guardrailReason =
   return (groups: out, cancelledMerges: cancelled);
 }
 
-/// --- Patch unités / statuts / porte temps (poussé sur main) ---
+/// --- Units / statuses / time gate patch (pushed to main) ---
 ///
-/// Choix de représentation, sans casser les tests ni la persistance :
-/// le type `Group` n'a pas de champ statut dédié, donc les statuts
-/// sont portés par `uncertain = true` + une raison explicite dans
-/// `uncertaintyReasons` (préfixe `statut-contradictoire` ou
-/// `drapeau-multi-probleme`). Aucun champ n'est ajouté à `Group`,
-/// donc `toJson` / `fromJson` et le serveur sont inchangés. Les statuts
-/// ne découpent JAMAIS un groupe : ils le signalent. Seule la porte
-/// temps (post-modèle, comme le garde-fou) découpe, et chaque découpe
-/// est comptée dans `splitGroups` et tracée par une raison
-/// `porte-temps-meta` sur chaque composante issue du découpage.
+/// Representation choice, without breaking tests or persistence:
+/// the `Group` type has no dedicated status field, so statuses
+/// are carried by `uncertain = true` + an explicit reason in
+/// `uncertaintyReasons` (`status-conflicting` or
+/// `multi-problem-flag` prefix). No field is added to `Group`,
+/// so `toJson` / `fromJson` and the server are unchanged. Statuses
+/// NEVER split a group: they flag it. Only the time
+/// gate (post-model, like the guardrail) splits, and each split
+/// is counted in `splitGroups` and traced by a
+/// `meta-time-gate` reason on each component from the split.
 
-/// Familles de problèmes DEV (lexique limité, vocabulaire des
-/// scénarios trompeurs + cas étendus). Ne prétend pas couvrir le
-/// français général : une forme abrégée inconnue du lexique (ex.
-/// « ndp » pour la voirie est couverte, mais une abréviation inédite
-/// ne le serait pas) échappe au drapeau — limite documentée.
+/// DEV problem families (limited lexicon, vocabulary of the
+/// misleading scenarios + extended cases). Does not claim to cover
+/// general French: an abbreviated form unknown to the lexicon (e.g.
+/// "ndp" for roads is covered, but an unseen abbreviation
+/// would not be) escapes the flag — documented limitation.
 const Map<String, Set<String>> _problemFamilies = {
   'voirie-nid': {
     'nid', 'poule', 'ndp', 'trou', 'chaussee', 'chaus',
@@ -120,10 +120,10 @@ const Map<String, Set<String>> _problemFamilies = {
   'eclairage': {'reverbere', 'lampadaire', 'lampadaires', 'eclairage', 'eteint', 'defaillant'},
   'eau': {'fuite', 'eau', 'inonde', 'canalisation', 'ecoulement'},
   'electricite': {'coupure', 'courant', 'electrique', 'electricite', 'panne'},
-  // Famille DEMO §8 (caniveau + déchets) : ajout documenté, en fin de
-  // lexique pour ne pas modifier l'ordre d'expansion existant.
-  // Comme les autres familles : vocabulaire DEV limité, pas de
-  // compréhension générale du français.
+  // DEMO family §8 (gutter + waste): documented addition, at the end of
+  // the lexicon to avoid changing the existing expansion order.
+  // Like the other families: limited DEV vocabulary, no
+  // general understanding of French.
   'assainissement': {'caniveau', 'dechet', 'dechets', 'assainissement'},
 };
 
@@ -133,7 +133,7 @@ const Set<String> _resolvedTokens = {
 };
 const Set<String> _ongoingTokens = {'inonde', 'inondee', 'coule', 'coulee'};
 
-/// Familles touchées par le texte d'un signalement.
+/// Families touched by a report's text.
 Set<String> reportProblemFamilies(Report r) {
   final toks = tokens(r.text);
   return {
@@ -142,10 +142,10 @@ Set<String> reportProblemFamilies(Report r) {
   };
 }
 
-/// Un signalement liste-t-il au moins deux problèmes distincts ?
+/// Does a report list at least two distinct problems?
 bool hasMultiProblem(Report r) => reportProblemFamilies(r).length >= 2;
 
-/// Raison de contradiction d'état (résolu contre en cours), ou null.
+/// State contradiction reason (resolved vs ongoing), or null.
 String? stateContradictionReason(List<Report> members) {
   final toks = <String>{};
   for (final r in members) {
@@ -153,14 +153,14 @@ String? stateContradictionReason(List<Report> members) {
   }
   if (toks.intersection(_resolvedTokens).isNotEmpty &&
       toks.intersection(_ongoingTokens).isNotEmpty) {
-    return "contradiction d'état : marques résolu et en cours dans le même groupe";
+    return 'state contradiction: resolved and ongoing markers in the same group';
   }
   return null;
 }
 
-/// Raisons de contradiction d'un groupe : état + écarts de
-/// gravité/exposition déclarées >= 2. Les valeurs sont conservées,
-/// jamais moyennées.
+/// Contradiction reasons of a group: state + declared
+/// severity/exposure gaps >= 2. Values are kept,
+/// never averaged.
 List<String> groupContradictionReasons(
     List<Report> reports, List<String> reportIds) {
   final byId = {for (final r in reports) r.id: r};
@@ -172,8 +172,8 @@ List<String> groupContradictionReasons(
   final state = stateContradictionReason(members);
   if (state != null) reasons.add(state);
   for (final entry in {
-    'gravité': members.map((r) => r.severityHint).whereType<int>(),
-    'exposition': members.map((r) => r.exposureHint).whereType<int>(),
+    'severity': members.map((r) => r.severityHint).whereType<int>(),
+    'exposure': members.map((r) => r.exposureHint).whereType<int>(),
   }.entries) {
     final vals = entry.value.toList();
     if (vals.isNotEmpty &&
@@ -181,16 +181,16 @@ List<String> groupContradictionReasons(
                 vals.reduce((a, b) => a < b ? a : b) >=
             2) {
       reasons.add(
-          'contradiction de ${entry.key} : valeurs déclarées $vals, écart >= 2, conservées sans moyenne');
+          'contradiction of ${entry.key}: declared values $vals, gap >= 2, kept without averaging');
     }
   }
   return reasons;
 }
 
-/// Applique les statuts aux groupes, sans changer leurs reportIds.
-/// Retourne aussi le nombre de groupes contradictoires et le nombre
-/// de groupes multi-problème (traces comptables, comme
-/// `cancelledMerges` pour le garde-fou).
+/// Applies statuses to groups, without changing their reportIds.
+/// Also returns the number of conflicting groups and the number
+/// of multi-problem groups (accounting traces, like
+/// `cancelledMerges` for the guardrail).
 ({List<Group> groups, int contradictoryGroups, int multiProblemGroups})
     applyGroupStatuses(List<Report> reports, List<Group> groups) {
   final byId = {for (final r in reports) r.id: r};
@@ -203,7 +203,7 @@ List<String> groupContradictionReasons(
     if (contra.isNotEmpty) {
       nContra++;
       for (final r in contra) {
-        final labelled = 'statut-contradictoire : $r';
+        final labelled = 'status-conflicting: $r';
         if (!reasons.contains(labelled)) reasons.add(labelled);
       }
     }
@@ -214,7 +214,7 @@ List<String> groupContradictionReasons(
     if (multiIds.isNotEmpty) {
       nMulti++;
       reasons.add(
-          'drapeau-multi-probleme : signalement(s) ${multiIds.join(',')} listant >= 2 problèmes distincts ; groupe non comptable comme un seul incident propre');
+          'multi-problem-flag: report(s) ${multiIds.join(',')} listing >= 2 distinct problems; group not countable as a single clean incident');
     }
     out.add(Group(
       id: g.id,
@@ -235,18 +235,18 @@ List<String> groupContradictionReasons(
   );
 }
 
-/// Porte temps post-modèle (déterministe, comptée).
+/// Post-model time gate (deterministic, counted).
 ///
-/// Seuil local : 360 min (6 h), aligné sur la porte classique
-/// (deltaTMaxH = 6 h) pour les incidents ponctuels. Exception
-/// événements étendus : si TOUS les signalements du groupe ont une
-/// catégorie dans `extendedCategories` (coupure de réseau, panne
-/// réseau — un événement réseau peut persister plusieurs jours),
-/// seuil 10080 min (7 jours). Catégorie mixte ou ponctuelle -> seuil
-/// local (choix conservateur : on découpe). La porte ne doit pas
-/// casser les événements étendus : c'est pourquoi l'exception est
-/// explicite et testée (T25c), et pourquoi un groupe mixte retombe
-/// sur le seuil local plutôt que sur le seuil étendu.
+/// Local threshold: 360 min (6 h), aligned with the classic gate
+/// (deltaTMaxH = 6 h) for one-off incidents. Extended-event
+/// exception: if ALL reports in the group have a
+/// category in `extendedCategories` (network outage, network
+/// failure — a network event can persist for several days),
+/// threshold 10080 min (7 days). Mixed or one-off category -> local
+/// threshold (conservative choice: we split). The gate must not
+/// break extended events: that is why the exception is
+/// explicit and tested (T25c), and why a mixed group falls back
+/// to the local threshold rather than the extended one.
 const int localTimeGateMin = 360;
 const int extendedTimeGateMin = 10080;
 const Set<String> extendedCategories = {
@@ -263,15 +263,15 @@ const Set<String> extendedCategories = {
   };
   if (cats.isNotEmpty &&
       cats.every((c) => extendedCategories.contains(c))) {
-    return (gateMin: extendedTimeGateMin, kind: 'étendu');
+    return (gateMin: extendedTimeGateMin, kind: 'extended');
   }
   return (gateMin: localTimeGateMin, kind: 'local');
 }
 
-/// Découpe post-modèle les groupes violant la porte temps.
-/// Retourne les groupes découpés + le nombre de groupes découpés.
-/// Chaque composante issue d'un découpage porte une raison
-/// `porte-temps-meta` ; les groupes non découpés sont inchangés.
+/// Post-model split of groups violating the time gate.
+/// Returns the split groups + the number of groups split.
+/// Each component from a split carries a
+/// `meta-time-gate` reason; unsplit groups are unchanged.
 ({List<Group> groups, int splitGroups}) applyMetaTimeGate(
     List<Report> reports, List<Group> groups) {
   final byId = {for (final r in reports) r.id: r};
@@ -320,7 +320,7 @@ const Set<String> extendedCategories = {
       comp.sort();
       final reasons = [...g.uncertaintyReasons];
       reasons.add(
-          'porte-temps-meta : fusion proposée découpée, délai > ${gate.gateMin} min (seuil ${gate.kind})');
+          'meta-time-gate: proposed merge split, delay > ${gate.gateMin} min (threshold ${gate.kind})');
       out.add(Group(
         id: '',
         reportIds: comp,
@@ -352,46 +352,45 @@ const Set<String> extendedCategories = {
   return (groups: out, splitGroups: split);
 }
 
-/// --- Patch découpage multi-problème (local, poussé sur main) ---
+/// --- Multi-problem splitting patch (local, pushed to main) ---
 ///
-/// Un signalement peut décrire plusieurs problèmes distincts. Le
-/// drapeau multi-problème existant signale ce cas, il ne le résout
-/// pas : un groupe [E1, E2] reste un seul incident pour l'optimiseur,
-/// et le problème secondaire (éclairage) disparaît du plan.
+/// One report can describe several distinct problems. The
+/// existing multi-problem flag signals this case, it does not resolve
+/// it: a group [E1, E2] remains a single incident for the optimizer,
+/// and the secondary problem (lighting) disappears from the plan.
 ///
-/// Le découpage résout ce cas au niveau du regroupement, sans
-/// inventer de problème : chaque signalement est expansé en
-/// sous-signalements, un par famille DEV explicite
-/// (`reportProblemFamilies`, lexique limité documenté, pas de
-/// prétention au français général). Un sous-signalement s'identifie
-/// `ORIGINE:FAMILLE` (ex. `E1:eclairage`) : l'origine est
-/// récupérable en lecture en coupant au premier `:` (voir
-/// `originIdOfSubunit`), donc le découpage est réversible.
+/// Splitting resolves this case at grouping level, without
+/// inventing a problem: each report is expanded into
+/// sub-reports, one per explicit DEV family
+/// (`reportProblemFamilies`, documented limited lexicon, no
+/// claim to general French). A sub-report is identified as
+/// `ORIGIN:FAMILY` (e.g. `E1:eclairage`): the origin is
+/// recoverable on read by cutting at the first `:` (see
+/// `originIdOfSubunit`), so splitting is reversible.
 ///
-/// Règles :
-/// - deux sous-signalements ne sont groupés que s'ils partagent la
-///   MÊME famille (famille `inconnu` exclue : jamais de fusion) et
-///   passent les portes distance et temps du regroupement classique.
-///   Aucun seuil Jaccard n'est appliqué après découpage : la famille
-///   explicite est l'appariement sémantique. Limite assumée : cette
-///   règle est plus permissive que le classique ; elle ne vaut que
-///   parce que la famille est explicite.
-/// - un contenu insuffisant (garde-fou) ne fusionne jamais.
-/// - un signalement à une seule famille n'est pas découpé ; une
-///   mention vague sans famille explicite ne crée aucun
-///   sous-signalement, donc aucun découpage automatique.
-/// - `aggregate()` classique NE DOIT PAS être appelé sur des groupes
-///   de sous-signalements : il chercherait `E1:eclairage` dans la
-///   table des signalements et échouerait. Utiliser
-///   `aggregateSplitGroups()` (lib/incidents.dart), qui agrège par
-///   sous-signalement et conserve les identifiants découpés dans
-///   l'incident. La persistance des sous-signalements par le serveur
-///   réel (MongoDB / JSON) reste à vérifier sur serveur réel.
-/// - les groupes découpés portent `method: 'split'` et une raison
-///   `découpage-multi-problème` quand ils proviennent d'un
-///   signalement multi-problème ; ils sont marqués incertains, car
-///   le découpage repose sur un lexique DEV, pas sur une vérification
-///   terrain.
+/// Rules:
+/// - two sub-reports are grouped only if they share the
+///   SAME family (`inconnu` family excluded: never merged) and
+///   pass the distance and time gates of classic grouping.
+///   No Jaccard threshold is applied after splitting: the explicit
+///   family is the semantic match. Assumed limitation: this
+///   rule is more permissive than the classic one; it only holds
+///   because the family is explicit.
+/// - insufficient content (guardrail) never merges.
+/// - a report with a single family is not split; a
+///   vague mention without an explicit family creates no
+///   sub-report, hence no automatic splitting.
+/// - classic `aggregate()` MUST NOT be called on groups
+///   of sub-reports: it would look up `E1:eclairage` in the
+///   reports table and fail. Use
+///   `aggregateSplitGroups()` (lib/incidents.dart), which aggregates by
+///   sub-report and keeps the split identifiers in
+///   the incident. Persistence of sub-reports by the real server
+///   (MongoDB / JSON) remains to be verified on a real server.
+/// - split groups carry `method: 'split'` and a
+///   `multi-problem-splitting` reason when they come from a
+///   multi-problem report; they are marked uncertain, because
+///   splitting relies on a DEV lexicon, not on field verification.
 class Subunit {
   final String id; // ORIGINE:FAMILLE, ex. E1:eclairage
   final String originId;
@@ -404,16 +403,16 @@ class Subunit {
       required this.report});
 }
 
-/// Origine d'un identifiant de sous-signalement (réversibilité).
+/// Origin of a sub-report identifier (reversibility).
 String originIdOfSubunit(String subunitId) {
   final i = subunitId.indexOf(':');
   return i < 0 ? subunitId : subunitId.substring(0, i);
 }
 
-/// Expansion déterministe : un sous-signalement par famille DEV.
-/// Ordre des familles = ordre du lexique (voirie-nid, eclairage, eau,
-/// electricite). Aucune famille -> un seul sous-signalement `inconnu`,
-/// qui ne fusionnera jamais.
+/// Deterministic expansion: one sub-report per DEV family.
+/// Family order = lexicon order (voirie-nid, eclairage, eau,
+/// electricite). No family -> a single `inconnu` sub-report,
+/// which will never merge.
 List<Subunit> expandToSubunits(List<Report> reports) {
   final out = <Subunit>[];
   for (final r in reports) {
@@ -447,7 +446,7 @@ class _UnionFindSplit {
   }
 }
 
-/// Regroupement par sous-signalements (global, pas post-filtre).
+/// Grouping by sub-reports (global, not a post-filter).
 List<Group> groupSplitReports(
   List<Report> reports, {
   required double distMaxM,
@@ -489,7 +488,7 @@ List<Group> groupSplitReports(
     final reasons = <String>[];
     if (multi) {
       reasons.add(
-          'découpage-multi-problème : groupe issu d’un signalement listant >= 2 problèmes distincts ; vérifier le découpage (lexique DEV)');
+          'multi-problem-splitting: group from a report listing >= 2 distinct problems; verify the splitting (DEV lexicon)');
     }
     groups.add(Group(
       id: 'G$gi',
@@ -500,18 +499,18 @@ List<Group> groupSplitReports(
       uncertain: multi,
       uncertaintyReasons: reasons,
       justification: multi
-          ? 'Découpage multi-problème par famille DEV ; origine(s) : ${origins.join(',')}'
+          ? 'Multi-problem splitting by DEV family; origin(s): ${origins.join(',')}'
           : null,
     ));
   }
   return groups;
 }
 
-/// Post-filtre : découpe chaque groupe de signalements en
-/// sous-groupes par famille, SANS fusionner entre groupes d'origine.
-/// Un groupe sans signalement multi-problème est retourné inchangé
-/// (identifiants de signalements, pas de sous-signalements).
-/// Retourne les groupes découpés + le nombre de groupes découpés.
+/// Post-filter: splits each group of reports into
+/// sub-groups by family, WITHOUT merging across origin groups.
+/// A group without a multi-problem report is returned unchanged
+/// (report identifiers, not sub-report identifiers).
+/// Returns the split groups + the number of groups split.
 ({List<Group> groups, int splitGroups}) splitGroupsByFamily(
     List<Report> reports, List<Group> groups) {
   final byId = {for (final r in reports) r.id: r};
@@ -539,7 +538,7 @@ List<Group> groupSplitReports(
         method: 'split',
         uncertain: true,
         uncertaintyReasons: [
-          'découpage-multi-problème : groupe ${g.id} découpé par famille DEV (${entry.key}) ; origine(s) : ${members.map((r) => r.id).join(',')}'
+          'multi-problem-splitting: group ${g.id} split by DEV family (${entry.key}); origin(s): ${members.map((r) => r.id).join(',')}'
         ],
         justification: g.justification,
       ));
@@ -566,7 +565,7 @@ List<Group> groupSplitReports(
 double jaccard(String a, String b) {
   final ta = tokens(a);
   final tb = tokens(b);
-  // Deux textes sans jeton : aucune évidence de similarité (pas 1,0).
+  // Two texts without tokens: no evidence of similarity (not 1.0).
   if (ta.isEmpty && tb.isEmpty) return 0.0;
   if (ta.isEmpty || tb.isEmpty) return 0.0;
   final inter = ta.intersection(tb).length;
@@ -580,7 +579,7 @@ double distKm(Report a, Report b) {
   return dx * dx + dy * dy > 0 ? _sqrt(dx * dx + dy * dy) : 0.0;
 }
 
-// Racine carrée de Newton (évite dart:math pour un module pur).
+// Newton square root (avoids dart:math for a pure module).
 double _sqrt(double v) {
   if (v <= 0) return 0.0;
   var g = v / 2.0;
@@ -613,8 +612,8 @@ class _UnionFind {
   }
 }
 
-/// Regroupe les signalements. Paramètres en unités SI du prototype :
-/// distMaxM (mètres), deltaTMaxH (heures), simMin (Jaccard 0..1).
+/// Groups the reports. Parameters in prototype SI units:
+/// distMaxM (metres), deltaTMaxH (hours), simMin (Jaccard 0..1).
 List<Group> groupReports(
   List<Report> reports, {
   required double distMaxM,
@@ -630,10 +629,10 @@ List<Group> groupReports(
     for (var j = i + 1; j < n; j++) {
       final a = reports[i];
       final b = reports[j];
-      // Garde-fou : un contenu insuffisant ne fusionne JAMAIS, quelle que
-      // soit la distance, le temps ou la similarité (deux textes vides
-      // ont un Jaccard de 0,0, mais la règle est explicite et ne dépend
-      // d'aucun seuil).
+      // Guardrail: insufficient content NEVER merges, whatever
+      // the distance, time or similarity (two empty texts
+      // have a Jaccard of 0.0, but the rule is explicit and depends
+      // on no threshold).
       if (hasInsufficientContent(a.text) || hasInsufficientContent(b.text)) {
         continue;
       }
@@ -650,7 +649,7 @@ List<Group> groupReports(
   for (var i = 0; i < n; i++) {
     comps.putIfAbsent(uf.find(i), () => []).add(i);
   }
-  // Ordre déterministe : tri par plus petit id de signalement.
+  // Deterministic order: sort by smallest report id.
   final ordered = comps.values.toList()
     ..sort((a, b) => reports[a.first].id.compareTo(reports[b.first].id));
   final groups = <Group>[];
@@ -670,7 +669,7 @@ List<Group> groupReports(
         }
       }
     }
-    // Incertitude du regroupement : signalée, jamais masquée.
+    // Grouping uncertainty: flagged, never hidden.
     final reasons = <String>[];
     if (comp.length == 1 &&
         hasInsufficientContent(reports[comp.first].text)) {
@@ -679,9 +678,9 @@ List<Group> groupReports(
     if (comp.length > 1) {
       if (conf <= simMin + 0.10) {
         reasons.add(
-            'similarité minimale ${conf.toStringAsFixed(2)} proche du seuil $simMin');
+            'minimum similarity ${conf.toStringAsFixed(2)} close to threshold $simMin');
       }
-      // Chaînage transitif : paire interne sans arête directe.
+      // Transitive chaining: internal pair without a direct edge.
       for (var x = 0; x < comp.length && reasons.length < 4; x++) {
         for (var y = x + 1; y < comp.length; y++) {
           final key = comp[x] < comp[y]
@@ -689,7 +688,7 @@ List<Group> groupReports(
               : '${comp[y]}|${comp[x]}';
           if (!edgeSim.containsKey(key)) {
             reasons.add(
-                'chaînage transitif : ${reports[comp[x]].id}-${reports[comp[y]].id} sans arête directe');
+                'transitive chaining: ${reports[comp[x]].id}-${reports[comp[y]].id} with no direct edge');
             break;
           }
         }
@@ -700,20 +699,20 @@ List<Group> groupReports(
           sevHints.reduce((a, b) => a > b ? a : b) -
                   sevHints.reduce((a, b) => a < b ? a : b) >=
               2) {
-        reasons.add('gravités déclarées contradictoires dans le groupe');
+        reasons.add('conflicting declared severities in the group');
       }
-      // Patch unités/statuts : le classique porte aussi les statuts
-      // (raisons seulement, regroupement inchangé).
+      // Units/statuses patch: the classic one also carries statuses
+      // (reasons only, grouping unchanged).
       final members = comp.map((i) => reports[i]).toList();
       final state = stateContradictionReason(members);
-      if (state != null) reasons.add('statut-contradictoire : $state');
+      if (state != null) reasons.add('status-conflicting: $state');
       final multiIds = members
           .where((r) => hasMultiProblem(r))
           .map((r) => r.id)
           .toList();
       if (multiIds.isNotEmpty) {
         reasons.add(
-            'drapeau-multi-probleme : signalement(s) ${multiIds.join(',')} listant >= 2 problèmes distincts ; groupe non comptable comme un seul incident propre');
+            'multi-problem-flag: report(s) ${multiIds.join(',')} listing >= 2 distinct problems; group not countable as a single clean incident');
       }
     }
     gi++;
@@ -729,9 +728,9 @@ List<Group> groupReports(
   return groups;
 }
 
-/// Paires NON regroupées mais ambiguës (presque-fusions / séparations
-/// douteuses). Permet de signaler une séparation incertaine au lieu de
-/// l'imposer en silence (cas E2 : même lieu/instant, vocabulaire disjoint).
+/// Pairs NOT grouped but ambiguous (near-merges / doubtful
+/// splits). Flags an uncertain separation instead of
+/// imposing it silently (case E2: same place/time, disjoint vocabulary).
 List<Map<String, dynamic>> ambiguousPairs(
   List<Report> reports,
   List<Group> groups, {
@@ -758,17 +757,17 @@ List<Map<String, dynamic>> ambiguousPairs(
       String? reason;
       if (dKm <= distMaxKm && dt <= deltaTMaxMin && s < simMin) {
         reason =
-            'proximité spatio-temporelle mais vocabulaire insuffisant (Jaccard ${s.toStringAsFixed(2)} < $simMin) : séparation incertaine';
+            'spatio-temporal proximity but insufficient vocabulary (Jaccard ${s.toStringAsFixed(2)} < $simMin): uncertain separation';
       } else if (s >= simMin && dKm > distMaxKm && dKm <= distMaxKm * 2) {
         reason =
-            'texte similaire mais distance ${(dKm * 1000).round()} m au-delà du seuil ${distMaxM.round()} m : séparation incertaine';
+            'similar text but distance ${(dKm * 1000).round()} m beyond the ${distMaxM.round()} m threshold: uncertain separation';
       } else if (s >= simMin && dt <= deltaTMaxMin && dKm > distMaxKm * 2) {
-        // E4 (poussé sur main) : même texte, très loin. Ne pas
-        // fusionner de force (deux incidents réels peuvent partager un
-        // texte), mais ne pas séparer en silence : signaler le doublon
-        // distant à vérifier par un humain.
+        // E4 (pushed to main): same text, very far away. Do not
+        // force a merge (two real incidents can share a
+        // text), but do not split silently: flag the distant
+        // duplicate for a human to verify.
         reason =
-            'texte similaire (Jaccard ${s.toStringAsFixed(2)}) mais distance ${(dKm * 1000).round()} m, bien au-delà du seuil ${distMaxM.round()} m : séparation incertaine, doublon distant à vérifier, non fusionné';
+            'similar text (Jaccard ${s.toStringAsFixed(2)}) but distance ${(dKm * 1000).round()} m, well beyond the ${distMaxM.round()} m threshold: uncertain separation, distant duplicate to verify, not merged';
       }
       if (reason != null) {
         out.add({

@@ -1,16 +1,16 @@
-// Politique expérimentale CityResolve.
+// CityResolve experimental policy.
 //
-// ATTENTION : toutes les valeurs ci-dessous sont des HYPOTHÈSES DE
-// LABORATOIRE ([H]) ou des CONVENTIONS NORMATIVES ([N]), reprises de
-// SPECIFICATION_D_SIMU.md. Aucune n'est une mesure réelle ([E] = 0).
-// Le protocole scientifique reste NON GELÉ.
+// WARNING: all values below are LABORATORY
+// HYPOTHESES ([H]) or NORMATIVE CONVENTIONS ([N]), taken from
+// SPECIFICATION_D_SIMU.md. None is a real measurement ([E] = 0).
+// The scientific protocol remains NOT FROZEN.
 
-/// Poids du score Q : 65 % gravité, 35 % exposition (proposition V1.5, non validée).
+/// Q score weights: 65% severity, 35% exposure (V1.5 proposal, not validated).
 const double qWeightSeverity = 0.65;
 const double qWeightExposure = 0.35;
 
-/// Échéances en minutes calendaires depuis l'apparition réelle (S1..S4).
-/// S5 : pas d'échéance, escalade humaine immédiate, jamais planifié.
+/// Deadlines in calendar minutes since the real appearance (S1..S4).
+/// S5: no deadline, immediate human escalation, never planned.
 const Map<int, int> deadlinesMin = {
   1: 7 * 24 * 60,
   2: 72 * 60,
@@ -18,7 +18,7 @@ const Map<int, int> deadlinesMin = {
   4: 4 * 60,
 };
 
-/// Bandes d'exposition E (personnes distinctes). Inconnue = null, jamais 0.
+/// Exposure bands E (distinct people). Unknown = null, never 0.
 int exposureBand(int persons) {
   if (persons <= 0) return 0;
   if (persons <= 9) return 1;
@@ -27,50 +27,50 @@ int exposureBand(int persons) {
   return 4;
 }
 
-/// Valeur E de décision quand l'exposition est inconnue (conservateur, symétrique).
+/// Decision E value when exposure is unknown (conservative, symmetric).
 const int unknownExposureDecision = 4;
 
-/// Valeur S de décision pour le seul calcul de priorité quand la gravité
-/// est inconnue/contradictoire. N'autorise AUCUN dispatch automatique :
-/// ces incidents exigent une vérification (voir optimizer.dart).
+/// Decision S value for priority computation only when severity
+/// is unknown/conflicting. Allows NO automatic dispatch:
+/// these incidents require verification (see optimizer.dart).
 const int unknownSeverityDecision = 4;
 
-/// Poids w_i d'un incident S1..S4 pour le score Q.
+/// Weight w_i of an S1..S4 incident for the Q score.
 double incidentWeight(int severity, int exposureBandValue) {
   return qWeightSeverity * (severity / 4.0) +
       qWeightExposure * (exposureBandValue / 4.0);
 }
 
-/// Durées d'intervention sur site en minutes par gravité [H].
+/// On-site intervention durations in minutes by severity [H].
 const Map<int, int> siteDurationsMin = {1: 60, 2: 120, 3: 240, 4: 180};
 
-/// Multiplicateurs cachés possibles (vérité terrain, invisibles) [H].
+/// Possible hidden multipliers (ground truth, invisible) [H].
 const List<double> hiddenMultipliers = [0.8, 1.0, 1.25];
 
-/// Déplacements : grille 5x5 km, Manhattan, 20 km/h => 3 min/km [H].
+/// Travel: 5x5 km grid, Manhattan, 20 km/h => 3 min/km [H].
 const double gridSizeKm = 5.0;
 const double travelMinPerKm = 3.0;
 
-/// Coûts et budget (unités fictives) [N].
+/// Costs and budget (fictitious units) [N].
 const double siteRatePerHour = 10.0;
 const double travelRatePerKm = 2.0;
 const double budgetUnits = 120.0;
 
-/// Disponibilités : 08:00-16:00 chaque jour calendaire, horizon 14 jours [N].
+/// Availability: 08:00-16:00 every calendar day, 14-day horizon [N].
 const int dayStartMin = 8 * 60;
 const int dayEndMin = 16 * 60;
 const int horizonDays = 14;
 const int arrivalDays = 7;
 
-/// Compétences des deux équipes [N].
+/// Skills of the two teams [N].
 const Map<String, List<String>> teamDomains = {
   'equipe-1': ['voirie', 'espaces-verts'],
   'equipe-2': ['voirie', 'reseaux'],
 };
 
-/// Catégorie DÉCLARÉE du signalement -> domaine métier.
-/// Aucune gravité n'est déduite de la catégorie (supprimé : l'ancienne
-/// table categoryDefaultSeverity fabriquait une gravité silencieuse).
+/// DECLARED category of the report -> business domain.
+/// No severity is inferred from the category (removed: the old
+/// categoryDefaultSeverity table fabricated a silent severity).
 const Map<String, String> categoryDomain = {
   'nid-de-poule': 'voirie',
   'chaussée': 'voirie',
@@ -83,16 +83,16 @@ const Map<String, String> categoryDomain = {
 String categoryDomainOf(String category) =>
     categoryDomain[category] ?? 'voirie';
 
-/// Grille de développement du comparateur classique (DEV visible).
+/// Development grid of the classic comparator (visible DEV).
 const List<double> devDistMaxM = [100.0, 250.0, 500.0];
 const List<double> devDeltaTMaxH = [1.0, 6.0, 24.0];
 const List<double> devSimMin = [0.65, 0.75, 0.85];
 
-/// Seuils candidats (provisoires, non validés) : révision +5 Q, cosmétique 30 min.
+/// Candidate thresholds (provisional, not validated): review +5 Q, cosmetic 30 min.
 const double revisionThresholdQ = 5.0;
 const int cosmeticShiftMin = 30;
 
-/// Échéance absolue (minutes) depuis l'apparition réelle. -1 pour S5 (escalade).
+/// Absolute deadline (minutes) since the real appearance. -1 for S5 (escalation).
 int deadlineAt(int severity, int firstArrivalMin) {
   final d = deadlinesMin[severity];
   if (d == null) return -1;

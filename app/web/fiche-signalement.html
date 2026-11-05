@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CityResolve — Fiche signalement</title>
+<title>CityResolve — Report details</title>
 <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
-<header class="demo-banner">DÉMONSTRATION — DONNÉES FICTIVES — PROTOCOLE NON GELÉ — AUCUNE PREUVE</header>
+<header class="demo-banner">DEMONSTRATION — FICTITIOUS DATA — PROTOCOL NOT FROZEN — NO PROOF</header>
 <div id="loginOverlay" class="login-overlay" hidden>
   <div class="login-card">
-    <h2>Espace municipal</h2>
-    <p class="muted">Page protégée : connectez-vous avec le jeton municipal.</p>
-    <input id="loginToken" type="password" placeholder="Jeton municipal" autocomplete="off">
-    <button id="loginGo" class="btn primary">Se connecter</button>
+    <h2>Municipal area</h2>
+    <p class="muted">Protected page: sign in with the municipal token.</p>
+    <input id="loginToken" type="password" placeholder="Municipal token" autocomplete="off">
+    <button id="loginGo" class="btn primary">Sign in</button>
     <p id="loginErr" class="err"></p>
   </div>
 </div>
@@ -24,69 +24,69 @@
       <span>CityResolve</span>
     </div>
     <nav class="side-nav">
-      <a href="/municipal/dashboard"><span class="ico">⌂</span> Tableau de bord</a>
-      <a href="/municipal/dashboard#panelReports" class="active"><span class="ico">💬</span> Signalements</a>
+      <a href="/municipal/dashboard"><span class="ico">⌂</span> Dashboard</a>
+      <a href="/municipal/dashboard#panelReports" class="active"><span class="ico">💬</span> Reports</a>
       <a href="/municipal/dashboard#panelIncidents"><span class="ico">⚠</span> Incidents</a>
-      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Carte</a>
-      <a href="/municipal/planification"><span class="ico">📅</span> Planification</a>
-      <a href="/municipal/revision"><span class="ico">✓</span> Révision</a>
-      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparaison</a>
-      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Journal</a>
+      <a href="/municipal/dashboard#panelMap"><span class="ico">🗺</span> Map</a>
+      <a href="/municipal/planification"><span class="ico">📅</span> Planning</a>
+      <a href="/municipal/revision"><span class="ico">✓</span> Review</a>
+      <a href="/municipal/dashboard#panelCompare"><span class="ico">📊</span> Comparison</a>
+      <a href="/municipal/dashboard#panelJournal"><span class="ico">📓</span> Log</a>
     </nav>
-    <div class="side-foot">Des signalements<br>aux décisions<br>d'intervention.</div>
+    <div class="side-foot">From reports<br>to intervention<br>decisions.</div>
   </aside>
   <div class="main">
     <header class="topbar">
       <button class="hamburger" id="burger" aria-label="Menu">☰</button>
       <div class="title-block">
-        <div class="crumb" id="crumb">Signalements › …</div>
-        <h1>Fiche signalement</h1>
-        <p class="muted">Détail d'un signalement citoyen, incluant les problèmes associés, la localisation et le statut de vérification.</p>
+        <div class="crumb" id="crumb">Reports › …</div>
+        <h1>Report details</h1>
+        <p class="muted">Details of a citizen report, including associated problems, location and verification status.</p>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
-          <input id="q" type="search" placeholder="Rechercher un signalement, un lieu, un incident…" aria-label="Recherche">
+          <input id="q" type="search" placeholder="Search for a report, a place, an incident…" aria-label="Search">
           <div class="search-results" id="qResults" hidden></div>
         </div>
-        <button class="icon-btn" id="bellBtn" title="Alertes">🔔<span class="badge" id="bellBadge" hidden></span></button>
-        <button class="icon-btn" id="helpBtn" title="Aide">?</button>
-        <span class="avatar" title="Utilisateur municipal (démo mono-utilisateur)">CM</span>
+        <button class="icon-btn" id="bellBtn" title="Alerts">🔔<span class="badge" id="bellBadge" hidden></span></button>
+        <button class="icon-btn" id="helpBtn" title="Help">?</button>
+        <span class="avatar" title="Municipal user (single-user demo)">CM</span>
       </div>
     </header>
     <div class="alerts" id="alerts" hidden></div>
     <section id="ficheBody"><div class="card"><div class="skel tall"></div></div></section>
-    <footer class="muted">CityResolve — démonstration. Données fictives, protocole non gelé. <a href="/">Accueil public</a> · <a href="/municipal/dashboard">Tableau de bord</a></footer>
+    <footer class="muted">CityResolve — demonstration. Fictitious data, protocol not frozen. <a href="/">Public home</a> · <a href="/municipal/dashboard">Dashboard</a></footer>
   </div>
 </div>
 
 <div class="modal" id="editModal" hidden>
   <div class="modal-card">
-    <h3>Modifier le signalement <span id="editId"></span></h3>
-    <p class="muted">Seuls les champs déclarés sont modifiables. Le regroupement n'est pas relancé automatiquement : re-regrouper ensuite depuis la page Découpage.</p>
+    <h3>Edit the report <span id="editId"></span></h3>
+    <p class="muted">Only reported fields are editable. Grouping is not re-run automatically: re-group afterwards from the Splitting page.</p>
     <label>Description<br><textarea id="eText" rows="4" style="width:100%" maxlength="500"></textarea></label><br>
-    <label>Catégorie<br><select id="eCat"><option>nid-de-poule</option><option>chaussée</option><option>eclairage</option><option>fuite-eau</option><option>coupure-electrique</option><option>arbre</option><option>autre</option></select></label><br>
-    <label>Gravité déclarée (1–5, vide = inconnue)<br><select id="eSev"><option value="">inconnue</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><br>
-    <label>Exposition déclarée (0–4, vide = inconnue)<br><select id="eExp"><option value="">inconnue</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+    <label>Category<br><select id="eCat"><option value="nid-de-poule">Roads — potholes</option><option value="chaussée">Roads — road surface</option><option value="eclairage">Public lighting</option><option value="fuite-eau">Sanitation / Drainage</option><option value="coupure-electrique">Electricity</option><option value="arbre">Trees / green spaces</option><option value="autre">Other (please specify)</option></select></label><br>
+    <label>Reported severity (1–5, empty = unknown)<br><select id="eSev"><option value="">unknown</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><br>
+    <label>Reported exposure (0–4, empty = unknown)<br><select id="eExp"><option value="">unknown</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
     <p class="err" id="editErr"></p>
-    <div class="btn-row"><button class="btn primary" id="editSave">Enregistrer</button><button class="btn ghost" id="editCancel">Annuler</button></div>
+    <div class="btn-row"><button class="btn primary" id="editSave">Save</button><button class="btn ghost" id="editCancel">Cancel</button></div>
   </div>
 </div>
 
 <div class="modal" id="verifyModal" hidden>
   <div class="modal-card">
-    <h3>Vérification humaine</h3>
-    <p class="muted">Le statut affiché reste calculé automatiquement (regroupement, plan). La note ci-dessous documente uniquement votre vérification terrain — elle ne modifie ni gravité ni exposition.</p>
-    <label>Note de vérification (max 500, vide = retirer la vérification)<br><textarea id="vNote" rows="3" style="width:100%" maxlength="500"></textarea></label>
+    <h3>Human verification</h3>
+    <p class="muted">The displayed status remains computed automatically (grouping, plan). The note below only documents your field verification — it changes neither severity nor exposure.</p>
+    <label>Verification note (max 500, empty = remove verification)<br><textarea id="vNote" rows="3" style="width:100%" maxlength="500"></textarea></label>
     <p class="err" id="verifyErr"></p>
-    <div class="btn-row"><button class="btn primary" id="verifySave">Enregistrer</button><button class="btn ghost" id="verifyCancel">Annuler</button></div>
+    <div class="btn-row"><button class="btn primary" id="verifySave">Save</button><button class="btn ghost" id="verifyCancel">Cancel</button></div>
   </div>
 </div>
 
 <div class="modal" id="helpModal" hidden>
   <div class="modal-card">
-    <h3>Fiche signalement</h3>
-    <p>Affiche le texte original exact, la photo réelle si téléversée, les problèmes détectés (lexique DEV, origine conservée), les inconnues conservées, et l'historique des événements liés. La modification est journalisée ; le statut reste dérivé automatiquement.</p>
-    <button class="btn primary" id="helpClose">Fermer</button>
+    <h3>Report details</h3>
+    <p>Shows the exact original text, the real photo if uploaded, the detected problems (DEV lexicon, origin kept), the unknowns kept, and the history of related events. Edits are logged; the status remains derived automatically.</p>
+    <button class="btn primary" id="helpClose">Close</button>
   </div>
 </div>
 <script src="/fiche-signalement.js"></script>

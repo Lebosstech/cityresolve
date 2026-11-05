@@ -1,13 +1,13 @@
-// Agrégation groupes -> incidents proposés (exploratoire).
+// Aggregation groups -> proposed incidents (exploratory).
 //
-// Gravité et exposition : JAMAIS déduites de la catégorie ni fabriquées.
-// - aucune valeur déclarée        -> valeur null, statut inconnue ;
-// - une seule valeur distincte    -> statut declaree ;
-// - valeurs proches (écart <= 1)  -> max, statut estimee ;
-// - valeurs incompatibles (>= 2)  -> valeur null, statut contradictoire,
-//   valeurs déclarées conservées dans severityValues/exposureValues.
-// Domaine : domaine majoritaire des catégories DÉCLARÉES ; égalité entre
-// deux domaines -> domainConflict signalé (domaine du premier conservé).
+// Severity and exposure: NEVER inferred from the category nor fabricated.
+// - no declared value           -> null value, inconnue status;
+// - a single distinct value    -> declaree status;
+// - close values (gap <= 1)    -> max, estimee status;
+// - incompatible values (>= 2) -> null value, contradictoire status,
+//   declared values kept in severityValues/exposureValues.
+// Domain: majority domain of the DECLARED categories; tie between
+// two domains -> domainConflict flagged (first domain kept).
 import 'policy.dart';
 import 'types.dart';
 
@@ -31,11 +31,11 @@ _Attr _aggregateAttr(List<int?> hints) {
   return _Attr(null, statusContradictoire, values);
 }
 
-/// Domaine métier d'une famille DEV (découpage). Aligné sur
-/// `categoryDomain` : l'éclairage y est rattaché à la voirie, comme
-/// la catégorie `eclairage`, pour rester assignable aux équipes
-/// existantes (equipe-1 : voirie, espaces-verts ; equipe-2 : voirie,
-/// reseaux). Aucune gravité n'est déduite de la famille.
+/// Business domain of a DEV family (splitting). Aligned with
+/// `categoryDomain`: lighting is attached to roads there, like
+/// the `eclairage` category, to stay assignable to the existing
+/// teams (equipe-1: voirie, espaces-verts; equipe-2: voirie,
+/// reseaux). No severity is inferred from the family.
 const Map<String, String> familyDomain = {
   'voirie-nid': 'voirie',
   'eclairage': 'voirie',
@@ -45,17 +45,17 @@ const Map<String, String> familyDomain = {
   'inconnu': 'voirie',
 };
 
-/// Agrégation pour groupes de SOUS-signalements (voir
+/// Aggregation for groups of SUB-reports (see
 /// `groupSplitReports` / `splitGroupsByFamily`).
-/// NE PAS appeler `aggregate()` sur ces groupes : il chercherait
-/// `E1:eclairage` dans la table des signalements et échouerait.
-/// Ici, chaque identifiant est résolu vers son signalement d'origine
-/// (partie avant `:`), et l'incident conserve les identifiants
-/// découpés dans `reportIds` : l'origine est donc traçable, et
-/// l'optimiseur voit autant de tâches que de groupes découpés.
-/// Limite : deux volets d'un même signalement partagent les mêmes
-/// gravité/exposition déclarées (celles de l'origine) ; le découpage
-/// ne crée ni gravité ni exposition propres à un volet.
+/// Do NOT call `aggregate()` on these groups: it would look up
+/// `E1:eclairage` in the reports table and fail.
+/// Here, each identifier is resolved to its origin report
+/// (part before `:`), and the incident keeps the split
+/// identifiers in `reportIds`: the origin is therefore traceable, and
+/// the optimizer sees as many tasks as split groups.
+/// Limitation: two parts of the same report share the same
+/// declared severity/exposure (those of the origin); splitting
+/// creates no severity or exposure of its own for a part.
 List<Incident> aggregateSplitGroups(
     List<Group> groups, Map<String, Report> byId) {
   final out = <Incident>[];
@@ -112,20 +112,20 @@ List<Incident> aggregateSplitGroups(
   return out;
 }
 
-/// --- Branchement serveur du découpage multi-problème ---
+/// --- Server wiring of multi-problem splitting ---
 ///
-/// Le serveur ne doit JAMAIS appeler `aggregate()` sur un groupe dont
-/// un identifiant contient `:` (sous-signalement `ORIGINE:FAMILLE`) :
-/// `aggregate()` chercherait `E1:eclairage` dans la table des
-/// signalements et échouerait (accès `byId[id]!` sur une clé absente).
-/// `aggregateMixedGroups()` route chaque groupe vers la bonne
-/// agrégation : groupes découpés -> `aggregateSplitGroups()`, groupes
-/// pleins -> `aggregate()`, puis renumérote les incidents I1.. dans
-/// l'ordre final (poids décroissant, échéance, identifiant provisoire),
-/// car les deux agrégations numéroteraient sinon chacune depuis I1
-/// et les tâches de plan (référencées par identifiant d'incident)
-/// deviendraient ambiguës. Sur des groupes sans `:` le résultat est
-/// identique à `aggregate()` (prouvé par le test T27d).
+/// The server must NEVER call `aggregate()` on a group whose
+/// identifier contains `:` (sub-report `ORIGIN:FAMILY`):
+/// `aggregate()` would look up `E1:eclairage` in the
+/// reports table and fail (`byId[id]!` access on a missing key).
+/// `aggregateMixedGroups()` routes each group to the right
+/// aggregation: split groups -> `aggregateSplitGroups()`, full
+/// groups -> `aggregate()`, then renumbers incidents I1.. in
+/// final order (decreasing weight, deadline, provisional identifier),
+/// because the two aggregations would otherwise each number from I1
+/// and plan tasks (referenced by incident identifier)
+/// would become ambiguous. On groups without `:` the result is
+/// identical to `aggregate()` (proven by test T27d).
 bool groupUsesSplitIds(Group g) =>
     g.reportIds.any((id) => id.contains(':'));
 
@@ -216,7 +216,7 @@ List<Incident> aggregate(
       confidence: g.confidence,
     ));
   }
-  // Priorité : poids de décision décroissant, puis échéance, puis id.
+  // Priority: decreasing decision weight, then deadline, then id.
   out.sort((a, b) {
     final dw = b.weight.compareTo(a.weight);
     if (dw != 0) return dw;

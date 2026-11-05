@@ -1,4 +1,4 @@
-// Métriques : F1 de regroupement, Q, révisions (calculs vérifiables).
+// Metrics: grouping F1, Q, reviews (verifiable computations).
 import 'policy.dart';
 
 class Prf {
@@ -22,8 +22,8 @@ class Prf {
       };
 }
 
-/// F1 pairwise. truth : groupes vrais (listes d'ids). pred : groupes prédits.
-/// abstained : signalements abstentionnistes scorés en singletons.
+/// Pairwise F1. truth: true groups (id lists). pred: predicted groups.
+/// abstained: abstaining reports scored as singletons.
 Prf pairwiseF1(
   List<Set<String>> truth,
   List<List<String>> pred, {
@@ -41,7 +41,7 @@ Prf pairwiseF1(
     for (final id in pred[i]) {
       if (abstained.contains(id)) {
         singletonSeq++;
-        predOf[id] = 1000000 + singletonSeq; // singleton déterministe
+        predOf[id] = 1000000 + singletonSeq; // deterministic singleton
       } else {
         predOf[id] = i;
       }
@@ -89,7 +89,7 @@ double macroF1(List<Prf> parts) {
   return s / parts.length;
 }
 
-/// B-cubed F1 (équilibré par signalement).
+/// B-cubed F1 (balanced per report).
 double bCubedF1(
     Map<String, int> trueOf, Map<String, int> predOf) {
   if (trueOf.isEmpty) return 1.0;
@@ -112,7 +112,7 @@ double bCubedF1(
   return mp + mr == 0 ? 0.0 : 2 * mp * mr / (mp + mr);
 }
 
-/// Score Q : 100 * Σ(w complétés) / Σ(w S1..S4). null si aucun S1..S4.
+/// Q score: 100 * Σ(completed w) / Σ(S1..S4 w). null if no S1..S4.
 double? qScore(Map<String, double> weights, Set<String> completed) {
   var num = 0.0, den = 0.0;
   weights.forEach((id, w) {
@@ -138,7 +138,7 @@ class RevisionCounts {
       };
 }
 
-/// Enveloppe : toute révision est mesurée sur les VRAIS groupes DEV visibles.
+/// Envelope: every review is measured on the TRUE visible DEV groups.
 String metricNote() =>
-    'Métriques calculées sur scénarios DEV fictifs visibles. '
-    'Aucune preuve scientifique. Politique Q ${qWeightSeverity}/${qWeightExposure} (provisoire).';
+    'Metrics computed on visible fictitious DEV scenarios. '
+    'No scientific proof. Q policy ${qWeightSeverity}/${qWeightExposure} (provisional).';

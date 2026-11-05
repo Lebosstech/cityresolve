@@ -106,7 +106,7 @@ select, input[type="number"], input[type="text"], input:not([type]) { padding: 7
 .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 10px; padding: 2px 8px; }
 .tag.calc { background: #e0f2fe; color: #075985; }
 .tag.hum { background: #ede9fe; color: #5b21b6; }
-/* Pages dédiées : découpage 3 blocs, cartes internes */
+/* Dedicated pages: 3-block splitting, inner cards */
 .split3 { display: grid; grid-template-columns: 5fr 4fr 4fr; gap: 14px; align-items: start; margin-top: 12px; }
 .card.inner { background: #f8fafc; }
 #subCol, #incCol { display: flex; flex-direction: column; gap: 10px; }

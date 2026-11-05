@@ -1,4 +1,4 @@
-// Fiche signalement : lecture réelle, modification autorisée et journalisée.
+// Report details: real read, authorised and logged edits.
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 let ctrl = null;
@@ -13,7 +13,7 @@ async function api(path, method = 'GET', body = null) {
   });
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); throw new Error('auth'); }
-  if (r.status === 404) throw new Error('Signalement introuvable.');
+  if (r.status === 404) throw new Error('Report not found.');
   if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
   return j;
 }
@@ -24,7 +24,7 @@ function showLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: $('loginToken').value }) });
     if (r.ok) location.reload();
-    else $('loginErr').textContent = 'Jeton invalide.';
+    else $('loginErr').textContent = 'Invalid token.';
   };
 }
 function needAuth(fn) { return async (...a) => { try { await fn(...a); } catch (e) { if (!String(e && e.message).includes('auth')) throw e; } }; }
@@ -32,79 +32,79 @@ function needAuth(fn) { return async (...a) => { try { await fn(...a); } catch (
 let current = null;
 
 function statusPill(r) {
-  if (r.verificationNote) return `<span class="pill st-valide-humain">Vérifié (humain)</span>`;
-  return `<span class="pill st-propose">À vérifier</span>`;
+  if (r.verificationNote) return `<span class="pill st-valide-humain">Verified (human)</span>`;
+  return `<span class="pill st-propose">To verify</span>`;
 }
 
 function render(j) {
   const r = j.report;
   current = r;
-  $('crumb').innerHTML = `Signalements › ${esc(r.id)}`;
+  $('crumb').innerHTML = `Reports › ${esc(r.id)}`;
   const isMedia = /^[0-9a-f]{24}$/.test(r.photo || '');
   const photo = isMedia
-    ? `<a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img src="/api/photos/${esc(r.photo)}" alt="photo du signalement" style="max-width:100%;border-radius:10px"></a>
-       <p class="muted">${j.photoMeta ? `${esc(j.photoMeta.mime || '')} · ${j.photoMeta.size} octets · reçu(e) le ${esc(new Date(j.photoMeta.createdAt).toLocaleString('fr-FR'))}` : 'média téléversé'}</p>`
-    : '<p class="empty">Aucune photo — état vide (aucune image fabriquée).</p>';
+    ? `<a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img src="/api/photos/${esc(r.photo)}" alt="report photo" style="max-width:100%;border-radius:10px"></a>
+       <p class="muted">${j.photoMeta ? `${esc(j.photoMeta.mime || '')} · ${j.photoMeta.size} bytes · received on ${esc(new Date(j.photoMeta.createdAt).toLocaleString('en-US'))}` : 'uploaded media'}</p>`
+    : '<p class="empty">No photo — empty state (no image fabricated).</p>';
   const fams = (j.subunits || []).map((u) => u.family);
   const uniqFams = [...new Set(fams)];
-  const famLabel = { 'voirie-nid': 'Voirie', 'eclairage': 'Éclairage public', 'eau': 'Drainage', 'electricite': 'Électricité', 'assainissement': 'Assainissement', 'dechets': 'Propreté', 'inconnu': 'Inconnu' };
+  const famLabel = { 'voirie-nid': 'Roads', 'eclairage': 'Public lighting', 'eau': 'Drainage', 'electricite': 'Electricity', 'assainissement': 'Sanitation', 'dechets': 'Cleanliness', 'inconnu': 'Unknown' };
   const unknown = [];
-  if (r.severityHint === null || r.severityHint === undefined) unknown.push('gravité');
-  if (r.exposureHint === null || r.exposureHint === undefined) unknown.push('exposition');
-  if (!r.gpsLat) unknown.push('position GPS exacte');
-  const when = r.receivedAt ? new Date(r.receivedAt).toLocaleString('fr-FR') : 'scénario DEV (sans heure de réception)';
+  if (r.severityHint === null || r.severityHint === undefined) unknown.push('severity');
+  if (r.exposureHint === null || r.exposureHint === undefined) unknown.push('exposure');
+  if (!r.gpsLat) unknown.push('exact GPS position');
+  const when = r.receivedAt ? new Date(r.receivedAt).toLocaleString('en-US') : 'DEV scenario (no receipt time)';
   $('ficheBody').innerHTML = `
   <section class="card"><div class="btn-row">
-    <button class="btn ghost" id="backBtn">← Retour aux signalements</button>
-    <span class="pill st-info" style="background:#e0f2fe;color:#075985;border-radius:14px;padding:3px 10px;font-size:11.5px;font-weight:700">Un signalement peut contenir plusieurs problèmes : ${uniqFams.length} détecté(s) ici (${uniqFams.map((f) => esc(famLabel[f] || f)).join(' + ') || 'aucun'}).</span>
+    <button class="btn ghost" id="backBtn">← Back to reports</button>
+    <span class="pill st-info" style="background:#e0f2fe;color:#075985;border-radius:14px;padding:3px 10px;font-size:11.5px;font-weight:700">A report can contain several problems: ${uniqFams.length} detected here (${uniqFams.map((f) => esc(famLabel[f] || f)).join(' + ') || 'none'}).</span>
     <span style="flex:1"></span>
-    <button class="btn ghost" id="editBtn">✏ Modifier</button>
-    <button class="btn primary" id="verifyBtn">✓ Mettre à jour le statut</button>
+    <button class="btn ghost" id="editBtn">✏ Edit</button>
+    <button class="btn primary" id="verifyBtn">✓ Update status</button>
   </div></section>
   <section class="row2">
     <div>
-      <div class="card"><h2>Photo ${isMedia ? '(1 photo)' : ''}</h2>${photo}${isMedia ? '<div class="btn-row"><button class="btn primary" id="visionBtn">Analyser la photo (IA)</button></div><p class="muted" id="visionMsg"></p>' : ''}</div>
+      <div class="card"><h2>Photo ${isMedia ? '(1 photo)' : ''}</h2>${photo}${isMedia ? '<div class="btn-row"><button class="btn primary" id="visionBtn">Analyse the photo (AI)</button></div><p class="muted" id="visionMsg"></p>' : ''}</div>
       <div class="card"><h2>Description</h2><p>« ${esc(r.text)} »</p>
-      <p class="muted">Texte original exact — aucune reformulation IA ne le remplace.</p></div>
-      <div class="card"><h2>Problèmes associés (${(j.subunits || []).length})</h2>
-      ${((j.subunits || []).map((u) => `<span class="chip">${esc(famLabel[u.family] || u.family)}</span> <span class="muted">${esc(u.id)}</span>`).join(' ') || '<p class="empty">aucun</p>')}
-      <p class="muted">Origine conservée (ORIGINE:FAMILLE) ; un problème secondaire ne disparaît jamais quand un autre est traité.</p></div>
-      ${j.extraction ? `<div class="card"><h2>Extraction IA (à vérifier)</h2><pre class="dump">${esc(JSON.stringify(j.extraction, null, 1))}</pre></div>` : ''}
-      ${j.visualAnalysis ? `<div class="card"><h2>Analyse visuelle IA (à vérifier)</h2><pre class="dump">${esc(JSON.stringify(j.visualAnalysis.analysis || j.visualAnalysis, null, 1))}</pre></div>` : ''}
+      <p class="muted">Exact original text — no AI rephrasing replaces it.</p></div>
+      <div class="card"><h2>Associated problems (${(j.subunits || []).length})</h2>
+      ${((j.subunits || []).map((u) => `<span class="chip">${esc(famLabel[u.family] || u.family)}</span> <span class="muted">${esc(u.id)}</span>`).join(' ') || '<p class="empty">none</p>')}
+      <p class="muted">Origin kept (ORIGIN:FAMILY); a secondary problem never disappears when another is handled.</p></div>
+      ${j.extraction ? `<div class="card"><h2>AI extraction (to verify)</h2><pre class="dump">${esc(JSON.stringify(j.extraction, null, 1))}</pre></div>` : ''}
+      ${j.visualAnalysis ? `<div class="card"><h2>AI visual analysis (to verify)</h2><pre class="dump">${esc(JSON.stringify(j.visualAnalysis.analysis || j.visualAnalysis, null, 1))}</pre></div>` : ''}
     </div>
     <div>
-      <div class="card"><h2>Informations générales</h2>
-        <p><b>N° de signalement</b> : ${esc(r.id)} <button class="link" id="copyId">copier</button></p>
-        <p><b>Source</b> : ${esc(r.source)} ${r.source === 'manuel' ? '(citoyen / manuel)' : '(scénario DEV)'}</p>
-        <p><b>Date</b> : ${esc(when)}</p>
-        <p><b>Statut de vérification</b> : ${statusPill(r)}</p>
-        ${r.verificationNote ? `<p class="muted">Note : ${esc(r.verificationNote)}${r.verifiedAt ? ' (' + esc(new Date(r.verifiedAt).toLocaleString('fr-FR')) + ')' : ''}</p>` : ''}
+      <div class="card"><h2>General information</h2>
+        <p><b>Report No.</b>: ${esc(r.id)} <button class="link" id="copyId">copy</button></p>
+        <p><b>Source</b>: ${esc(r.source)} ${r.source === 'manuel' ? '(citizen / manual)' : '(DEV scenario)'}</p>
+        <p><b>Date</b>: ${esc(when)}</p>
+        <p><b>Verification status</b>: ${statusPill(r)}</p>
+        ${r.verificationNote ? `<p class="muted">Note : ${esc(r.verificationNote)}${r.verifiedAt ? ' (' + esc(new Date(r.verifiedAt).toLocaleString('en-US')) + ')' : ''}</p>` : ''}
       </div>
-      <div class="card"><h2>Localisation</h2>
-        <p>Position fictive : <b>(${Number(r.x).toFixed(1)}, ${Number(r.y).toFixed(1)}) km</b> — grille 5×5, pas une adresse réelle.</p>
-        ${r.gpsLat ? `<p>Relevé GPS navigateur : ${Number(r.gpsLat).toFixed(5)}, ${Number(r.gpsLon).toFixed(5)}${r.gpsAccuracy != null ? ` (±${Math.round(r.gpsAccuracy)} m)` : ''} — fourni par le déclarant.</p>` : '<p class="muted">Aucune position GPS (saisie manuelle sur la grille).</p>'}
-        <p class="muted">Adresse / quartier / commune : non disponibles (aucune adresse déclarée, aucune géocodification).</p>
+      <div class="card"><h2>Location</h2>
+        <p>Fictitious position: <b>(${Number(r.x).toFixed(1)}, ${Number(r.y).toFixed(1)}) km</b> — 5×5 grid, not a real address.</p>
+        ${r.gpsLat ? `<p>Browser GPS reading: ${Number(r.gpsLat).toFixed(5)}, ${Number(r.gpsLon).toFixed(5)}${r.gpsAccuracy != null ? ` (±${Math.round(r.gpsAccuracy)} m)` : ''} — provided by the reporter.</p>` : '<p class="muted">No GPS position (manual entry on the grid).</p>'}
+        <p class="muted">Address / district / municipality: unavailable (no address reported, no geocoding).</p>
       </div>
-      <div class="card"><h2>Gravité et exposition</h2>
-        <p>Gravité déclarée : <b>${r.severityHint === null || r.severityHint === undefined ? 'Inconnue' : 'S' + r.severityHint}</b></p>
-        <p>Exposition déclarée : <b>${r.exposureHint === null || r.exposureHint === undefined ? 'Inconnue' : 'E' + r.exposureHint}</b></p>
-        <p class="muted">Jamais déduites de la catégorie ; valeurs contradictoires conservées, jamais moyennées.</p>
+      <div class="card"><h2>Severity and exposure</h2>
+        <p>Reported severity: <b>${r.severityHint === null || r.severityHint === undefined ? 'Unknown' : 'S' + r.severityHint}</b></p>
+        <p>Reported exposure: <b>${r.exposureHint === null || r.exposureHint === undefined ? 'Unknown' : 'E' + r.exposureHint}</b></p>
+        <p class="muted">Never inferred from the category; conflicting values kept, never averaged.</p>
       </div>
-      <div class="card"><h2>Informations inconnues conservées</h2>
-        <p>${unknown.length ? 'Champs non déterminés : <b>' + unknown.map(esc).join(', ') + '</b>. ' : 'Aucun champ inconnu. '}Une vérification humaine est requise avant toute affectation opérationnelle.</p>
+      <div class="card"><h2>Unknown information kept</h2>
+        <p>${unknown.length ? 'Undetermined fields: <b>' + unknown.map(esc).join(', ') + '</b>. ' : 'No unknown fields. '}Human verification is required before any operational assignment.</p>
       </div>
     </div>
   </section>
   <section class="row2">
-    <div class="card"><h2>Incidents associés (${j.linkedIncidents.length})</h2>
-      ${j.linkedIncidents.map((i) => `<p><b>${esc(i.id)}</b> — ${esc(i.domain)} — gravité ${i.severity === null ? 'inconnue' : 'S' + i.severity} <a class="link" href="/municipal/decoupage">voir le découpage →</a></p>`).join('') || '<p class="empty">Aucun incident lié (regroupement en attente).</p>'}
+    <div class="card"><h2>Associated incidents (${j.linkedIncidents.length})</h2>
+      ${j.linkedIncidents.map((i) => `<p><b>${esc(i.id)}</b> — ${esc(i.domain)} — severity ${i.severity === null ? 'unknown' : 'S' + i.severity} <a class="link" href="/municipal/decoupage">see the splitting →</a></p>`).join('') || '<p class="empty">No linked incident (grouping pending).</p>'}
     </div>
-    <div class="card"><h2>Historique</h2>
+    <div class="card"><h2>History</h2>
       <ul class="timeline">${(j.history || []).map((e) => {
         const d = e.at ? new Date(e.at) : null;
-        return `<li><span class="tico">•</span><div><b>${esc(e.label)}</b><br><span class="muted">${esc(e.detail || '')}</span></div><time>${esc(d ? d.toLocaleString('fr-FR') : '?')}</time></li>`;
-      }).join('') || '<li class="empty">Aucun événement lié.</li>'}</ul>
-      <p class="muted">Donnée fictive — journal municipal horodaté.</p>
+        return `<li><span class="tico">•</span><div><b>${esc(e.label)}</b><br><span class="muted">${esc(e.detail || '')}</span></div><time>${esc(d ? d.toLocaleString('en-US') : '?')}</time></li>`;
+      }).join('') || '<li class="empty">No related events.</li>'}</ul>
+      <p class="muted">Fictitious data — timestamped municipal log.</p>
     </div>
   </section>`;
   $('backBtn').onclick = () => { location.href = '/municipal/dashboard#panelReports'; };
@@ -118,14 +118,14 @@ function render(j) {
 async function runVision() {
   const btn = $('visionBtn'), msg = $('visionMsg');
   btn.disabled = true;
-  msg.textContent = 'Analyse visuelle en cours (appel réel)…';
+  msg.textContent = 'Visual analysis in progress (real call)…';
   try {
     const j = await api('/api/meta/analyze-image', 'POST', { reportId: current.id });
-    msg.textContent = `Analyse enregistrée (modèle ${j.model || '?'}). Rechargement…`;
+    msg.textContent = `Analysis saved (model ${j.model || '?'}). Reloading…`;
     await load();
   } catch (e) {
     if (String(e && e.message).includes('auth')) return;
-    msg.innerHTML = `<span class="perr">Analyse impossible : ${esc(e.message || e)}</span>`;
+    msg.innerHTML = `<span class="perr">Analysis failed: ${esc(e.message || e)}</span>`;
     btn.disabled = false;
   }
 }
@@ -158,7 +158,7 @@ async function saveEdit() {
     if (j.staleGrouping) {
       const note = document.createElement('p');
       note.className = 'muted';
-      note.innerHTML = 'Enregistré. Regroupement non relancé : <a class="link" href="/municipal/decoupage">re-regrouper depuis la page Découpage</a> pour propager.';
+      note.innerHTML = 'Saved. Grouping not re-run: <a class="link" href="/municipal/decoupage">re-group from the Splitting page</a> to propagate.';
       const fb = $('ficheBody');
       fb.insertBefore(note, fb.firstChild);
     }
@@ -177,7 +177,7 @@ $('editCancel').onclick = () => { $('editModal').hidden = true; };
 $('verifySave').onclick = () => saveVerify();
 $('verifyCancel').onclick = () => { $('verifyModal').hidden = true; };
 
-// Recherche + alertes + aide : mêmes endpoints que le tableau de bord.
+// Search + alerts + help: same endpoints as the dashboard.
 async function loadSearch(q) {
   const box = $('qResults');
   if (!q || q.trim().length < 2) { box.hidden = true; return; }
@@ -185,7 +185,7 @@ async function loadSearch(q) {
     const j = await api('/api/municipal/dashboard/search?q=' + encodeURIComponent(q.trim()) + '&limit=8');
     box.innerHTML = j.results.map((r) =>
       `<div data-kind="${esc(r.kind)}" data-id="${esc(r.id)}"><b>${esc(r.id)}</b> <span class="muted">[${esc(r.kind)}]</span><br><span class="muted">${esc(String(r.text || '').slice(0, 70))}</span></div>`).join('')
-      || '<div class="muted">Aucun résultat.</div>';
+      || '<div class="muted">No results.</div>';
     box.hidden = false;
     box.querySelectorAll('div[data-id]').forEach((d) => {
       d.onclick = () => {
@@ -204,11 +204,11 @@ $('bellBtn').onclick = async () => {
     const j = await api('/api/municipal/dashboard/incident-status');
     const s5 = (j.buckets.find((b) => b.status === 'escalade-s5') || {}).count || 0;
     box.innerHTML = s5 > 0
-      ? `<div class="alert">⚠ ${s5} incident(s) S5 en escalade humaine — jamais dispatché(s) automatiquement.</div>`
-      : '<div class="alert" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d">Aucune escalade S5 en cours.</div>';
+      ? `<div class="alert">⚠ ${s5} S5 incident(s) in human escalation — never dispatched automatically.</div>`
+      : '<div class="alert" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d">No S5 escalation in progress.</div>';
     box.hidden = false;
     setTimeout(() => { box.hidden = true; }, 6000);
-  } catch (e) { /* silencieux */ }
+  } catch (e) { /* silent */ }
 };
 $('helpBtn').onclick = () => { $('helpModal').hidden = false; };
 $('helpClose').onclick = () => { $('helpModal').hidden = true; };
@@ -231,12 +231,12 @@ async function load() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: $('loginToken').value }) });
         if (r2.ok) location.reload();
-        else $('loginErr').textContent = 'Jeton invalide.';
+        else $('loginErr').textContent = 'Invalid token.';
       };
       return;
     }
-  } catch (e) { /* la fiche affichera l'erreur */ }
+  } catch (e) { /* the details page will show the error */ }
   try { await load(); } catch (e) {
-    if (!String(e && e.message).includes('auth')) $('ficheBody').innerHTML = `<div class="card"><p class="perr">${esc(e.message || e)}</p><p><a class="link" href="/municipal/dashboard">← Retour au tableau de bord</a></p></div>`;
+    if (!String(e && e.message).includes('auth')) $('ficheBody').innerHTML = `<div class="card"><p class="perr">${esc(e.message || e)}</p><p><a class="link" href="/municipal/dashboard">← Back to the dashboard</a></p></div>`;
   }
 })();

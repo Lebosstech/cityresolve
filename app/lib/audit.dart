@@ -1,4 +1,4 @@
-// Journal d'audit : mémoire + fichier JSONL ajout seul.
+// Audit journal: memory + append-only JSONL file.
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,8 +6,8 @@ class AuditLog {
   final List<Map<String, dynamic>> entries = [];
   final String? path;
   AuditLog({this.path}) {
-    // Reprise du journal existant : le fichier survit au redémarrage,
-    // la séquence continue au lieu de repartir à 1.
+    // Resume the existing journal: the file survives restarts,
+    // the sequence continues instead of restarting at 1.
     if (path != null) {
       final f = File(path!);
       if (f.existsSync()) {
@@ -16,7 +16,7 @@ class AuditLog {
           try {
             entries.add(jsonDecode(line) as Map<String, dynamic>);
           } catch (_) {
-            // Ligne corrompue ignorée, jamais bloquante.
+            // Corrupt line ignored, never blocking.
           }
         }
       }

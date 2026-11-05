@@ -1,10 +1,10 @@
-// Optimiseur COMMUN exact (moteur unique, indépendant du regroupement).
+// COMMON exact optimizer (single engine, independent of grouping).
 //
-// Méthode : énumération complète des affectations (incident -> équipe/aucune)
-// × ordres par équipe, simulation d'ordonnancement au plus tôt, sélection du
-// meilleur plan. Exact pour n <= 9 incidents (garde anti-explosion).
-// Départages : Q décroissant, coût croissant, durée croissante, id stable.
-// Planification sur ESTIMATIONS accessibles ; la notation utilise la vérité.
+// Method: full enumeration of assignments (incident -> team/none)
+// × orders per team, earliest scheduling simulation, selection of the
+// best plan. Exact for n <= 9 incidents (anti-explosion guard).
+// Tie-breaks: decreasing Q, increasing cost, increasing duration, stable id.
+// Planning on accessible ESTIMATES; scoring uses the truth.
 import 'policy.dart';
 import 'types.dart';
 
@@ -13,13 +13,13 @@ double manhattanKm(double x1, double y1, double x2, double y2) =>
 
 int estDurationMin(int? severity) => siteDurationsMin[severity] ?? 60;
 
-/// Durée de tâche (site + trajet aller) et coût avec des paramètres donnés.
+/// Task duration (site + outbound travel) and cost with given parameters.
 class SchedTask {
   final String incidentId;
   final double x, y;
   final int siteMin;
-  final int deadline; // -1 si S5 (jamais planifié)
-  final int firstSeen; // connaissance : démarrage impossible avant
+  final int deadline; // -1 if S5 (never planned)
+  final int firstSeen; // knowledge: cannot start before
   const SchedTask({
     required this.incidentId,
     required this.x,
@@ -38,8 +38,8 @@ class SchedResult {
   const SchedResult(this.tasks, this.totalCost, this.spanMin, this.completed);
 }
 
-/// Ordonnancement au plus tôt d'une équipe (départ dépôt chaque matin).
-/// teamId utilisé pour les Task. Retourne tâches + coûts + complétés (fin <= échéance).
+/// Earliest scheduling of a team (depot departure every morning).
+/// teamId used for the Tasks. Returns tasks + costs + completed (end <= deadline).
 SchedResult simulateTeamSchedule(
     String teamId, List<SchedTask> ordered, double depotX, double depotY) {
   final tasks = <Task>[];
@@ -51,7 +51,7 @@ SchedResult simulateTeamSchedule(
   final completed = <String>{};
   for (var k = 0; k < ordered.length; k++) {
     final t = ordered[k];
-    // Premier créneau : connaissance (firstSeen) + horaires, lendemains inclus.
+    // First slot: knowledge (firstSeen) + hours, following days included.
     var dDay = day, dTime = time, dPx = px, dPy = py;
     var placed = false;
     while (dDay < horizonDays) {
@@ -91,7 +91,7 @@ SchedResult simulateTeamSchedule(
       dPx = depotX;
       dPy = depotY;
     }
-    if (!placed) break; // file abandonnée (reste non planifié)
+    if (!placed) break; // queue abandoned (rest unplanned)
   }
   return SchedResult(tasks, cost, firstStart < 0 ? 0 : lastEnd - firstStart,
       completed);
@@ -101,10 +101,10 @@ String fmtMin(int m) {
   final d = m ~/ 1440;
   final hh = ((m % 1440) ~/ 60).toString().padLeft(2, '0');
   final mm = (m % 60).toString().padLeft(2, '0');
-  return 'J$d $hh:$mm';
+  return 'D$d $hh:$mm';
 }
 
-/// Fin au plus tôt d'un incident seul (équipe compétente dédiée, estimations).
+/// Earliest end of a single incident (dedicated competent team, estimates).
 int earliestEnd(Incident inc, List<Team> teams) {
   var best = 1 << 30;
   for (final team in teams) {
@@ -128,7 +128,7 @@ int earliestEnd(Incident inc, List<Team> teams) {
 }
 
 List<List<T>> _permutations<T>(List<T> items) {
-  if (items.isEmpty) return [[]]; // équipe sans tâche : un ordre vide
+  if (items.isEmpty) return [[]]; // team without task: an empty order
   final out = <List<T>>[];
   void gen(List<T> arr, int k) {
     if (k == 1) {
@@ -163,29 +163,29 @@ double _planQ(Set<String> completed, Map<String, double> weights) {
   return 100.0 * num / den;
 }
 
-/// Optimise exactement. Lève si plus de 9 incidents S1..S4 (garde).
+/// Optimizes exactly. Throws if more than 9 S1..S4 incidents (guard).
 Plan optimizeExact({
   required List<Incident> incidents,
   required List<Team> teams,
 }) {
-  // S5 (gravité déclarée >= 5) : escalade humaine, jamais dispatché.
+  // S5 (declared severity >= 5): human escalation, never dispatched.
   final escalations = incidents
       .where((i) => i.severity != null && i.severity! >= 5)
       .map((i) => i.id)
       .toList();
-  // Gravité inconnue/contradictoire : jamais de dispatch automatique.
+  // Unknown/conflicting severity: never any automatic dispatch.
   final blocked = <String, String>{};
   for (final i in incidents.where((i) => i.severity == null)) {
     blocked[i.id] = i.severityStatus == statusContradictoire
-        ? 'gravités contradictoires déclarées ${i.severityValues} : vérification humaine requise avant dispatch'
-        : 'gravité inconnue : vérification humaine requise avant dispatch';
+        ? 'conflicting declared severities ${i.severityValues}: human verification required before dispatch'
+        : 'unknown severity: human verification required before dispatch';
   }
   final cands =
       incidents.where((i) => i.severity != null && i.severity! <= 4).toList()
         ..sort((a, b) => a.id.compareTo(b.id));
   if (cands.length > 9) {
     throw StateError(
-        'Optimiseur exact limité à 9 incidents (${cands.length} reçus).');
+        'Exact optimizer limited to 9 incidents (${cands.length} received).');
   }
   final weights = {for (final c in cands) c.id: c.weight};
   Plan? best;
@@ -194,7 +194,7 @@ Plan optimizeExact({
   var bestId = '';
   final k = teams.length;
   if (k < 1 || k > 3) {
-    throw StateError('Optimiseur exact : 1 à 3 équipes ($k reçues).');
+    throw StateError('Exact optimizer: 1 to 3 teams ($k received).');
   }
   final n = cands.length;
   final base = k + 1;
@@ -202,7 +202,7 @@ Plan optimizeExact({
   for (var i = 0; i < n; i++) {
     total *= base;
   }
-  // Énumération des affectations en base k+1 (0=aucune, 1..k=équipes).
+  // Enumeration of assignments in base k+1 (0=none, 1..k=teams).
   for (var code = 0; code < total; code++) {
     final assign = <int>[];
     var c = code;
@@ -216,7 +216,7 @@ Plan optimizeExact({
     for (var i = 0; i < n; i++) {
       if (assign[i] > 0) perTeam[assign[i] - 1]!.add(cands[i]);
     }
-    // Compétences : rejet immédiat si équipe incompétente.
+    // Skills: immediate rejection if the team is not competent.
     var ok = true;
     for (var t = 0; t < k; t++) {
       for (final inc in perTeam[t]!) {
@@ -227,7 +227,7 @@ Plan optimizeExact({
       }
     }
     if (!ok) continue;
-    // Produit cartésien des ordres par équipe.
+    // Cartesian product of the orders per team.
     var combos = <List<List<Incident>>>[[]];
     for (var t = 0; t < k; t++) {
       final next = <List<List<Incident>>>[];
@@ -262,7 +262,7 @@ Plan optimizeExact({
           if (r.spanMin > span) span = r.spanMin;
           all.addAll(r.tasks);
         }
-        if (cost > budgetUnits) continue; // budget strict
+        if (cost > budgetUnits) continue; // strict budget
         final q = _planQ(completed, weights);
         all.sort((a, b) => a.incidentId.compareTo(b.incidentId));
         final cid = all.map((t) => '${t.teamId}:${t.incidentId}').join(',');
@@ -299,15 +299,15 @@ Plan optimizeExact({
       feasible: true,
       violations: [],
       justifications: {});
-  // Motifs de non-affectation + justifications.
+  // Non-assignment reasons + justifications.
   final assigned = best.tasks.map((t) => t.incidentId).toSet();
   final unassigned = <String, String>{};
   final just = <String, String>{};
   for (final t in best.tasks) {
     final inc = cands.firstWhere((c) => c.id == t.incidentId);
     just[t.incidentId] =
-        '${t.teamId} ordre ${t.order}, ${fmtMin(t.startMin)}→${fmtMin(t.endMin)}, '
-        'coût ${t.cost.toStringAsFixed(1)}, marge échéance ${inc.deadline - t.endMin} min.';
+        '${t.teamId} order ${t.order}, ${fmtMin(t.startMin)}→${fmtMin(t.endMin)}, '
+        'cost ${t.cost.toStringAsFixed(1)}, deadline margin ${inc.deadline - t.endMin} min.';
   }
   for (final inc in cands) {
     if (assigned.contains(inc.id)) continue;
@@ -315,26 +315,26 @@ Plan optimizeExact({
     final competent =
         teams.any((tm) => tm.domains.contains(inc.domain));
     if (!competent) {
-      reason = 'aucune équipe compétente (${inc.domain})';
+      reason = 'no competent team (${inc.domain})';
     } else if (earliestEnd(inc, teams) > inc.deadline) {
-      reason = 'échéance inaccessible même seule (${fmtMin(inc.deadline)})';
+      reason = 'deadline unreachable even alone (${fmtMin(inc.deadline)})';
     } else {
       final cheapest = (estDurationMin(inc.severity) / 60.0) * siteRatePerHour;
       if (cheapest > budgetUnits) {
-        reason = 'budget insuffisant même seule';
+        reason = 'insufficient budget even alone';
       } else {
-        reason = 'non retenu par l\u2019optimiseur (Q maximal sans lui)';
+        reason = 'not selected by the optimizer (maximum Q without it)';
       }
     }
     unassigned[inc.id] = reason;
-    just[inc.id] = 'Non affecté : $reason.';
+    just[inc.id] = 'Not assigned: $reason.';
   }
   for (final e in escalations) {
-    just[e] = 'S5 : escalade humaine immédiate, jamais dispatché.';
+    just[e] = 'S5: immediate human escalation, never dispatched.';
   }
   blocked.forEach((id, reason) {
     unassigned[id] = reason;
-    just[id] = 'Non affecté : $reason.';
+    just[id] = 'Not assigned: $reason.';
   });
   return Plan(
       tasks: best.tasks,

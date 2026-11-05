@@ -1,16 +1,16 @@
-// Médias photos CityResolve (P1) : stockage local contrôlé + référence.
+// CityResolve photo media (P1): controlled local storage + reference.
 //
-// Principe : les octets ne transitent JAMAIS dans state.json ni dans les
-// documents MongoDB. Seul l'identifiant `mediaId` est persisté dans
-// `Report.photo`. Les fichiers vivent sous `data/uploads/`.
+// Principle: bytes NEVER travel through state.json or MongoDB
+// documents. Only the `mediaId` identifier is persisted in
+// `Report.photo`. Files live under `data/uploads/`.
 import 'dart:io';
 import 'dart:math';
 
-/// Taille maximale acceptée : 5 Mo (bien en dessous des 50 Mo inline de
-/// l'API, garde-fou de bac à sable).
+/// Maximum accepted size: 5 MB (well below the API's 50 MB inline,
+/// sandbox safeguard).
 const int maxPhotoBytes = 5 * 1024 * 1024;
 
-/// Identifiant permanent : 24 caractères hexadécimaux (aléatoire sûr).
+/// Permanent identifier: 24 hexadecimal characters (secure random).
 String newMediaId() {
   final rng = Random.secure();
   final sb = StringBuffer();
@@ -23,8 +23,8 @@ String newMediaId() {
 bool isMediaId(String s) =>
     RegExp(r'^[0-9a-f]{24}$').hasMatch(s);
 
-/// Détection du type par octets magiques (jamais par l'extension fournie).
-/// Retourne l'extension sûre ou null si type inconnu/dangereux.
+/// Type detection by magic bytes (never by the provided extension).
+/// Returns the safe extension or null if the type is unknown/dangerous.
 String? detectImageExt(List<int> bytes) {
   if (bytes.length >= 3 &&
       bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
@@ -66,63 +66,63 @@ class MediaValidationError implements Exception {
   String toString() => message;
 }
 
-/// Valide les octets reçus. Lève MediaValidationError sinon.
+/// Validates the received bytes. Throws MediaValidationError otherwise.
 String validateImageBytes(List<int> bytes) {
   if (bytes.isEmpty) {
-    throw const MediaValidationError('fichier vide : aucun octet reçu');
+    throw const MediaValidationError('empty file: no bytes received');
   }
   if (bytes.length > maxPhotoBytes) {
     throw MediaValidationError(
-        'fichier trop volumineux (${bytes.length} octets, max $maxPhotoBytes)');
+        'file too large (${bytes.length} bytes, max $maxPhotoBytes)');
   }
   final ext = detectImageExt(bytes);
   if (ext == null) {
     throw const MediaValidationError(
-        'type de fichier non reconnu (jpeg/png/gif/webp attendus, vérifiés par octets magiques)');
+        'unrecognized file type (jpeg/png/gif/webp expected, verified by magic bytes)');
   }
   return ext;
 }
 
-/// Chemin sûr : répertoire fixe + mediaId validé + extension validée.
-/// Aucun nom fourni par le client n'est jamais utilisé.
+/// Safe path: fixed directory + validated mediaId + validated extension.
+/// No client-provided name is ever used.
 File mediaFile(String uploadsDir, String mediaId, String ext) {
   if (!isMediaId(mediaId)) {
-    throw const MediaValidationError('identifiant média invalide');
+    throw const MediaValidationError('invalid media identifier');
   }
   if (!{'jpg', 'png', 'gif', 'webp'}.contains(ext)) {
-    throw const MediaValidationError('extension non autorisée');
+    throw const MediaValidationError('extension not allowed');
   }
   return File('$uploadsDir/$mediaId.$ext');
 }
 
 File mediaMetaFile(String uploadsDir, String mediaId) {
   if (!isMediaId(mediaId)) {
-    throw const MediaValidationError('identifiant média invalide');
+    throw const MediaValidationError('invalid media identifier');
   }
   return File('$uploadsDir/$mediaId.json');
 }
 
-/// Valide le contrat de sortie d'analyse visuelle (§7 : exemple de contrat,
-/// jamais une vérité terrain). Retourne null si valide, sinon le motif.
+/// Validates the visual analysis output contract (§7: example contract,
+/// never ground truth). Returns null if valid, otherwise the reason.
 String? validateVisualAnalysis(Map<String, dynamic> out) {
   if (out['observationsVisibles'] is! List ||
       (out['observationsVisibles'] as List).isEmpty) {
-    return 'observationsVisibles absent ou vide';
+    return 'observationsVisibles missing or empty';
   }
   if (out['problemesPossibles'] is! List) {
-    return 'problemesPossibles absent';
+    return 'problemesPossibles missing';
   }
   for (final p in (out['problemesPossibles'] as List)) {
     if (p is! Map ||
         p['famille'] is! String ||
         p['hypothese'] is! String ||
         p['confirmation'] is! String) {
-      return 'problemePossible mal formé (famille/hypothese/confirmation requis)';
+      return 'problemePossible malformed (famille/hypothese/confirmation required)';
     }
   }
   if (out['incertitudes'] is! List ||
       (out['incertitudes'] as List).isEmpty) {
-    return 'incertitudes absentes (une analyse sans incertitude est refusée)';
+    return 'incertitudes missing (an analysis without uncertainty is refused)';
   }
   return null;
 }

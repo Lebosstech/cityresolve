@@ -1,12 +1,12 @@
-// Migration CityResolve : MongoDB local -> base distante (Atlas).
+// CityResolve migration: local MongoDB -> remote database (Atlas).
 //
-// Source : mongodb://127.0.0.1:27017/cityresolve_dev (figée, lecture seule).
-// Destination : variable d'environnement CITYRESOLVE_MONGO_URI
-//   (jamais affichée, jamais journalisée — définir hors chat, ex. :
+// Source: mongodb://127.0.0.1:27017/cityresolve_dev (frozen, read-only).
+// Destination: CITYRESOLVE_MONGO_URI environment variable
+//   (never displayed, never logged — set outside chat, e.g.:
 //    [Environment]::SetEnvironmentVariable('CITYRESOLVE_MONGO_URI','...','User'))
-// Copie les 8 collections en préservant les _id, puis recrée les index
-// secondaires. La source locale n'est ni modifiée ni supprimée.
-// Usage : dart run test/migrate_mongo.dart [--dry-run]
+// Copies the 8 collections preserving _ids, then recreates the secondary
+// indexes. The local source is neither modified nor deleted.
+// Usage: dart run test/migrate_mongo.dart [--dry-run]
 import 'dart:io';
 
 import 'package:mongo_dart/mongo_dart.dart';
@@ -27,11 +27,11 @@ Future<void> main(List<String> args) async {
   final destUri = Platform.environment['CITYRESOLVE_MONGO_URI'];
   if (destUri == null || destUri.isEmpty) {
     stderr.writeln(
-        'CITYRESOLVE_MONGO_URI absente : définir la variable (hors chat) puis relancer.');
+        'CITYRESOLVE_MONGO_URI missing: set the variable (outside chat) then rerun.');
     exit(2);
   }
   if (destUri.contains('127.0.0.1') || destUri.contains('localhost')) {
-    stderr.writeln('La destination ressemble au local : migration annulée.');
+    stderr.writeln('Destination looks local: migration cancelled.');
     exit(2);
   }
   final src = await Db.create('mongodb://127.0.0.1:27017/cityresolve_dev');
@@ -39,19 +39,19 @@ Future<void> main(List<String> args) async {
   final dst = await Db.create(destUri);
   await dst.open();
   final info = await dst.getBuildInfo();
-  print('Destination connectée, MongoDB ${info['version']} (URI masquée).');
+  print('Destination connected, MongoDB ${info['version']} (URI hidden).');
 
   for (final name in collections) {
     final srcCol = src.collection(name);
     final docs = await srcCol.find().toList();
-    print('$name : ${docs.length} document(s) source');
+    print('$name: ${docs.length} source document(s)');
     if (dryRun) continue;
     final dstCol = dst.collection(name);
     await dstCol.deleteMany({});
     if (docs.isNotEmpty) {
       await dstCol.insertMany(docs);
     }
-    // Recréer les index secondaires (hors _id_).
+    // Recreate the secondary indexes (except _id_).
     try {
       for (final idx in await srcCol.getIndexes()) {
         final idxName = idx['name']?.toString();
@@ -63,12 +63,12 @@ Future<void> main(List<String> args) async {
         );
       }
     } catch (e) {
-      print('  index non recréés pour $name : $e');
+      print('  indexes not recreated for $name: $e');
     }
     final copied = await dstCol.count();
-    print('  -> $copied document(s) destination');
+    print('  -> $copied destination document(s)');
   }
   await src.close();
   await dst.close();
-  print(dryRun ? 'Dry-run terminé (aucune écriture).' : 'Migration terminée.');
+  print(dryRun ? 'Dry run finished (no writes).' : 'Migration finished.');
 }

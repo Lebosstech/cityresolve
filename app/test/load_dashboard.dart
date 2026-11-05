@@ -1,12 +1,12 @@
-// Test de charge des motifs d'accès du tableau de bord (§12).
+// Load test of the dashboard access patterns (§12).
 //
-// Base DÉDIÉE locale uniquement : cityresolve_loadtest (jamais la base
-// applicative, jamais Atlas, jamais Render). Données synthétiques
-// identifiées (source: 'loadtest'). Usage :
+// DEDICATED local database only: cityresolve_loadtest (never the
+// application database, never Atlas, never Render). Identified synthetic
+// data (source: 'loadtest'). Usage:
 //   dart run test/load_dashboard.dart --n=10000
-// Mesure : latences médiane/p95/max sur 20 exécutions + explain()
-// (étapes, documents examinés). Aucune allégation au-delà du volume
-// réellement exécuté.
+// Measures: median/p95/max latencies over 20 runs + explain()
+// (stages, documents examined). No claim beyond the volume
+// actually executed.
 import 'dart:io';
 import 'dart:math';
 
@@ -38,10 +38,10 @@ Future<Map<String, dynamic>> timed(
   lat.sort();
   final q = (double p) => lat[(lat.length * p).floor().clamp(0, lat.length - 1)];
   final res = {
-    'requete': name,
+    'query': name,
     'runs': runs,
-    'erreurs': errors,
-    'mediane_ms': (q(0.5) / 1000).toStringAsFixed(2),
+    'errors': errors,
+    'median_ms': (q(0.5) / 1000).toStringAsFixed(2),
     'p95_ms': (q(0.95) / 1000).toStringAsFixed(2),
     'max_ms': (q(1.0) / 1000).toStringAsFixed(2),
   };
@@ -69,10 +69,10 @@ Future<String> explainStage(Db db, Map<String, Object> cmd) async {
 
     final stats = r?['executionStats'] as Map<String, dynamic>?;
     return '${stage(stats?['executionStages'] as Map<String, dynamic>?)} '
-        'examines=${stats?['totalDocsExamined']} '
-        'retournes=${stats?['nReturned']}';
+        'examined=${stats?['totalDocsExamined']} '
+        'returned=${stats?['nReturned']}';
   } catch (e) {
-    return 'explain indisponible ($e)';
+    return 'explain unavailable ($e)';
   }
 }
 
@@ -82,18 +82,18 @@ Future<void> main(List<String> args) async {
     if (a.startsWith('--n=')) n = int.parse(a.substring(4));
   }
   if (n < 100 || n > 2000000) {
-    stderr.writeln('n hors bornes [100, 2000000]');
+    stderr.writeln('n out of bounds [100, 2000000]');
     exit(2);
   }
   final db = await Db.create('mongodb://127.0.0.1:27017/cityresolve_loadtest');
   await db.open();
   final info = await db.getBuildInfo();
-  print('MongoDB local ${info['version']} — base cityresolve_loadtest (dédiée)');
+  print('Local MongoDB ${info['version']} — cityresolve_loadtest database (dedicated)');
   final col = db.collection('reports');
   await col.deleteMany({});
   final rng = Random(20261104);
   final base = DateTime.utc(2026, 10, 1);
-  print('insertion de $n documents synthétiques…');
+  print('Inserting $n synthetic documents…');
   const batch = 2000;
   final swAll = Stopwatch()..start();
   for (var off = 0; off < n; off += batch) {
@@ -101,7 +101,7 @@ Future<void> main(List<String> args) async {
     for (var i = off; i < off + batch && i < n; i++) {
       docs.add({
         '_id': 'LT$i',
-        'text': 'signalement synthetique $i ${cats[i % cats.length]} rue test',
+        'text': 'synthetic report $i ${cats[i % cats.length]} test street',
         'category': cats[i % cats.length],
         'x': rng.nextDouble() * 5.0,
         'y': rng.nextDouble() * 5.0,
@@ -113,7 +113,7 @@ Future<void> main(List<String> args) async {
     }
     await col.insertMany(docs, ordered: false);
   }
-  print('insertion terminée en ${swAll.elapsedMilliseconds} ms');
+  print('Insertion finished in ${swAll.elapsedMilliseconds} ms');
   for (final spec in [
     {'keys': {'receivedAt': -1}, 'name': 'lt_receivedAt'},
     {'keys': {'category': 1}, 'name': 'lt_category'},
@@ -128,11 +128,11 @@ Future<void> main(List<String> args) async {
   try {
     await col.createIndex(
         keys: {'text': 'text'}, name: 'lt_text');
-    print('index texte créé');
+    print('text index created');
   } catch (e) {
-    print('index texte non créé ($e)');
+    print('text index not created ($e)');
   }
-  print('--- mesures (20 exécutions chacune) ---');
+  print('--- measurements (20 runs each) ---');
   await timed('recents-p1', () async {
     await col
         .find(where.sortBy('receivedAt', descending: true).limit(20))
@@ -153,13 +153,13 @@ Future<void> main(List<String> args) async {
             .limit(200))
         .toList();
   }, 20);
-  await timed('compte-categorie', () async {
+  await timed('count-category', () async {
     await col.count(where.eq('category', 'fuite-eau'));
   }, 20);
-  await timed('recherche-texte', () async {
+  await timed('text-search', () async {
     await col.find(where.match('text', 'caniveau').limit(20)).toList();
   }, 20);
-  print('--- plans d\u2019exécution ---');
+  print('--- execution plans ---');
   print('recents: ${await explainStage(db, {
         'find': 'reports',
         'sort': {'receivedAt': -1},
@@ -174,8 +174,8 @@ Future<void> main(List<String> args) async {
         'limit': 200
       })}');
   final st = await db.collection(r'$cmd').findOne({'dbStats': 1, 'scale': 1});
-  print('taille base test: dataSize=${st?['dataSize']} storageSize=${st?['storageSize']} objects=${st?['objects']}');
+  print('test db size: dataSize=${st?['dataSize']} storageSize=${st?['storageSize']} objects=${st?['objects']}');
   await db.close();
-  print('Terminé. Base cityresolve_loadtest conservée pour inspection, '
-      'supprimable sans risque (données synthétiques).');
+  print('Done. cityresolve_loadtest database kept for inspection, '
+      'safe to delete (synthetic data).');
 }

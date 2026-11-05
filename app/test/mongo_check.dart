@@ -1,7 +1,7 @@
-// Vérification directe de MongoDB local (hors serveur CityResolve).
-// Usage : dart run test/mongo_check.dart
-// Affiche version serveur, collections, compteurs, index et identifiants
-// d'échantillon. Lecture seule.
+// Direct check of local MongoDB (outside the CityResolve server).
+// Usage: dart run test/mongo_check.dart
+// Shows server version, collections, counters, indexes and sample
+// ids. Read-only.
 import 'dart:convert';
 
 import 'package:mongo_dart/mongo_dart.dart';
@@ -37,7 +37,7 @@ Future<void> main() async {
       final last = await col
           .find(where.sortBy('seq', descending: true).limit(1))
           .toList();
-      print('  dernier seq: ${last.isEmpty ? null : last.first['seq']}');
+      print('  last seq: ${last.isEmpty ? null : last.first['seq']}');
     }
   }
   final state = await db.collection('state').findOne({'_id': 'current'});

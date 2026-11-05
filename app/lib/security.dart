@@ -1,17 +1,17 @@
-// Sécurité de l'exposition publique CityResolve (P1, §6).
+// Security of the CityResolve public exposure (P1, §6).
 //
-// - RateLimiter : seaux par clé (IP), fenêtre glissante, testable.
-// - MunicipalAuth : espace municipal protégé par jeton (variable
-//   d'environnement CITYRESOLVE_MUNICIPAL_TOKEN). Si la variable est
-//   absente, mode ouvert documenté (développement local uniquement).
-// - Validation des entrées publiques : texte borné, catégorie fermée.
-// - DTO publics : aucun indice interne, aucune vérité terrain, aucun
-//   secret. Statuts de suivi dérivés de données réelles uniquement.
+// - RateLimiter: buckets per key (IP), sliding window, testable.
+// - MunicipalAuth: municipal area protected by token
+//   (CITYRESOLVE_MUNICIPAL_TOKEN environment variable). If the variable is
+//   missing, documented open mode (local development only).
+// - Public input validation: bounded text, closed category.
+// - Public DTOs: no internal hint, no ground truth, no
+//   secret. Tracking statuses derived from real data only.
 import 'dart:math';
 
 import 'types.dart';
 
-/// Limites publiques (documentées, serveur).
+/// Public limits (documented, server).
 const int maxPublicTextLen = 500;
 const int maxReportsTotal = 500;
 const Set<String> publicCategories = {
@@ -24,15 +24,15 @@ const Set<String> publicCategories = {
   'autre',
 };
 
-/// Limiteur de débit : au plus [max] événements par [window] et par clé.
-/// Horloge injectable pour les tests.
+/// Rate limiter: at most [max] events per [window] and per key.
+/// Injectable clock for tests.
 class RateLimiter {
   final Map<String, List<DateTime>> _hits = {};
   final DateTime Function() _now;
   RateLimiter({DateTime Function()? now})
       : _now = now ?? DateTime.now;
 
-  /// true si l'événement est accepté (et compté), false si rejeté (429).
+  /// true if the event is accepted (and counted), false if rejected (429).
   bool allow(String key, {required int max, required Duration window}) {
     final now = _now();
     final cutoff = now.subtract(window);
@@ -52,7 +52,7 @@ class RateLimiter {
   int count(String key) => _hits[key]?.length ?? 0;
 }
 
-/// Comparaison à temps quasi-constant (anti timing basique).
+/// Near-constant-time comparison (basic anti-timing).
 bool constantTimeEquals(String a, String b) {
   if (a.length != b.length) return false;
   var diff = 0;
@@ -62,8 +62,8 @@ bool constantTimeEquals(String a, String b) {
   return diff == 0;
 }
 
-/// Authentification de l'espace municipal. Sessions en mémoire serveur
-/// (invalidées au redémarrage — assumé et documenté).
+/// Municipal area authentication. Sessions in server memory
+/// (invalidated on restart — assumed and documented).
 class MunicipalAuth {
   final String? expectedToken;
   final Set<String> _sessions = {};
@@ -75,7 +75,7 @@ class MunicipalAuth {
         expectedToken: (t == null || t.isEmpty) ? null : t);
   }
 
-  /// Protection active seulement si un jeton est configuré.
+  /// Protection active only if a token is configured.
   bool get enforced => expectedToken != null;
 
   bool checkToken(String candidate) =>
@@ -98,7 +98,7 @@ class MunicipalAuth {
     _sessions.remove(id);
   }
 
-  /// Autorisé si : non protégé, ou session valide, ou jeton porteur valide.
+  /// Authorized if: unprotected, or valid session, or valid bearer token.
   bool isAuthorized({String? sessionId, String? bearerToken}) {
     if (!enforced) return true;
     if (checkSession(sessionId)) return true;
@@ -109,38 +109,38 @@ class MunicipalAuth {
   }
 }
 
-/// Erreur de validation du texte public, null si valide.
+/// Public text validation error, null if valid.
 String? publicTextError(String? text) {
   final t = (text ?? '').trim();
-  if (t.isEmpty) return 'description requise';
+  if (t.isEmpty) return 'description required';
   if (t.length > maxPublicTextLen) {
-    return 'description trop longue (${t.length}/$maxPublicTextLen)';
+    return 'description too long (${t.length}/$maxPublicTextLen)';
   }
   return null;
 }
 
 bool isPublicCategory(String c) => publicCategories.contains(c);
 
-/// Erreur de validation GPS, null si valide ou absent (saisie manuelle).
-/// Les trois champs doivent être présents ensemble et dans leurs bornes.
+/// GPS validation error, null if valid or absent (manual entry).
+/// All three fields must be present together and within their bounds.
 String? publicGpsError(double? lat, double? lon, double? accuracy) {
   if (lat == null && lon == null && accuracy == null) return null;
   if (lat == null || lon == null) {
-    return 'position GPS incomplète (latitude et longitude requises)';
+    return 'incomplete GPS position (latitude and longitude required)';
   }
   if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-    return 'coordonnées GPS hors bornes';
+    return 'GPS coordinates out of bounds';
   }
   if (accuracy != null && (accuracy.isNaN || accuracy < 0)) {
-    return 'précision GPS invalide';
+    return 'invalid GPS accuracy';
   }
   return null;
 }
 
-/// Statut de suivi honnête, dérivé de l'état réel uniquement :
-/// enregistré (reçu, pas encore regroupé), regroupé (groupe de 2+),
-/// planifié (incident dans le plan courant), escalade-s5.
-/// Aucun délai ni promesse d'intervention.
+/// Honest tracking status, derived from the real state only:
+/// enregistre (received, not yet grouped), regroupe (group of 2+),
+/// planifie (incident in the current plan), escalade-s5.
+/// No deadline or intervention promise.
 String trackingStatus(
     Report r, List<Group> groups, List<Incident> incidents, Plan? plan) {
   Group? g;
@@ -169,16 +169,16 @@ String trackingStatus(
 }
 
 const Map<String, String> trackingLabels = {
-  'enregistre': 'Enregistré',
-  'regroupe': 'Regroupé',
-  'planifie': 'Planifié',
-  'escalade-s5': 'Escalade humaine (S5)',
+  'enregistre': 'Registered',
+  'regroupe': 'Grouped',
+  'planifie': 'Planned',
+  'escalade-s5': 'Human escalation (S5)',
 };
 
-/// Tri public stable : reçus d'abord (plus récent), identifiant
-/// décroissant en départage. Scénarios (sans receivedAt) en dernier.
-/// La page publique ne trie JAMAIS qu'en mémoire sur l'état de travail
-/// (borné par maxReportsTotal), jamais par scan Mongo.
+/// Stable public sort: received first (most recent), decreasing
+/// identifier as tie-break. Scenarios (without receivedAt) last.
+/// The public page NEVER sorts except in memory on the working state
+/// (bounded by maxReportsTotal), never via a Mongo scan.
 List<Report> sortPublicReports(List<Report> reports) {
   final out = List<Report>.from(reports);
   out.sort((a, b) {
@@ -194,13 +194,13 @@ List<Report> sortPublicReports(List<Report> reports) {
 
 class ReportPage {
   final List<Report> items;
-  final String? nextCursor; // identifiant du dernier élément, null si fin
+  final String? nextCursor; // identifier of the last item, null if end
   const ReportPage(this.items, this.nextCursor);
 }
 
-/// Pagination par curseur : la page commence APRÈS le curseur (dernier
-/// identifiant vu). Curseur inconnu -> page vide (pas de doublon, pas de
-/// saut silencieux). Limite strictement bornée par l'appelant.
+/// Cursor pagination: the page starts AFTER the cursor (last
+/// identifier seen). Unknown cursor -> empty page (no duplicate, no
+/// silent skip). Limit strictly bounded by the caller.
 ReportPage paginatePublicReports(
     List<Report> sorted, int limit, String? cursor) {
   var start = 0;
@@ -215,8 +215,8 @@ ReportPage paginatePublicReports(
   return ReportPage(items, end < sorted.length ? items.last.id : null);
 }
 
-/// Filtre bbox sur coordonnées grille + limite stricte (jamais de
-/// chargement complet pour la carte).
+/// Bbox filter on grid coordinates + strict limit (never a
+/// full load for the map).
 List<Incident> filterIncidentsBbox(List<Incident> incs, double minx,
     double miny, double maxx, double maxy, int limit) {
   return incs
@@ -226,8 +226,8 @@ List<Incident> filterIncidentsBbox(List<Incident> incs, double minx,
       .toList();
 }
 
-/// Agrégats publics calculés sur l'état en mémoire (borné) : compteurs
-/// uniquement, aucune donnée individuelle, aucun scan Mongo.
+/// Public aggregates computed on the in-memory state (bounded): counters
+/// only, no individual data, no Mongo scan.
 Map<String, dynamic> publicStatsSummary(
     List<Report> reports, List<Group> groups, List<Incident> incidents) {
   final grouped = <String>{};
@@ -254,9 +254,9 @@ Map<String, dynamic> publicStatsSummary(
   };
 }
 
-/// Vue publique d'un signalement : aucun indice, aucune vérité terrain.
-/// Les coordonnées GPS brutes (donnée personnelle fournie par l'usager)
-/// ne sortent que sur la fiche de suivi ([includeGps]), jamais en liste.
+/// Public view of a report: no hint, no ground truth.
+/// Raw GPS coordinates (personal data provided by the user)
+/// only appear on the tracking details ([includeGps]), never in lists.
 Map<String, dynamic> publicReportJson(Report r,
         {required String status, bool includeGps = false}) =>
     {
@@ -280,8 +280,8 @@ Map<String, dynamic> publicReportJson(Report r,
       'fictive': true,
     };
 
-/// Vue publique d'un incident (carte) : centroïde, famille, gravité
-/// déclarée ou inconnue, statut de vérification, effectif.
+/// Public view of an incident (map): centroid, family, declared
+/// or unknown severity, verification status, headcount.
 Map<String, dynamic> publicIncidentJson(Incident i) => {
       'id': i.id,
       'x': i.x,

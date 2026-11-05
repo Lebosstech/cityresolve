@@ -1,9 +1,9 @@
-// Page publique CityResolve : signalement + carte + suivi (données réelles filtrées).
+// CityResolve public page: report + map + tracking (filtered real data).
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const isMediaId = (s) => /^[0-9a-f]{24}$/.test(String(s || ''));
 const state = { x: null, y: null, mediaId: null, gps: null };
-const DEMO_RADIUS_KM = 3.54; // demi-diagonale de la grille 5×5 : hors de ce rayon, refus honnête
+const DEMO_RADIUS_KM = 3.54; // half-diagonal of the 5×5 grid: outside this radius, honest refusal
 function distKm(lat1, lon1, lat2, lon2) {
   const r = Math.PI / 180, dLa = (lat2 - lat1) * r;
   const dLo = (lon2 - lon1) * r * Math.cos((lat1 + lat2) / 2 * r);
@@ -33,7 +33,7 @@ document.querySelectorAll('[data-nav]').forEach((a) => {
 $('mapBig').onclick = (e) => { e.preventDefault(); $('mapCard').classList.toggle('large'); document.getElementById('mapCard').scrollIntoView({ behavior: 'smooth' }); };
 $('recentAll').onclick = (e) => { e.preventDefault(); loadRecent(10, true); };
 
-// --- Formulaire ---
+// --- Form ---
 $('pText').oninput = () => { $('pCount').textContent = $('pText').value.length; };
 document.querySelectorAll('.tile').forEach((t) => {
   t.onclick = () => {
@@ -47,13 +47,13 @@ $('pFile').onchange = async () => {
   clearErr();
   const f = $('pFile').files[0];
   if (!f) return;
-  if (f.size > 5 * 1024 * 1024) { showErr('Photo trop volumineuse : ' + f.size + ' octets (max 5 Mo).'); $('pFile').value = ''; return; }
+  if (f.size > 5 * 1024 * 1024) { showErr('Photo too large: ' + f.size + ' bytes (max 5 MB).'); $('pFile').value = ''; return; }
   try {
     const r = await fetch('/api/photos', { method: 'POST', headers: { 'Content-Type': f.type || 'application/octet-stream' }, body: f });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
     state.mediaId = j.mediaId;
-    $('pMedia').textContent = 'Photo téléversée (' + j.size + ' octets, ' + j.mime + ').';
+    $('pMedia').textContent = 'Photo uploaded (' + j.size + ' bytes, ' + j.mime + ').';
     $('pImg').src = '/api/photos/' + j.mediaId;
     $('pPreview').hidden = false;
   } catch (e) { showErr(e.message); $('pFile').value = ''; }
@@ -62,34 +62,34 @@ $('pRemove').onclick = () => { state.mediaId = null; $('pFile').value = ''; $('p
 $('pGps').onclick = () => {
   clearErr();
   if (!navigator.geolocation) {
-    showErr('Géolocalisation indisponible dans ce navigateur (contexte non sécurisé ?). Utilisez « Choisir sur la carte ».');
+    showErr('Geolocation unavailable in this browser (insecure context?). Use "Choose on the map".');
     return;
   }
-  $('pCoords').textContent = 'Localisation en cours… (autorisez la position dans votre navigateur)';
+  $('pCoords').textContent = 'Locating… (allow location in your browser)';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const { latitude, longitude, accuracy } = pos.coords;
       const d = distKm(latitude, longitude, ANCHOR.lat, ANCHOR.lon);
       if (d > DEMO_RADIUS_KM) {
         state.x = null; state.y = null; state.gps = null;
-        $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
-        showErr(`Position hors zone de démonstration (${d.toFixed(1)} km de l'ancrage, démo limitée à ${DEMO_RADIUS_KM} km). Utilisez « Choisir sur la carte ».`);
+        $('pCoords').textContent = 'Position: not chosen (fictitious 5×5 km grid)';
+        showErr(`Position outside the demo zone (${d.toFixed(1)} km from the anchor, demo limited to ${DEMO_RADIUS_KM} km). Use "Choose on the map".`);
         return;
       }
       const [gx, gy] = latLngToGrid(latitude, longitude);
       state.x = gx; state.y = gy;
       state.gps = { lat: latitude, lon: longitude, accuracy: accuracy ?? null };
-      $('pCoords').textContent = `Position GPS : (${gx.toFixed(1)}, ${gy.toFixed(1)}) km — grille fictive (±${Math.round(accuracy ?? -1)} m annoncés)`;
+      $('pCoords').textContent = `GPS position: (${gx.toFixed(1)}, ${gy.toFixed(1)}) km — fictitious grid (±${Math.round(accuracy ?? -1)} m reported)`;
       drawMap();
     },
     (err) => {
       state.x = null; state.y = null; state.gps = null;
       const msg = err.code === err.PERMISSION_DENIED
-        ? 'Géolocalisation refusée : aucune position collectée. Utilisez « Choisir sur la carte ».'
+        ? 'Geolocation denied: no position collected. Use "Choose on the map".'
         : err.code === err.POSITION_UNAVAILABLE
-          ? 'Position indisponible (GPS coupé ?). Utilisez « Choisir sur la carte ».'
-          : 'Délai de localisation dépassé. Réessayez ou utilisez « Choisir sur la carte ».';
-      $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
+          ? 'Position unavailable (GPS off?). Use "Choose on the map".'
+          : 'Location timed out. Try again or use "Choose on the map".';
+      $('pCoords').textContent = 'Position: not chosen (fictitious 5×5 km grid)';
       showErr(msg);
     },
     { timeout: 10000, maximumAge: 60000 },
@@ -98,16 +98,16 @@ $('pGps').onclick = () => {
 $('pPick').onclick = () => { $('pickModal').hidden = false; drawPicker(); };
 $('pickCancel').onclick = () => { $('pickModal').hidden = true; };
 $('pickOk').onclick = () => {
-  if (state.x === null) { showErr('Cliquez sur la grille pour choisir une position.'); return; }
-  state.gps = null; // saisie manuelle : pas de relevé GPS associé
-  $('pCoords').textContent = `Position : (${state.x.toFixed(1)}, ${state.y.toFixed(1)}) km — grille fictive (saisie manuelle)`;
+  if (state.x === null) { showErr('Click on the grid to choose a position.'); return; }
+  state.gps = null; // manual entry: no GPS reading attached
+  $('pCoords').textContent = `Position: (${state.x.toFixed(1)}, ${state.y.toFixed(1)}) km — fictitious grid (manual entry)`;
   $('pickModal').hidden = true;
   drawMap();
 };
 let mapPick = null, pickDot = null;
 function drawPicker() {
   if (typeof L === 'undefined') {
-    $('pickMap').innerHTML = '<p class="map-offline">Fond de carte indisponible (connexion requise). Saisie au clavier : utilisez la console municipale.</p>';
+    $('pickMap').innerHTML = '<p class="map-offline">Map background unavailable (connection required). Keyboard entry: use the municipal console.</p>';
     return;
   }
   if (!mapPick) {
@@ -128,9 +128,9 @@ $('pSend').onclick = async () => {
   clearErr();
   $('pConfirm').hidden = true;
   const text = $('pText').value.trim();
-  if (!text) return showErr('Décrivez le problème observé.');
-  if (text.length > 500) return showErr('Description trop longue (' + text.length + '/500).');
-  if (state.x === null) return showErr('Choisissez une position via « Ma position (GPS) » ou « Choisir sur la carte ».');
+  if (!text) return showErr('Describe the problem you observed.');
+  if (text.length > 500) return showErr('Description too long (' + text.length + '/500).');
+  if (state.x === null) return showErr('Choose a position via "My position (GPS)" or "Choose on the map".');
   try {
     const body = { text, category: $('pCat').value, x: state.x, y: state.y, photoMediaId: state.mediaId };
     if (state.gps) { body.gpsLat = state.gps.lat; body.gpsLon = state.gps.lon; body.gpsAccuracy = state.gps.accuracy; }
@@ -139,7 +139,7 @@ $('pSend').onclick = async () => {
     $('pConfirm').hidden = false;
     $('pText').value = ''; $('pCount').textContent = '0';
     state.x = null; state.y = null; state.gps = null;
-    $('pCoords').textContent = 'Position : non choisie (grille fictive 5×5 km)';
+    $('pCoords').textContent = 'Position: not chosen (fictitious 5×5 km grid)';
     $('pRemove').onclick();
     loadRecent(3); drawMap();
   } catch (e) { showErr(e.message); }
@@ -150,11 +150,11 @@ $('pTrackGo').onclick = () => {
   $('tGo').click();
 };
 
-// --- Carte publique : fond OpenStreetMap (gratuit, ODbL) + positions
-// FICTIVES projetées. La grille 0–5 km n'est PAS une mesure GPS : elle est
-// projetée autour d'un point d'ancrage de démonstration, explicitement
-// étiqueté comme tel. Ne jamais présenter ces points comme des relevés.
-const ANCHOR = { lat: 5.32, lon: -4.02, label: 'Abidjan-Plateau (ancrage fictif de démonstration)' };
+// --- Public map: OpenStreetMap base (free, ODbL) + positions
+// FICTITIOUS projected positions. The 0–5 km grid is NOT a GPS measurement: it is
+// projected around a demo anchor point, explicitly
+// labeled as such. Never present these points as readings.
+const ANCHOR = { lat: 5.32, lon: -4.02, label: 'Abidjan-Plateau (fictitious demo anchor)' };
 const KM_PER_DEG = 111.32;
 function gridToLatLng(x, y) {
   return [
@@ -176,10 +176,10 @@ function osmLayer() {
   });
 }
 async function drawMap() {
-  // Borné : bbox grille complète + limite stricte, jamais toute la base.
+  // Bounded: full-grid bbox + strict limit, never the whole database.
   const j = await api('/api/public/incidents/map?minx=0&miny=0&maxx=5&maxy=5&limit=200');
   if (typeof L === 'undefined') {
-    $('pMap').innerHTML = '<p class="map-offline">Fond de carte indisponible (connexion requise pour OpenStreetMap). Les données restent consultables en liste.</p>';
+    $('pMap').innerHTML = '<p class="map-offline">Map background unavailable (connection required for OpenStreetMap). Data remains available as a list.</p>';
     return;
   }
   if (!mapMain) {
@@ -190,27 +190,27 @@ async function drawMap() {
   layerMain.clearLayers();
   j.incidents.forEach((inc) => {
     const [lat, lon] = gridToLatLng(inc.x, inc.y);
-    const label = `${inc.id} — ${inc.domain} — ${inc.reportCount} signalement(s)` +
-      (inc.severity === null ? ' — gravité à vérifier' : ' — S' + inc.severity);
+    const label = `${inc.id} — ${inc.domain} — ${inc.reportCount} report(s)` +
+      (inc.severity === null ? ' — severity to verify' : ' — S' + inc.severity);
     L.circleMarker([lat, lon], { radius: 10, color: sevColor(inc.severity), fillColor: sevColor(inc.severity), fillOpacity: 0.85, weight: 2 })
-      .bindPopup(`<b>${esc(inc.id)}</b> (position fictive projetée)<br>${esc(label)}`)
+      .bindPopup(`<b>${esc(inc.id)}</b> (projected fictitious position)<br>${esc(label)}`)
       .bindTooltip(inc.id, { permanent: true, direction: 'right', offset: [8, 0] })
       .addTo(layerMain);
   });
   if (state.x !== null) {
     const ll = state.gps ? [state.gps.lat, state.gps.lon] : gridToLatLng(state.x, state.y);
-    const label = state.gps ? 'Votre position GPS (relevé navigateur)' : 'Votre point choisi (grille fictive)';
+    const label = state.gps ? 'Your GPS position (browser reading)' : 'Your chosen point (fictitious grid)';
     L.circleMarker(ll, { radius: 8, color: '#0b5fff', fillColor: '#0b5fff', fillOpacity: 1, weight: 3 })
       .bindPopup(label)
       .addTo(layerMain);
   }
 }
 
-// --- Signalements récents (données réelles) ---
+// --- Recent reports (real data) ---
 function fmtDate(iso) {
   if (!iso) return null;
   const d = new Date(iso);
-  return 'reçu le ' + d.toLocaleDateString('fr-FR') + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return 'received on ' + d.toLocaleDateString('en-US') + ' at ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 function thumb(r) {
   if (isMediaId(r.photo)) return `<img src="/api/photos/${esc(r.photo)}" alt="">`;
@@ -228,28 +228,28 @@ async function loadRecent(n, append) {
     const j = await api(url);
     recentCursor = j.nextCursor;
     const html = j.reports.map((r) =>
-      `<li>${thumb(r)}<div><b>${esc(shortText(r.text) || r.id)}</b><small>${esc(r.category)} · ${fmtDate(r.receivedAt) || 'scénario fictif (sans heure de réception)'} · <i>donnée fictive</i></small></div><span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></li>`
+      `<li>${thumb(r)}<div><b>${esc(shortText(r.text) || r.id)}</b><small>${esc(r.category)} · ${fmtDate(r.receivedAt) || 'fictitious scenario (no receipt time)'} · <i>fictitious data</i></small></div><span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></li>`
     ).join('');
-    $('pRecent').innerHTML = append ? ($('pRecent').innerHTML + html) : (html || '<li class="muted">Aucun signalement pour le moment.</li>');
+    $('pRecent').innerHTML = append ? ($('pRecent').innerHTML + html) : (html || '<li class="muted">No reports yet.</li>');
     $('recentAll').style.display = recentCursor ? '' : 'none';
   } finally { recentLoading = false; }
 }
 
-// --- Suivi ---
+// --- Tracking ---
 $('tGo').onclick = async () => {
   $('tErr').hidden = true; $('tOut').innerHTML = '';
   const id = $('tId').value.trim();
-  if (!id) { $('tErr').textContent = 'Saisissez un identifiant.'; $('tErr').hidden = false; return; }
+  if (!id) { $('tErr').textContent = 'Enter an ID.'; $('tErr').hidden = false; return; }
   try {
     const j = await api('/api/public/report/' + encodeURIComponent(id));
     const r = j.report;
     let h = `<div class="track"><p><b>${esc(r.id)}</b> <span class="pill st-${esc(r.status)}">${esc(r.statusLabel)}</span></p>`;
-    h += `<p>${esc(r.text)}</p><p class="muted">${esc(r.category)} · position fictive (${r.x.toFixed(1)}, ${r.y.toFixed(1)}) km${r.receivedAt ? ' · ' + esc(fmtDate(r.receivedAt)) : ''}</p>`;
-    if (r.gps) h += `<p class="muted">Relevé GPS navigateur : ${r.gps.lat.toFixed(5)}, ${r.gps.lon.toFixed(5)}${r.gps.accuracy !== null && r.gps.accuracy !== undefined ? ` (±${Math.round(r.gps.accuracy)} m)` : ''} — fourni par vous, visible uniquement sur cette fiche.</p>`;
-    if (isMediaId(r.photo)) h += `<p><a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img class="upload preview" style="max-width:220px" src="/api/photos/${esc(r.photo)}" alt="photo du signalement"></a></p>`;
-    if (j.incident) h += `<p>Incident associé : <b>${esc(j.incident.id)}</b> (${esc(j.incident.domain)}, ${j.incident.reportCount} signalement(s)).</p>`;
-    else h += `<p class="muted">Pas encore rattaché à un incident (regroupement municipal en attente).</p>`;
-    h += `<p class="muted">Démonstration : données fictives, aucun délai d'intervention promis.</p></div>`;
+    h += `<p>${esc(r.text)}</p><p class="muted">${esc(r.category)} · fictitious position (${r.x.toFixed(1)}, ${r.y.toFixed(1)}) km${r.receivedAt ? ' · ' + esc(fmtDate(r.receivedAt)) : ''}</p>`;
+    if (r.gps) h += `<p class="muted">Browser GPS reading: ${r.gps.lat.toFixed(5)}, ${r.gps.lon.toFixed(5)}${r.gps.accuracy !== null && r.gps.accuracy !== undefined ? ` (±${Math.round(r.gps.accuracy)} m)` : ''} — provided by you, visible only on this page.</p>`;
+    if (isMediaId(r.photo)) h += `<p><a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img class="upload preview" style="max-width:220px" src="/api/photos/${esc(r.photo)}" alt="report photo"></a></p>`;
+    if (j.incident) h += `<p>Associated incident: <b>${esc(j.incident.id)}</b> (${esc(j.incident.domain)}, ${j.incident.reportCount} report(s)).</p>`;
+    else h += `<p class="muted">Not yet attached to an incident (municipal grouping pending).</p>`;
+    h += `<p class="muted">Demonstration: fictitious data, no intervention deadline promised.</p></div>`;
     $('tOut').innerHTML = h;
   } catch (e) { $('tErr').textContent = e.message; $('tErr').hidden = false; }
 };

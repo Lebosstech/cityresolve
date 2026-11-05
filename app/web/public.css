@@ -93,7 +93,7 @@ body { margin: 0; font-family: "Segoe UI", system-ui, Arial, sans-serif; backgro
 footer { text-align: center; color: var(--mut); font-size: 13px; padding: 18px; }
 footer a { color: var(--blue); }
 @media (max-width: 1024px) {
-  /* Mobile-first réel : héros court, formulaire, récents, puis carte. */
+  /* Real mobile-first: short hero, form, recent reports, then map. */
   .columns { display: flex; flex-direction: column; }
   .col-main, .col-side { display: contents; }
   #formCard { order: 1; }
