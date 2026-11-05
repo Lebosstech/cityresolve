@@ -65,7 +65,8 @@ async function loadLatest() {
   const box = $('panelLatest');
   const r = j.report;
   if (!r) { box.innerHTML = '<h2>⚡ Dernier signalement reçu</h2><p class="empty">Aucun signalement pour le moment.</p>'; return; }
-  const img = /^[0-9a-f]{24}$/.test(r.photo || '')
+  const hasPhoto = /^[0-9a-f]{24}$/.test(r.photo || '');
+  const img = hasPhoto
     ? `<a href="/api/photos/${esc(r.photo)}" target="_blank" rel="noopener"><img src="/api/photos/${esc(r.photo)}" alt="photo du signalement"></a>`
     : '<span class="noimg">📝</span>';
   const fams = (r.families || []).map((f) => `<span class="chip">${esc(f)}</span>`).join('');
@@ -74,7 +75,8 @@ async function loadLatest() {
     <div class="latest">${img}<div><h3>${esc(r.id)} — ${esc(r.category)}</h3>
     <p>${esc(r.text)}</p><p>${fams}</p>
     <p class="muted">${esc(when)} · statut : <b>${esc(r.statusLabel)}</b> · <i>donnée fictive</i></p>
-    <a class="link" href="#panelReports">Voir le signalement →</a></div></div>`;
+    <a class="link" href="#panelReports">Voir le signalement →</a>${hasPhoto ? ' <button class="btn ghost" id="latestVision">Analyser la photo (IA)</button> <span class="muted" id="latestVisionMsg"></span>' : ''}</div></div>`;
+  if (hasPhoto) $('latestVision').onclick = () => analyzePhoto(r.id, 'latestVision', 'latestVisionMsg');
 }
 
 const donutColors = { 'planifie': '#14b8a6', 'en-attente': '#f97316', 'en-cours': '#5eead4', 'resolus': '#94a3b8', 'escalade-s5': '#b3261e', 'non-affecte': '#f97316', 'a-analyser': '#eab308' };
@@ -317,6 +319,46 @@ async function loadJournalPanel(reset) {
     $('jMore').hidden = jCursor === null || jCursor === undefined;
   } catch (e) { tb.innerHTML = `<tr><td colspan="4" class="perr">${esc(e.message || e)}</td></tr>`; }
 }
+async function analyzePhoto(reportId, btnId, msgId) {
+  const btn = $(btnId), msg = $(msgId);
+  btn.disabled = true;
+  msg.textContent = 'Analyse visuelle en cours (appel réel)…';
+  try {
+    const j = await api('/api/meta/analyze-image', 'POST', { reportId });
+    msg.innerHTML = `Analyse enregistrée (modèle ${esc(j.model || '?')}, « à vérifier »). <a class="link" href="/municipal/signalements/${esc(reportId)}">Voir la fiche →</a>`;
+    loadJournalPanel(true).catch(() => {});
+  } catch (e) {
+    if (String(e && e.message).includes('auth')) return;
+    msg.innerHTML = `<span class="perr">Analyse impossible : ${esc(e.message || e)}</span>`;
+  } finally { btn.disabled = false; }
+}
+async function loadMetaBox() {
+  try {
+    const j = await api('/api/meta');
+    $('metaState').textContent = `État Meta : ${j.state} — modèle : ${j.model || 'aucun'} — ${j.message || ''}`;
+  } catch (e) {
+    if (String(e && e.message).includes('auth') || (e && e.name === 'AbortError')) return;
+    $('metaState').textContent = 'État Meta : indisponible (' + (e.message || e) + ')';
+  }
+  try {
+    const c = await api('/api/meta/calls');
+    $('metaCalls').textContent = `${c.calls.length} appel(s) Meta journalisé(s) — appels réels ou refus explicites, aucun résultat simulé.`;
+  } catch (e) { /* silencieux */ }
+}
+$('metaVerifyBtn').onclick = async () => {
+  const btn = $('metaVerifyBtn');
+  btn.disabled = true;
+  $('metaState').textContent = 'État Meta : vérification en cours (appel réel GET /models)…';
+  try {
+    const j = await api('/api/meta/verify', 'POST', {});
+    $('metaState').textContent = `État Meta : ${j.meta.state} — modèle : ${j.meta.model || 'aucun'} — ${j.meta.message || ''} (appel ${j.call.id}, ${j.call.latencyMs} ms)`;
+    const c = await api('/api/meta/calls');
+    $('metaCalls').textContent = `${c.calls.length} appel(s) Meta journalisé(s) — appels réels ou refus explicites, aucun résultat simulé.`;
+    loadJournalPanel(true).catch(() => {});
+  } catch (e) {
+    if (!String(e && e.message).includes('auth')) $('metaState').textContent = 'État Meta : vérification impossible (' + (e.message || e) + ')';
+  } finally { btn.disabled = false; }
+};
 $('gRun').onclick = () => { loadReportsPanel(); loadIncidentsPanel(); runGroupDash().catch((e) => { $('groupMeta').innerHTML = `<span class="perr">${esc(e.message || e)}</span>`; }); };
 $('scLoad').onclick = async () => {
   if (!confirm('Charger un scénario DEV remplace tout l\u2019état courant. Continuer ?')) return;
@@ -329,7 +371,7 @@ $('iTeam').onclick = () => injectDash('team');
 $('c2Run').onclick = () => runCompareDash();
 $('jMore').onclick = () => loadJournalPanel(false);
 const oldReload = reloadAll;
-reloadAll = async () => { await oldReload(); loadReportsPanel().catch((e) => panelError('panelReports', e)); loadIncidentsPanel().catch((e) => panelError('panelIncidents', e)); loadJournalPanel(true).catch(() => {}); };
+reloadAll = async () => { await oldReload(); loadReportsPanel().catch((e) => panelError('panelReports', e)); loadIncidentsPanel().catch((e) => panelError('panelIncidents', e)); loadJournalPanel(true).catch(() => {}); loadMetaBox().catch(() => {}); };
 
 (async () => {
   try {

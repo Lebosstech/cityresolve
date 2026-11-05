@@ -72,8 +72,9 @@ async function loadExample(reportId) {
   $('originCard').innerHTML = `<h3>Signalement d'origine</h3>
     <p><b>N° ${esc(j.reportId)}</b> <span class="muted">· ${esc(j.category)} · ${esc(j.source)}</span></p>
     <p>« ${esc(j.text)} »</p>
-    ${isMedia ? `<a href="/api/photos/${esc(j.photo)}" target="_blank" rel="noopener"><img src="/api/photos/${esc(j.photo)}" alt="photo du signalement" style="max-width:100%;border-radius:10px"></a><p class="muted">1 média</p>` : '<p class="muted">Aucune photo.</p>'}
+    ${isMedia ? `<a href="/api/photos/${esc(j.photo)}" target="_blank" rel="noopener"><img src="/api/photos/${esc(j.photo)}" alt="photo du signalement" style="max-width:100%;border-radius:10px"></a><p class="muted">1 média</p><button class="btn ghost" id="originVision">Analyser la photo (IA)</button> <span class="muted" id="originVisionMsg"></span>` : '<p class="muted">Aucune photo.</p>'}
     <p><a class="link" href="/municipal/signalements/${esc(j.reportId)}">Fiche complète →</a></p>`;
+  if (isMedia) $('originVision').onclick = () => analyzePhoto(j.reportId, 'originVision', 'originVisionMsg');
   $('subCol').innerHTML = j.subunits.map((u, i) =>
     `<div class="card sub"><h3>${famIcon[u.family] || '❓'} Sous-signalement ${i + 1}</h3>
     <p><b>${esc(famLabel[u.family] || u.family)}</b><br><span class="muted">${esc(u.id)}</span></p>
@@ -124,6 +125,37 @@ $('bellBtn').onclick = async () => {
 $('helpBtn').onclick = () => { $('helpModal').hidden = false; };
 $('helpClose').onclick = () => { $('helpModal').hidden = true; };
 $('burger').onclick = () => { $('sidebar').classList.toggle('open'); };
+async function analyzePhoto(reportId, btnId, msgId) {
+  const btn = $(btnId), msg = $(msgId);
+  btn.disabled = true;
+  msg.textContent = 'Analyse visuelle en cours (appel réel)…';
+  try {
+    const j = await api('/api/meta/analyze-image', 'POST', { reportId });
+    msg.innerHTML = `Analyse enregistrée (modèle ${esc(j.model || '?')}, « à vérifier »). <a class="link" href="/municipal/signalements/${esc(reportId)}">Voir la fiche →</a>`;
+  } catch (e) {
+    if (!String(e && e.message).includes('auth')) msg.innerHTML = `<span class="perr">Analyse impossible : ${esc(e.message || e)}</span>`;
+  } finally { btn.disabled = false; }
+}
+async function loadMeta() {
+  try {
+    const j = await api('/api/meta');
+    $('metaState').textContent = `État Meta : ${j.state} — modèle : ${j.model || 'aucun'} — ${j.message || ''}`;
+  } catch (e) {
+    if (String(e && e.message).includes('auth') || (e && e.name === 'AbortError')) return;
+    $('metaState').textContent = 'État Meta : indisponible (' + (e.message || e) + ')';
+  }
+}
+$('metaVerifyBtn').onclick = async () => {
+  const btn = $('metaVerifyBtn');
+  btn.disabled = true;
+  $('metaState').textContent = 'État Meta : vérification en cours (appel réel GET /models)…';
+  try {
+    const j = await api('/api/meta/verify', 'POST', {});
+    $('metaState').textContent = `État Meta : ${j.meta.state} — modèle : ${j.meta.model || 'aucun'} — ${j.meta.message || ''} (appel ${j.call.id}, ${j.call.latencyMs} ms)`;
+  } catch (e) {
+    if (!String(e && e.message).includes('auth')) $('metaState').textContent = 'État Meta : vérification impossible (' + (e.message || e) + ')';
+  } finally { btn.disabled = false; }
+};
 $('repSel').onchange = () => { currentReportId = $('repSel').value || null; if (currentReportId) loadExample(currentReportId).catch((e) => panelError('originCard', e)); };
 $('gRun').onclick = async () => {
   try {
@@ -155,4 +187,5 @@ function panelError(id, e) {
   } catch (e) { /* les panneaux afficheront leurs erreurs */ }
   newCtrl();
   try { await loadOverview(); } catch (e) { panelError('originCard', e); }
+  loadMeta().catch(() => {});
 })();

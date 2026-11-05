@@ -1881,6 +1881,43 @@ Future<void> main() async {
         'T42e historique scope a la generation courante (apres scenario.loaded)');
   }
 
+  // T43 : non-régression « boutons disparus » (nov. 2026) — l'interface
+  // municipale expose l'état Meta et l'analyse visuelle, jamais simulés :
+  // chaque bouton appelle la route serveur réelle correspondante.
+  {
+    String readWeb(String name) {
+      for (final base in ['web', 'app/web']) {
+        final f = File('$base/$name');
+        if (f.existsSync()) return f.readAsStringSync();
+      }
+      return '';
+    }
+
+    final dashHtml = readWeb('dashboard.html');
+    final dashJs = readWeb('dashboard.js');
+    final decoupHtml = readWeb('decoupage.html');
+    final decoupJs = readWeb('decoupage.js');
+    final ficheJs = readWeb('fiche-signalement.js');
+    check(dashHtml.isNotEmpty && dashJs.isNotEmpty && decoupHtml.isNotEmpty &&
+        decoupJs.isNotEmpty && ficheJs.isNotEmpty,
+        'T43a pages municipales lisibles depuis la racine du test');
+    check(dashHtml.contains('Vérifier Meta') && dashHtml.contains('metaVerifyBtn'),
+        'T43b dashboard : bouton Vérifier Meta présent');
+    check(dashJs.contains('/api/meta') && dashJs.contains('/api/meta/verify'),
+        'T43c dashboard : état Meta lu et vérifié via les routes réelles');
+    check(decoupHtml.contains('Vérifier Meta') &&
+        decoupHtml.contains('metaVerifyBtn'),
+        'T43d découpage : bouton Vérifier Meta présent');
+    check(decoupJs.contains('/api/meta/verify'),
+        'T43e découpage : vérification via la route réelle');
+    check(ficheJs.contains('/api/meta/analyze-image'),
+        'T43f fiche : analyse visuelle via la route réelle');
+    check(dashJs.contains('/api/meta/analyze-image'),
+        'T43g dashboard : analyse visuelle du dernier signalement');
+    check(decoupJs.contains('/api/meta/analyze-image'),
+        'T43h découpage : analyse visuelle du signalement d’origine');
+  }
+
   print('== $_pass PASS, $_fail FAIL ==');
   if (_fail > 0) throw StateError('$_fail test(s) en échec.');
 }

@@ -63,7 +63,7 @@ function render(j) {
   </div></section>
   <section class="row2">
     <div>
-      <div class="card"><h2>Photo ${isMedia ? '(1 photo)' : ''}</h2>${photo}</div>
+      <div class="card"><h2>Photo ${isMedia ? '(1 photo)' : ''}</h2>${photo}${isMedia ? '<div class="btn-row"><button class="btn primary" id="visionBtn">Analyser la photo (IA)</button></div><p class="muted" id="visionMsg"></p>' : ''}</div>
       <div class="card"><h2>Description</h2><p>« ${esc(r.text)} »</p>
       <p class="muted">Texte original exact — aucune reformulation IA ne le remplace.</p></div>
       <div class="card"><h2>Problèmes associés (${(j.subunits || []).length})</h2>
@@ -111,8 +111,24 @@ function render(j) {
   $('copyId').onclick = () => { try { navigator.clipboard.writeText(r.id); } catch (e) {} };
   $('editBtn').onclick = openEdit;
   $('verifyBtn').onclick = openVerify;
+  const vb = $('visionBtn');
+  if (vb) vb.onclick = runVision;
 }
 
+async function runVision() {
+  const btn = $('visionBtn'), msg = $('visionMsg');
+  btn.disabled = true;
+  msg.textContent = 'Analyse visuelle en cours (appel réel)…';
+  try {
+    const j = await api('/api/meta/analyze-image', 'POST', { reportId: current.id });
+    msg.textContent = `Analyse enregistrée (modèle ${j.model || '?'}). Rechargement…`;
+    await load();
+  } catch (e) {
+    if (String(e && e.message).includes('auth')) return;
+    msg.innerHTML = `<span class="perr">Analyse impossible : ${esc(e.message || e)}</span>`;
+    btn.disabled = false;
+  }
+}
 function fillEdit() {
   const r = current;
   $('editId').textContent = r.id;
